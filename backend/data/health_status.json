@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-05-18T13:57:21.726565+00:00",
+  "overall": "critical",
+  "checks": [
+    {
+      "name": "db_integrity",
+      "status": "ok",
+      "message": "SQLite integrity OK",
+      "repaired": false,
+      "repair_action": ""
+    },
+    {
+      "name": "odds_freshness",
+      "status": "fail",
+      "message": "99/99 场比赛赔率过期",
+      "repaired": true,
+      "repair_action": "triggered_emergency_odds_tier1"
+    },
+    {
+      "name": "scheduler_jobs",
+      "status": "ok",
+      "message": "46 个任务正常运行",
+      "repaired": false,
+      "repair_action": ""
+    },
+    {
+      "name": "data_completeness",
+      "status": "warn",
+      "message": "共 53 场 | 缺赔率:53 | 缺球队数据:106",
+      "repaired": false,
+      "repair_action": ""
+    },
+    {
+      "name": "model_drift",
+      "status": "fail",
+      "message": "方向准确率 46.7% < 48% 阈值 (147/315)",
+      "repaired": false,
+      "repair_action": "self_heal_cycle_status=skipped"
+    },
+    {
+      "name": "consecutive_failures",
+      "status": "ok",
+      "message": "无连续失败",
+      "repaired": false,
+      "repair_action": ""
+    },
+    {
+      "name": "backup_freshness",
+      "status": "ok",
+      "message": "最新备份 19.0 小时前 (5 个)",
+      "repaired": false,
+      "repair_action": ""
+    }
+  ]
+}

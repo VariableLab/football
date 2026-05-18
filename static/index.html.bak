@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WC Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@200;300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/tailwind.css?v=20260515">
+</head>
+<body class="min-h-screen antialiased">
+
+<!-- Nav -->
+<nav class="fixed top-0 left-0 right-0 z-50 nav-glass">
+  <div class="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between h-14">
+    <div class="flex items-center gap-3">
+      <span class="font-serif text-2xl font-semibold tracking-wide hero-title">WC Analytics</span>
+      <span class="text-accent text-xl font-serif">.</span>
+    </div>
+    <div class="flex items-center gap-8" id="navUser">
+      <span class="text-sm font-light tracking-wide text-warm-gray">预测仅供参考</span>
+    </div>
+  </div>
+</nav>
+
+<!-- Main -->
+<main class="pt-20 pb-24 max-w-7xl mx-auto px-6 lg:px-12">
+
+  <!-- Hero -->
+  <section class="mb-12">
+    <h1 class="font-serif text-4xl lg:text-5xl font-semibold tracking-wide mb-3 hero-title">赛事智能分析</h1>
+    <p class="text-sm font-light leading-relaxed text-warm-gray max-w-lg">市场数据追踪 · 概率校准模型 · 预测结果参考</p>
+  </section>
+
+  <!-- Tabs -->
+  <div class="flex items-center gap-2 mb-10" id="sectionTabs">
+    <button onclick="switchSection('matches')" class="section-tab px-6 py-2.5 text-sm font-medium tracking-wide border-b-2 border-accent text-charcoal transition-all" data-section="matches">赛事</button>
+    <button onclick="switchSection('validation')" class="section-tab px-6 py-2.5 text-sm font-light tracking-wide border-b-2 border-transparent text-warm-gray hover:text-charcoal transition-all" data-section="validation">验证</button>
+    <button onclick="switchSection('report')" class="section-tab px-6 py-2.5 text-sm font-light tracking-wide border-b-2 border-transparent text-warm-gray hover:text-charcoal transition-all" data-section="report">报告</button>
+    <button onclick="switchSection('feedback')" class="section-tab px-6 py-2.5 text-sm font-light tracking-wide border-b-2 border-transparent text-warm-gray hover:text-charcoal transition-all" data-section="feedback">留言</button>
+  </div>
+
+  <!-- Section: 赛事分析 -->
+  <div id="sectionMatches">
+    <div class="flex items-center gap-3 mb-8 flex-wrap" id="matchTabs">
+      <button onclick="setFilter('jingcai')" class="tab-filter px-5 py-2 text-sm font-light tracking-wide border text-charcoal hover:text-charcoal transition-all duration-300" data-filter="jingcai">在售赛事</button>
+      <button onclick="setFilter('all')" class="tab-filter px-5 py-2 text-sm font-light tracking-wide text-warm-gray hover:text-charcoal transition-all duration-300" data-filter="all">全部</button>
+      <button onclick="setFilter('today')" class="tab-filter px-5 py-2 text-sm font-light tracking-wide text-warm-gray hover:text-charcoal transition-all duration-300" data-filter="today">今日</button>
+      <button onclick="setFilter('tomorrow')" class="tab-filter px-5 py-2 text-sm font-light tracking-wide text-warm-gray hover:text-charcoal transition-all duration-300" data-filter="tomorrow">明日</button>
+      <button onclick="setFilter('world_cup')" class="tab-filter px-5 py-2 text-sm font-light tracking-wide text-warm-gray hover:text-charcoal transition-all duration-300" data-filter="world_cup">世界杯</button>
+      <button onclick="setFilter('friendly')" class="tab-filter px-5 py-2 text-sm font-light tracking-wide text-warm-gray hover:text-charcoal transition-all duration-300" data-filter="friendly">热身赛</button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="matchGrid">
+      <div class="col-span-full text-center py-24 text-warm-gray">
+        <div class="w-10 h-10 rounded-full border-2 border-accent/20 border-t-accent animate-spin mx-auto mb-4"></div>
+        <div class="text-base font-light">加载中...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section: 预测报告 -->
+  <div id="sectionReport" class="hidden">
+    <div id="reportDashboard" class="space-y-6">
+      <div class="text-center py-16 text-warm-gray text-base font-light">加载中...</div>
+    </div>
+  </div>
+
+  <!-- Section: 模型验证 -->
+  <div id="sectionValidation" class="hidden">
+    <div id="validationDashboard" class="space-y-6">
+      <div class="text-center py-16 text-warm-gray text-base font-light">加载中...</div>
+    </div>
+  </div>
+
+  <!-- Section: 用户留言 -->
+  <div id="sectionFeedback" class="hidden">
+    <div id="feedbackBoard" class="space-y-6">
+      <div class="text-center py-16 text-warm-gray text-base font-light">加载中...</div>
+    </div>
+  </div>
+</main>
+
+<!-- Match Detail Modal -->
+<div id="detailModal" class="fixed inset-0 z-[60] hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal()"></div>
+  <div class="absolute inset-x-0 bottom-0 lg:inset-0 lg:flex lg:items-center lg:justify-center">
+    <div class="w-full lg:max-w-2xl lg:mx-4 glass-modal rounded-xl overflow-hidden max-h-[90vh] overflow-y-auto scrollbar-hide">
+      <div id="modalContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div id="loginModal" class="fixed inset-0 z-[70] hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeLoginModal()"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div class="w-full max-w-sm glass-modal rounded-xl p-8">
+      <div class="flex items-center justify-between mb-8">
+        <h3 class="font-serif text-2xl font-semibold text-charcoal">登录</h3>
+        <button onclick="closeLoginModal()" class="text-warm-gray hover:text-charcoal transition-colors text-xl">&times;</button>
+      </div>
+      <form onsubmit="handleLogin(event)" class="space-y-5">
+        <div>
+          <input type="email" id="loginEmail" required class="w-full px-4 py-3 rounded-lg text-base placeholder-warm-gray" placeholder="邮箱">
+        </div>
+        <div>
+          <input type="password" id="loginPassword" required class="w-full px-4 py-3 rounded-lg text-base placeholder-warm-gray" placeholder="密码">
+        </div>
+        <div id="loginError" class="hidden text-sm text-accent-red"></div>
+        <div class="flex gap-3 pt-2">
+          <button type="submit" class="flex-1 py-3 btn-primary text-sm">登录</button>
+          <button type="button" onclick="handleRegister(event)" class="flex-1 py-3 btn-outline text-sm">注册</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Redeem Modal -->
+<div id="redeemModal" class="fixed inset-0 z-[70] hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeRedeemModal()"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div class="w-full max-w-sm glass-modal rounded-xl p-8">
+      <div class="flex items-center justify-between mb-8">
+        <h3 class="font-serif text-2xl font-semibold text-charcoal">兑换卡密</h3>
+        <button onclick="closeRedeemModal()" class="text-warm-gray hover:text-charcoal transition-colors text-xl">&times;</button>
+      </div>
+      <div class="space-y-5">
+        <div>
+          <input type="text" id="redeemKey" class="w-full px-4 py-3 rounded-lg text-base font-mono placeholder-warm-gray" placeholder="WC26-XXXX-XXXX-XXXX-XXXX">
+        </div>
+        <div id="redeemError" class="hidden text-sm text-accent-red"></div>
+        <div id="redeemSuccess" class="hidden text-sm text-accent-green"></div>
+        <button onclick="handleRedeem()" class="w-full py-3 btn-primary text-sm">兑换</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="fixed inset-0 z-[70] hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeSettingsModal()"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div class="w-full max-w-sm glass-modal rounded-xl p-8">
+      <div class="flex items-center justify-between mb-8">
+        <h3 class="font-serif text-2xl font-semibold text-charcoal">设置</h3>
+        <button onclick="closeSettingsModal()" class="text-warm-gray hover:text-charcoal transition-colors text-xl">&times;</button>
+      </div>
+      <div id="settingsContent" class="space-y-5">
+        <div class="text-center py-4 text-warm-gray text-sm font-light">加载中...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="max-w-7xl mx-auto px-6 lg:px-12 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+      <div>
+        <h3 class="font-serif text-xl font-semibold tracking-wide hero-title">WC Analytics<span class="text-accent">.</span></h3>
+        <p class="mt-4 text-sm font-light leading-relaxed text-warm-gray max-w-sm">市场数据追踪 · 概率校准模型 · 预测结果参考</p>
+      </div>
+      <div>
+        <p class="text-xs uppercase tracking-[0.25em] text-accent mb-6 font-sans font-medium">链接</p>
+        <div class="space-y-3">
+          <a href="/static/legal.html?p=disclaimer" class="text-sm font-light text-warm-gray hover:text-charcoal transition-colors duration-300 block">免责声明</a>
+          <a href="/static/legal.html?p=privacy" class="text-sm font-light text-warm-gray hover:text-charcoal transition-colors duration-300 block">隐私政策</a>
+          <a href="/static/legal.html?p=terms" class="text-sm font-light text-warm-gray hover:text-charcoal transition-colors duration-300 block">用户协议</a>
+        </div>
+      </div>
+      <div>
+        <p class="text-xs uppercase tracking-[0.25em] text-accent mb-6 font-sans font-medium">声明</p>
+        <p class="text-sm font-light text-warm-gray leading-relaxed">概率估算仅供参考，不代表实际结果。历史回测不保证未来表现。</p>
+      </div>
+    </div>
+    <div class="mt-8 pt-6 border-t border-warm-gray/10 flex flex-col md:flex-row justify-between items-center gap-4">
+      <p class="text-xs text-warm-gray font-light">&copy; 2026 WC Analytics</p>
+    </div>
+  </div>
+</footer>
+
+<script src="/static/api_client.js?v=20260517"></script>
+<script src="/static/app.js?v=20260518c"></script>
+</body>
+</html>

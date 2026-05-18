@@ -1,0 +1,276 @@
+{
+  "session_id": "20260514-data-cleaning",
+  "session_date": "2026-05-14",
+  "project": "WC Analytics - 足球赛事智能分析平台",
+  "project_type": "football_prediction_platform",
+  "project_repo": "/Users/liuxuran/Github/football/backend",
+  "session_goal": "数据清洗功能全量实现 + 预测报告页面 + 自动验证调度",
+  "session_summary": "实现数据清洗模块、修复6类数据质量问题、添加预写入校验层、构建每期预测报告页面、添加自动验证调度任务",
+
+  "project_status": {
+    "current_level": "MVP+",
+    "description": "已具备完整的赛事数据同步、5种玩法预测(SPF/RQ/SCORE/GOALS/HALF)、策略管线、模型验证、数据清洗闭环",
+    "nn_accuracy": {
+      "overall": 0.513,
+      "brier_score": 0.2002,
+      "draw_precision": 0.291,
+      "market_weight_dominant": 0.64,
+      "elo_weight_minimal": 0.04
+    },
+    "scheduler_jobs": 37,
+    "ml_models_trained": 5,
+    "self_heal": "审计→重学→重生成 自动闭环已上线"
+  },
+
+  "issues_found": [
+    {
+      "id": "ISS-001",
+      "category": "timezone",
+      "severity": "critical",
+      "title": "时区混乱 — 4种时间规范混用",
+      "description": "代码库混用 naive datetime.utcnow()、aware datetime.now(timezone.utc)、北京时间 datetime.now(timezone(timedelta(hours=8)))。SQLite 不保留 tzinfo，导致存储值无法区分 UTC 和北京时间。",
+      "affected_files": [
+        {"path": "backend/odds_collector.py", "lines": "222,236,310,331,421,468,1122,1288,1365", "problem": "使用 naive datetime.utcnow()"},
+        {"path": "backend/scheduler.py", "lines": "227,279,359", "problem": "使用 naive datetime.utcnow()"},
+        {"path": "backend/zgzcw_source.py", "lines": "285,347", "problem": "使用 naive datetime.utcnow()"},
+        {"path": "backend/wubaibai_source.py", "lines": "439,471", "problem": "使用 naive datetime.utcnow()"},
+        {"path": "backend/collect_data.py", "lines": "54,100", "problem": "使用 naive datetime.utcnow()"},
+        {"path": "backend/historical_importer.py", "lines": "142-149,247", "problem": "_parse_date 返回 naive datetime，无时区标记"},
+        {"path": "backend/sporttery_sync.py", "lines": "95-96,183", "problem": "混用 datetime.now() 和 datetime.now(timezone.utc)"}
+      ],
+      "fix_method": "全量替换 datetime.utcnow() → datetime.now(timezone.utc)；historical_importer._parse_date 返回值加 .replace(tzinfo=timezone.utc)；创建 ensure_aware_utc() 函数统一转换，sporttery 数据(JC前缀)视为北京时间再转UTC，其余视为UTC",
+      "fix_files": [
+        "backend/odds_collector.py",
+        "backend/scheduler.py",
+        "backend/zgzcw_source.py",
+        "backend/wubaibai_source.py",
+        "backend/collect_data.py",
+        "backend/historical_importer.py",
+        "backend/data_cleaner.py"
+      ],
+      "result": "6个文件12+处修改，5499条 naive datetime 修复（JC前缀 BJ→UTC，其余加 UTC tzinfo）",
+      "limitation": "SQLite 不保留 tzinfo，读取后仍显示 naive，但值已正确转为 UTC 时段。显示层 fmtBJ() 正确处理转换。"
+    },
+    {
+      "id": "ISS-002",
+      "category": "odds_dedup",
+      "severity": "warning",
+      "title": "OddsHistory 无去重 — 30分钟写入一次导致大量重复行",
+      "description": "zgzcw_source 和 wubaibai_source 每30分钟调度写入 OddsHistory，无任何去重检查。odds_collector._store_snapshot 同理。几周后累积数千条重复记录。",
+      "affected_files": [
+        {"path": "backend/zgzcw_source.py", "lines": "372-382", "problem": "每次调度直接 db.add(OddsHistory)，无去重"},
+        {"path": "backend/wubaibai_source.py", "lines": "496-506", "problem": "同上"},
+        {"path": "backend/odds_collector.py", "lines": "1340-1354", "problem": "_store_snapshot 直接写入，无去重"}
+      ],
+      "fix_method": "三处写入点均增加5min窗口去重检查：写入前查询是否已存在同 match_id/source 且 recorded_at 在5分钟内的记录，存在则跳过。存量数据通过 data_cleaner._fix_odds_duplicates 一次性清理。",
+      "fix_files": [
+        "backend/zgzcw_source.py",
+        "backend/wubaibai_source.py",
+        "backend/odds_collector.py",
+        "backend/data_cleaner.py"
+      ],
+      "result": "201条重复记录已删除，后续写入自动去重"
+    },
+    {
+      "id": "ISS-003",
+      "category": "safe_float",
+      "severity": "critical",
+      "title": "_safe_float 返回 0.0 而非 None — 无效赔率泄露到下游",
+      "description": "sporttery_sync.py 和 jingcai_predictor.py 的 _safe_float 在解析失败时返回 0.0。0.0 是 falsy 但仍会写入 DB（如 OddsHistory.odds_home=0.0），导致下游计算异常。其他模块（odds_collector、zgzcw、wubaibai）正确返回 None。",
+      "affected_files": [
+        {"path": "backend/sporttery_sync.py", "lines": "463-467", "problem": "返回 0.0 而非 None，且不检查 <=0"},
+        {"path": "backend/jingcai_predictor.py", "lines": "1260-1263", "problem": "返回 0.0 而非 None，且不检查 <=0"},
+        {"path": "backend/zgzcw_source.py", "lines": "376-378", "problem": "OddsHistory 写入使用 snap.odds_home or 0.0，None 被 0.0 替代"},
+        {"path": "backend/wubaibai_source.py", "lines": "500-502", "problem": "同上"},
+        {"path": "backend/odds_collector.py", "lines": "1346-1348", "problem": "同上"}
+      ],
+      "fix_method": "1) _safe_float 统一返回 None，增加 v>0 检查；2) 守卫条件从 if not (odds_h and odds_d and odds_a) 改为 if None in (odds_h, odds_d, odds_a)；3) OddsHistory 写入去掉 or 0.0 后备值；4) 写入前增加 validate_odds() 范围检查 [1.01, 100]",
+      "fix_files": [
+        "backend/sporttery_sync.py",
+        "backend/jingcai_predictor.py",
+        "backend/zgzcw_source.py",
+        "backend/wubaibai_source.py",
+        "backend/odds_collector.py",
+        "backend/data_cleaner.py"
+      ],
+      "result": "所有 _safe_float 统一返回 None；or 0.0 模式全部消除；validate_odds() 拦截超范围赔率"
+    },
+    {
+      "id": "ISS-004",
+      "category": "team_name",
+      "severity": "warning",
+      "title": "队名模糊匹配错关联 — 子串匹配误匹配不同球队",
+      "description": "historical_importer 使用 key in existing_name 匹配（'United' 可匹配多队），openfootball_importor 使用 SequenceMatcher(0.85) 和子串匹配（'Milan' 5字符可误匹配），soccerdata_adapter 使用 ilike 模糊匹配。三处独立维护，别名不一致。",
+      "affected_files": [
+        {"path": "backend/historical_importer.py", "lines": "112-114", "problem": "if key in existing_name or existing_name in key — 过于宽松"},
+        {"path": "backend/openfootball_importer.py", "lines": "222-244", "problem": "子串5字符+SequenceMatcher 0.85阈值"},
+        {"path": "backend/integrations/soccerdata_adapter.py", "lines": "443-445", "problem": "ilike 模糊匹配"}
+      ],
+      "fix_method": "1) 创建 TEAM_ALIASES 规范名映射(170+条)和 resolve_team_name() 函数在 data_cleaner.py；2) 创建 resolve_team_db() 数据库查找函数（规范名→name_en→code→子串，按优先级）；3) 三个导入器在模糊匹配前优先调用 resolve_team_db；4) 子串匹配最小长度从4提升到5",
+      "fix_files": [
+        "backend/data_cleaner.py",
+        "backend/historical_importer.py",
+        "backend/openfootball_importer.py",
+        "backend/integrations/soccerdata_adapter.py"
+      ],
+      "result": "42个别名队名可自动解析为规范名；导入器优先使用精确匹配，减少误关联"
+    },
+    {
+      "id": "ISS-005",
+      "category": "controlled_vocab",
+      "severity": "warning",
+      "title": "match_code/odds_source 无受控词表 — 格式不统一",
+      "description": "match_code 有5种前缀格式（JC/INT/OF/FR/WC+历史联赛前缀），odds_source 有10+种来源名但无统一注册。openfootball_importer 写入原始字符串绕过 Enum。",
+      "affected_files": [
+        {"path": "backend/openfootball_importer.py", "lines": "345,366", "problem": "直接存储 'finished' 字符串而非 MatchStatus 枚举"},
+        {"path": "backend/main.py", "lines": "383-393", "problem": "odds fallback 使用 or 2.0 硬编码"},
+        {"path": "全项目", "problem": "odds_source 无统一注册"}
+      ],
+      "fix_method": "1) data_cleaner.py 定义 VALID_ODDS_SOURCES / VALID_MATCH_CODE_PREFIXES 常量；2) validate_source() 函数自动映射旧名到规范名；3) _fix_enum_consistency() 修复 raw string → enum value；4) admin API 端点 GET /api/admin/data-quality 和 POST /api/admin/data-clean",
+      "fix_files": [
+        "backend/data_cleaner.py",
+        "backend/main.py"
+      ],
+      "result": "62143条 enum 值修正；2个未知 odds_source 映射到规范名；admin API 可查看/执行数据清洗"
+    },
+    {
+      "id": "ISS-006",
+      "category": "pre_write_validation",
+      "severity": "critical",
+      "title": "数据导入无预写入校验 — 脏数据直接入库",
+      "description": "sporttery_sync、odds_collector、scheduler sync_results_job 全部直接 ORM 写入，无 Pydantic 校验、无 SQLAlchemy event hook、无范围检查。唯一防护是 _safe_float，已证明不够。",
+      "affected_files": [
+        {"path": "backend/sporttery_sync.py", "lines": "199-211,342-356", "problem": "直接 db.add() 无校验"},
+        {"path": "backend/odds_collector.py", "lines": "1340-1354", "problem": "_store_snapshot 无校验"},
+        {"path": "backend/scheduler.py", "lines": "382-400", "problem": "sync_results_job 直接赋值"}
+      ],
+      "fix_method": "在 data_cleaner.py 创建3个预写入校验函数：validate_odds(home,draw,away) 返回 (h,d,a,valid) 含范围检查 [1.01,100]；ensure_aware_utc(dt,assume_bj) 确保时区规范；validate_source(source) 受控词表映射。集成到 sporttery_sync（写入前）、odds_collector._store_snapshot（写入前）、jingcai_predictor（写入前）。",
+      "fix_files": [
+        "backend/data_cleaner.py",
+        "backend/sporttery_sync.py",
+        "backend/odds_collector.py",
+        "backend/jingcai_predictor.py"
+      ],
+      "result": "三个主要导入路径全部增加预写入校验；新数据写入前自动过滤无效赔率、规范 source、统一时区"
+    }
+  ],
+
+  "new_features": [
+    {
+      "id": "FEAT-001",
+      "title": "每期预测报告页面",
+      "description": "新增 '📋 预测报告' tab，展示每期足彩最高胜率预测 + 结果自分析",
+      "details": {
+        "backend": "GET /api/jingcai/report — 返回最近50期报告，含最高胜率推荐、命中/未中判断、自分析摘要",
+        "frontend": "4个 section tab（赛事分析/预测报告/模型验证/用户留言），每期卡片显示命中率进度条、自分析文本、逐场比赛推荐+结果",
+        "scheduler": "jingcai_auto_verify — 每2小时检查已开奖未验证的期号，自动执行 verify_issue"
+      },
+      "api_client": "WCApi.Jingcai.getReport()",
+      "files": [
+        "backend/main.py:新增 jingcai_report + _build_issue_analysis",
+        "static/index.html:新增 sectionReport div + report tab",
+        "static/app.js:新增 loadReportDashboard + renderIssueReport + renderReportMatch",
+        "static/api_client.js:新增 Jingcai.getReport()",
+        "backend/scheduler.py:新增 jingcai_auto_verify_wrapper"
+      ]
+    },
+    {
+      "id": "FEAT-002",
+      "title": "数据清洗模块",
+      "description": "核心清洗 + 预写入校验 + 每日自动检查",
+      "details": {
+        "core_module": "data_cleaner.py — DataCleaner 类，6大审计功能 + 5大修复功能",
+        "pre_write": "validate_odds / ensure_aware_utc / validate_source / resolve_team_name / resolve_team_db",
+        "admin_api": "GET /api/admin/data-quality (只读审计) + POST /api/admin/data-clean (执行清洗)",
+        "scheduler": "data_quality_check — 每天05:45自动审计+修复安全项",
+        "controlled_vocab": "VALID_ODDS_SOURCES / VALID_MATCH_CODE_PREFIXES / VALID_PLAY_TYPES / TEAM_ALIASES(170+)"
+      },
+      "files": [
+        "backend/data_cleaner.py (新建, ~650行)",
+        "backend/main.py:新增 data-quality + data-clean 端点",
+        "backend/scheduler.py:新增 data_quality_wrapper"
+      ]
+    }
+  ],
+
+  "fixes_summary": {
+    "timezone": {"count": 5499, "method": "ensure_aware_utc, JC前缀=BJ→UTC, 其余=UTC"},
+    "odds_dedup": {"count": 201, "method": "5min窗口去重, 存量清理"},
+    "zero_odds": {"count": 0, "method": "_safe_float→None, or 0.0 消除, validate_odds范围检查"},
+    "enum": {"count": 62143, "method": "raw string→enum value (FRIENDLY→friendly等)"},
+    "odds_source": {"count": 2, "method": "validate_source映射 (manual→sporttery, football-data-BW→football-data-B365)"},
+    "team_names": {"count": 42, "method": "TEAM_ALIASES 170+映射, resolve_team_db 优先精确匹配"}
+  },
+
+  "remaining_issues": [
+    {
+      "category": "match_code",
+      "severity": "info",
+      "count": 5345,
+      "description": "历史数据 match_code 前缀不在受控词表 (BUNDESLIGA-等联赛前缀)，需逐步迁移"
+    },
+    {
+      "category": "odds_source_history",
+      "severity": "info",
+      "count": 1066,
+      "description": "OddsHistory 历史表有旧格式 source (football-data|TeamA_vs_TeamB)，不影响功能"
+    },
+    {
+      "category": "team_name_aliases",
+      "severity": "warning",
+      "count": 42,
+      "description": "42个队名是别名(曼城/狼队/利物浦等)，需人工确认后批量替换为规范名"
+    },
+    {
+      "category": "missing_odds",
+      "severity": "info",
+      "count": 294,
+      "description": "294场即将进行的比赛缺少赔率数据(正常，等待赔率源更新)"
+    }
+  ],
+
+  "architecture": {
+    "data_flow_before": "外部数据源 → ORM直接写入DB → (无校验) → 可能存入脏数据",
+    "data_flow_after": "外部数据源 → validate_odds/ensure_aware_utc/validate_source → ORM写入DB → DataCleaner每日审计兜底",
+    "timezone_storage": "统一存储UTC值(SQLite不保留tzinfo)，显示层通过 kickoff_bj + fmtBJ() 转为北京时间",
+    "cleaning_strategy": "预写入拦截(防增量脏数据) + 每日自动审计(修复存量) + Admin API(手动触发)"
+  },
+
+  "files_modified": [
+    "backend/data_cleaner.py (新建)",
+    "backend/main.py (报告API+清洗API+分析函数)",
+    "backend/scheduler.py (auto-verify+data-quality jobs)",
+    "backend/sporttery_sync.py (validate_odds+_safe_float修复+guard修复)",
+    "backend/odds_collector.py (timezone+dedup+validate_odds+or 0.0消除)",
+    "backend/jingcai_predictor.py (_safe_float修复+guard修复)",
+    "backend/zgzcw_source.py (timezone+dedup+or 0.0消除)",
+    "backend/wubaibai_source.py (timezone+dedup+or 0.0消除)",
+    "backend/collect_data.py (timezone)",
+    "backend/historical_importer.py (timezone+resolve_team_db)",
+    "backend/openfootball_importer.py (resolve_team_name)",
+    "backend/integrations/soccerdata_adapter.py (resolve_team_db)",
+    "static/index.html (报告section+tab)",
+    "static/app.js (报告渲染+section切换)",
+    "static/api_client.js (Jingcai.getReport)"
+  ],
+
+  "for_model_training": {
+    "intent": "此JSON用于训练AI模型理解：1)软件项目中数据质量问题的分类和识别；2)修复策略的选择和实施；3)前后端联调的完整流程；4)Python/FastAPI/SQLAlchemy技术栈的常见陷阱",
+    "key_patterns": [
+      "naive vs aware datetime 是 Python 项目的系统性风险",
+      "SQLite DateTime(timezone=True) 不保留 tzinfo，需显示层兜底",
+      "_safe_float 返回0.0而非None是数据管道的经典反模式",
+      "ORM直接写入无校验 → 需要预写入校验层",
+      "队名模糊匹配需优先精确匹配 + 规范别名表",
+      "OddsHistory等高频写入表必须去重",
+      "枚举值不一致(大小写)在宽松数据库(SQLite)中静默积累"
+    ],
+    "labels": {
+      "task_type": "data_quality_engineering",
+      "complexity": "high",
+      "scope": "full-stack",
+      "technologies": ["Python", "FastAPI", "SQLAlchemy", "SQLite", "JavaScript", "APScheduler"],
+      "problem_categories": ["timezone", "dedup", "validation", "normalization", "enum_consistency", "pre_write_check"]
+    }
+  }
+}

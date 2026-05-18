@@ -1,0 +1,43 @@
+{
+  "n_folds": 5,
+  "avg_accuracy": 0.3423,
+  "avg_draw_recall": 0.9149,
+  "folds": [
+    {
+      "fold": 0,
+      "val_size": 6129,
+      "accuracy": 0.3157,
+      "draw_recall": 0.9472,
+      "best_val_loss": 0.3674
+    },
+    {
+      "fold": 1,
+      "val_size": 6129,
+      "accuracy": 0.3658,
+      "draw_recall": 0.9132,
+      "best_val_loss": 0.3661
+    },
+    {
+      "fold": 2,
+      "val_size": 6129,
+      "accuracy": 0.3531,
+      "draw_recall": 0.904,
+      "best_val_loss": 0.3675
+    },
+    {
+      "fold": 3,
+      "val_size": 6129,
+      "accuracy": 0.3288,
+      "draw_recall": 0.9251,
+      "best_val_loss": 0.3696
+    },
+    {
+      "fold": 4,
+      "val_size": 6129,
+      "accuracy": 0.348,
+      "draw_recall": 0.8849,
+      "best_val_loss": 0.3735
+    }
+  ],
+  "validated_at": "2026-05-12T16:17:22.140248+00:00"
+}

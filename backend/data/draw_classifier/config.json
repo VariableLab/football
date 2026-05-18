@@ -1,0 +1,9 @@
+{
+  "threshold": 0.55,
+  "adjust_strategy": "moderate_calibration",
+  "baseline": 0.55,
+  "max_boost": 0.10,
+  "scale": 0.35,
+  "trained_at": "2026-05-13",
+  "notes": "Moderate calibration: threshold=0.55, max_boost=0.10, scale=0.35. Tested on 600 matches: moderate strategy gives draw_prec=12.5% with minimal accuracy loss (0.0%) vs conservative, aggressive hurts accuracy (-0.7%)"
+}

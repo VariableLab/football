@@ -1,0 +1,96 @@
+{
+  "session_id": "20260514-security-fixes",
+  "session_date": "2026-05-14",
+  "project": "WC Analytics - 足球赛事智能分析平台",
+  "session_goal": "修复3个CRITICAL安全问题，解除公网部署阻塞",
+  "session_summary": "3个CRITICAL安全问题全部修复：7个POST端点加鉴权、SSL验证恢复、生产环境禁用.env文件",
+
+  "issues_found": [
+    {
+      "id": "SEC-C1",
+      "category": "authentication",
+      "severity": "critical",
+      "title": "7个POST端点无鉴权",
+      "description": "任何人可调用管理端点修改核心数据，尤其开奖结果录入极危险",
+      "affected_files": [
+        {"path": "main.py", "lines": "607,637,685,995,1016,1030,1047", "problem": "无Depends(_verify_admin_key)鉴权"}
+      ],
+      "fix_method": "为7个POST端点函数签名添加 _: bool = Depends(_verify_admin_key) 参数，并将_verify_admin_key定义前移至首次引用之前(line 606)",
+      "fix_files": ["main.py"],
+      "result": "fixed — 无auth key返回422，错误key返回403，正确key返回200"
+    },
+    {
+      "id": "SEC-C2",
+      "category": "ssl_verification",
+      "severity": "critical",
+      "title": "SSL证书验证被禁用",
+      "description": "自定义SSL context禁用hostname检查和证书验证，MITM攻击可注入恶意赔率数据",
+      "affected_files": [
+        {"path": "scheduler.py", "lines": "322-325", "problem": "_ctx.check_hostname=False, _ctx.verify_mode=CERT_NONE"},
+        {"path": "openfootball_importer.py", "lines": "59-61", "problem": "_ctx.check_hostname=False, _ctx.verify_mode=CERT_NONE"}
+      ],
+      "fix_method": "删除check_hostname=False和verify_mode=CERT_NONE两行，保留ssl.create_default_context()的默认安全配置",
+      "fix_files": ["scheduler.py", "openfootball_importer.py"],
+      "result": "fixed — 使用默认SSL验证，MITM防护恢复"
+    },
+    {
+      "id": "SEC-C3",
+      "category": "secret_management",
+      "severity": "critical",
+      "title": ".env文件含明文密钥，生产环境不安全",
+      "description": "SECRET_KEY和ADMIN_API_KEY存储在.env文件中，文件读取漏洞可暴露所有密钥",
+      "affected_files": [
+        {"path": "config.py", "lines": "48-49", "problem": "env_file='.env' 无环境区分"},
+        {"path": ".env", "lines": "2,18", "problem": "明文密钥"}
+      ],
+      "fix_method": "添加WC_ENV环境变量检测：production模式禁用.env文件读取，强制密钥从OS环境变量获取，非production模式仍允许.env开发",
+      "fix_files": ["config.py"],
+      "result": "fixed — WC_ENV=production时.env被禁用，密钥必须从环境变量注入"
+    }
+  ],
+
+  "fixes_summary": {
+    "critical_fixed": 3,
+    "high_fixed": 0,
+    "total_endpoints_secured": 7,
+    "ssl_contexts_fixed": 2,
+    "config_hardened": true
+  },
+
+  "remaining_issues": [
+    {"severity": "high", "count": 8, "note": "无分页、N+1查询、LiveOdds全局状态、GET写数据、License竞态、CORS回退、用户枚举、ML无限速"},
+    {"severity": "medium", "count": 8, "note": "joinedload笛卡尔积、缺复合索引、DB会话泄漏等"},
+    {"severity": "low", "count": 3}
+  ],
+
+  "architecture": {
+    "before": "7个POST端点无鉴权，SSL验证全局禁用，.env文件无环境区分",
+    "after": "所有管理POST端点需X-Api-Key鉴权，SSL使用默认安全配置，生产环境强制环境变量密钥管理",
+    "key_change": "_verify_admin_key从line 1196前移至line 606，确保在首次引用前定义"
+  },
+
+  "files_modified": [
+    {"path": "main.py", "changes": ["_verify_admin_key前移至line 606", "7个POST端点添加Depends(_verify_admin_key)"]},
+    {"path": "scheduler.py", "changes": ["删除_ctx.check_hostname=False", "删除_ctx.verify_mode=CERT_NONE"]},
+    {"path": "openfootball_importer.py", "changes": ["删除_ctx.check_hostname=False", "删除_ctx.verify_mode=CERT_NONE"]},
+    {"path": "config.py", "changes": ["添加WC_ENV环境变量检测", "production模式禁用.env", "添加_check_secret_source验证密钥来源"]}
+  ],
+
+  "for_model_training": {
+    "intent": "训练AI理解安全修复流程：识别未鉴权端点→添加认证依赖→前向引用处理→验证修复效果",
+    "key_patterns": [
+      "FastAPI Depends()鉴权需在被引用前定义，否则NameError",
+      "ssl.create_default_context()默认启用证书验证，删除check_hostname=False和verify_mode=CERT_NONE即可恢复安全",
+      "生产环境应禁用.env文件，强制从OS环境变量读取密钥",
+      "验证安全修复需测试3种情况：无auth→422，错误auth→403，正确auth→200",
+      "X-Api-Key使用hmac.compare_digest防止时序攻击"
+    ],
+    "labels": {
+      "task_type": "security_fix",
+      "complexity": "medium",
+      "scope": "full-stack",
+      "technologies": ["Python", "FastAPI", "SSL/TLS", "Pydantic Settings"],
+      "outcome": "all_critical_fixed"
+    }
+  }
+}

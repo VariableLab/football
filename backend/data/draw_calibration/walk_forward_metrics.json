@@ -1,0 +1,726 @@
+{
+  "generated_at": "2026-05-12T05:39:40.666455+00:00",
+  "rows": 30644,
+  "folds": 14,
+  "baseline": {
+    "total": 27644,
+    "correct": 13086,
+    "accuracy": 0.473376,
+    "brier": 0.20912,
+    "log_loss": 1.047666,
+    "draw_prediction_rate": 0.0,
+    "actual_draw_rate": 0.250579
+  },
+  "calibrated": {
+    "total": 27644,
+    "correct": 13019,
+    "accuracy": 0.470952,
+    "brier": 0.209462,
+    "log_loss": 1.049976,
+    "draw_prediction_rate": 0.067718,
+    "actual_draw_rate": 0.250579
+  },
+  "latest_params": {
+    "enabled": false,
+    "elo_diff_threshold": 120.0,
+    "market_draw_threshold": 0.26,
+    "model_draw_threshold": 0.24,
+    "xg_diff_threshold": 0.5,
+    "min_signals": 2,
+    "min_draw_prob": 0.18,
+    "draw_boost": 1.3,
+    "draw_cap": 0.45,
+    "promote_draw": false,
+    "promote_min_signals": 3,
+    "promote_margin": 0.005
+  },
+  "fold_results": [
+    {
+      "train_start": "2010-08-14T12:45:00+00:00",
+      "train_end": "2013-12-07T15:00:00+00:00",
+      "test_start": "2013-12-07T15:00:00+00:00",
+      "test_end": "2015-02-14T15:30:00+00:00",
+      "train_size": 3000,
+      "test_size": 2000,
+      "params": {
+        "enabled": true,
+        "elo_diff_threshold": 120.0,
+        "market_draw_threshold": 0.26,
+        "model_draw_threshold": 0.24,
+        "xg_diff_threshold": 0.5,
+        "min_signals": 2,
+        "min_draw_prob": 0.18,
+        "draw_boost": 1.25,
+        "draw_cap": 0.42,
+        "promote_draw": false,
+        "promote_min_signals": 3,
+        "promote_margin": 0.005
+      },
+      "train_metrics": {
+        "total": 750,
+        "correct": 345,
+        "accuracy": 0.46,
+        "brier": 0.207845,
+        "log_loss": 1.045099,
+        "draw_prediction_rate": 0.136,
+        "actual_draw_rate": 0.236
+      },
+      "baseline": {
+        "total": 2000,
+        "correct": 885,
+        "accuracy": 0.4425,
+        "brier": 0.216895,
+        "log_loss": 1.081562,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.246
+      },
+      "calibrated": {
+        "total": 2000,
+        "correct": 879,
+        "accuracy": 0.4395,
+        "brier": 0.217651,
+        "log_loss": 1.088182,
+        "draw_prediction_rate": 0.166,
+        "actual_draw_rate": 0.246
+      }
+    },
+    {
+      "train_start": "2010-08-14T12:45:00+00:00",
+      "train_end": "2015-02-14T15:30:00+00:00",
+      "test_start": "2015-02-14T15:30:00+00:00",
+      "test_end": "2016-03-01T20:00:00+00:00",
+      "train_size": 5000,
+      "test_size": 2000,
+      "params": {
+        "enabled": false,
+        "elo_diff_threshold": 120.0,
+        "market_draw_threshold": 0.26,
+        "model_draw_threshold": 0.24,
+        "xg_diff_threshold": 0.5,
+        "min_signals": 2,
+        "min_draw_prob": 0.18,
+        "draw_boost": 1.3,
+        "draw_cap": 0.45,
+        "promote_draw": false,
+        "promote_min_signals": 3,
+        "promote_margin": 0.005
+      },
+      "train_metrics": {
+        "total": 1250,
+        "correct": 552,
+        "accuracy": 0.4416,
+        "brier": 0.218998,
+        "log_loss": 1.088234,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.264
+      },
+      "baseline": {
+        "total": 2000,
+        "correct": 865,
+        "accuracy": 0.4325,
+        "brier": 0.217885,
+        "log_loss": 1.085811,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.2585
+      },
+      "calibrated": {
+        "total": 2000,
+        "correct": 865,
+        "accuracy": 0.4325,
+        "brier": 0.217885,
+        "log_loss": 1.085811,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.2585
+      }
+    },
+    {
+      "train_start": "2011-12-21T19:45:00+00:00",
+      "train_end": "2016-03-01T20:00:00+00:00",
+      "test_start": "2016-03-01T21:00:00+00:00",
+      "test_end": "2017-04-08T15:00:00+00:00",
+      "train_size": 6000,
+      "test_size": 2000,
+      "params": {
+        "enabled": true,
+        "elo_diff_threshold": 120.0,
+        "market_draw_threshold": 0.26,
+        "model_draw_threshold": 0.24,
+        "xg_diff_threshold": 0.5,
+        "min_signals": 2,
+        "min_draw_prob": 0.18,
+        "draw_boost": 1.25,
+        "draw_cap": 0.42,
+        "promote_draw": false,
+        "promote_min_signals": 3,
+        "promote_margin": 0.005
+      },
+      "train_metrics": {
+        "total": 1500,
+        "correct": 640,
+        "accuracy": 0.426667,
+        "brier": 0.220944,
+        "log_loss": 1.104616,
+        "draw_prediction_rate": 0.160667,
+        "actual_draw_rate": 0.260667
+      },
+      "baseline": {
+        "total": 2000,
+        "correct": 925,
+        "accuracy": 0.4625,
+        "brier": 0.207676,
+        "log_loss": 1.04307,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.234
+      },
+      "calibrated": {
+        "total": 2000,
+        "correct": 944,
+        "accuracy": 0.472,
+        "brier": 0.208622,
+        "log_loss": 1.050264,
+        "draw_prediction_rate": 0.167,
+        "actual_draw_rate": 0.234
+      }
+    },
+    {
+      "train_start": "2013-12-07T15:00:00+00:00",
+      "train_end": "2017-04-08T15:00:00+00:00",
+      "test_start": "2017-04-08T15:30:00+00:00",
+      "test_end": "2018-04-23T20:00:00+00:00",
+      "train_size": 6000,
+      "test_size": 2000,
+      "params": {
+        "enabled": true,
+        "elo_diff_threshold": 120.0,
+        "market_draw_threshold": 0.26,
+        "model_draw_threshold": 0.24,
+        "xg_diff_threshold": 0.5,
+        "min_signals": 3,
+        "min_draw_prob": 0.18,
+        "draw_boost": 1.25,
+        "draw_cap": 0.42,
+        "promote_draw": false,
+        "promote_min_signals": 3,
+        "promote_margin": 0.005
+      },
+      "train_metrics": {
+        "total": 1500,
+        "correct": 723,
+        "accuracy": 0.482,
+        "brier": 0.206092,
+        "log_loss": 1.037435,
+        "draw_prediction_rate": 0.176,
+        "actual_draw_rate": 0.231333
+      },
+      "baseline": {
+        "total": 2000,
+        "correct": 916,
+        "accuracy": 0.458,
+        "brier": 0.211045,
+        "log_loss": 1.056725,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.247
+      },
+      "calibrated": {
+        "total": 2000,
+        "correct": 905,
+        "accuracy": 0.4525,
+        "brier": 0.21166,
+        "log_loss": 1.060852,
+        "draw_prediction_rate": 0.164,
+        "actual_draw_rate": 0.247
+      }
+    },
+    {
+      "train_start": "2015-02-14T15:30:00+00:00",
+      "train_end": "2018-04-23T20:00:00+00:00",
+      "test_start": "2018-04-23T20:45:00+00:00",
+      "test_end": "2019-05-24T21:05:00+00:00",
+      "train_size": 6000,
+      "test_size": 2000,
+      "params": {
+        "enabled": false,
+        "elo_diff_threshold": 120.0,
+        "market_draw_threshold": 0.26,
+        "model_draw_threshold": 0.24,
+        "xg_diff_threshold": 0.5,
+        "min_signals": 2,
+        "min_draw_prob": 0.18,
+        "draw_boost": 1.3,
+        "draw_cap": 0.45,
+        "promote_draw": false,
+        "promote_min_signals": 3,
+        "promote_margin": 0.005
+      },
+      "train_metrics": {
+        "total": 1500,
+        "correct": 679,
+        "accuracy": 0.452667,
+        "brier": 0.212763,
+        "log_loss": 1.062597,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.256
+      },
+      "baseline": {
+        "total": 2000,
+        "correct": 894,
+        "accuracy": 0.447,
+        "brier": 0.214572,
+        "log_loss": 1.073157,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.252
+      },
+      "calibrated": {
+        "total": 2000,
+        "correct": 894,
+        "accuracy": 0.447,
+        "brier": 0.214572,
+        "log_loss": 1.073157,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.252
+      }
+    },
+    {
+      "train_start": "2016-03-01T21:00:00+00:00",
+      "train_end": "2019-05-24T21:05:00+00:00",
+      "test_start": "2019-05-24T21:05:00+00:00",
+      "test_end": "2020-10-24T18:00:00+00:00",
+      "train_size": 6000,
+      "test_size": 2000,
+      "params": {
+        "enabled": true,
+        "elo_diff_threshold": 120.0,
+        "market_draw_threshold": 0.26,
+        "model_draw_threshold": 0.24,
+        "xg_diff_threshold": 0.5,
+        "min_signals": 2,
+        "min_draw_prob": 0.2,
+        "draw_boost": 1.25,
+        "draw_cap": 0.42,
+        "promote_draw": false,
+        "promote_min_signals": 3,
+        "promote_margin": 0.005
+      },
+      "train_metrics": {
+        "total": 1500,
+        "correct": 652,
+        "accuracy": 0.434667,
+        "brier": 0.215404,
+        "log_loss": 1.077791,
+        "draw_prediction_rate": 0.179333,
+        "actual_draw_rate": 0.260667
+      },
+      "baseline": {
+        "total": 2000,
+        "correct": 896,
+        "accuracy": 0.448,
+        "brier": 0.217316,
+        "log_loss": 1.086299,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.242
+      },
+      "calibrated": {
+        "total": 2000,
+        "correct": 881,
+        "accuracy": 0.4405,
+        "brier": 0.217879,
+        "log_loss": 1.092011,
+        "draw_prediction_rate": 0.125,
+        "actual_draw_rate": 0.242
+      }
+    },
+    {
+      "train_start": "2017-04-08T15:30:00+00:00",
+      "train_end": "2020-10-24T18:00:00+00:00",
+      "test_start": "2020-10-24T18:30:00+00:00",
+      "test_end": "2021-10-23T16:15:00+00:00",
+      "train_size": 6000,
+      "test_size": 2000,
+      "params": {
+        "enabled": false,
+        "elo_diff_threshold": 120.0,
+        "market_draw_threshold": 0.26,
+        "model_draw_threshold": 0.24,
+        "xg_diff_threshold": 0.5,
+        "min_signals": 2,
+        "min_draw_prob": 0.18,
+        "draw_boost": 1.3,
+        "draw_cap": 0.45,
+        "promote_draw": false,
+        "promote_min_signals": 3,
+        "promote_margin": 0.005
+      },
+      "train_metrics": {
+        "total": 1500,
+        "correct": 686,
+        "accuracy": 0.457333,
+        "brier": 0.215116,
+        "log_loss": 1.076423,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.240667
+      },
+      "baseline": {
+        "total": 2000,
+        "correct": 956,
+        "accuracy": 0.478,
+        "brier": 0.209623,
+        "log_loss": 1.051163,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.262
+      },
+      "calibrated": {
+        "total": 2000,
+        "correct": 956,
+        "accuracy": 0.478,
+        "brier": 0.209623,
+        "log_loss": 1.051163,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.262
+      }
+    },
+    {
+      "train_start": "2018-04-23T20:45:00+00:00",
+      "train_end": "2021-10-23T16:15:00+00:00",
+      "test_start": "2021-10-23T17:00:00+00:00",
+      "test_end": "2022-09-17 00:00:00.000000",
+      "train_size": 6000,
+      "test_size": 2000,
+      "params": {
+        "enabled": false,
+        "elo_diff_threshold": 120.0,
+        "market_draw_threshold": 0.26,
+        "model_draw_threshold": 0.24,
+        "xg_diff_threshold": 0.5,
+        "min_signals": 2,
+        "min_draw_prob": 0.18,
+        "draw_boost": 1.3,
+        "draw_cap": 0.45,
+        "promote_draw": false,
+        "promote_min_signals": 3,
+        "promote_margin": 0.005
+      },
+      "train_metrics": {
+        "total": 1500,
+        "correct": 722,
+        "accuracy": 0.481333,
+        "brier": 0.207902,
+        "log_loss": 1.045286,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.251333
+      },
+      "baseline": {
+        "total": 2000,
+        "correct": 963,
+        "accuracy": 0.4815,
+        "brier": 0.209674,
+        "log_loss": 1.050034,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.2575
+      },
+      "calibrated": {
+        "total": 2000,
+        "correct": 963,
+        "accuracy": 0.4815,
+        "brier": 0.209674,
+        "log_loss": 1.050034,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.2575
+      }
+    },
+    {
+      "train_start": "2019-05-24T21:05:00+00:00",
+      "train_end": "2022-09-17 00:00:00.000000",
+      "test_start": "2022-09-17 00:00:00.000000",
+      "test_end": "2023-03-19T20:45:00+00:00",
+      "train_size": 6000,
+      "test_size": 2000,
+      "params": {
+        "enabled": false,
+        "elo_diff_threshold": 120.0,
+        "market_draw_threshold": 0.26,
+        "model_draw_threshold": 0.24,
+        "xg_diff_threshold": 0.5,
+        "min_signals": 2,
+        "min_draw_prob": 0.18,
+        "draw_boost": 1.3,
+        "draw_cap": 0.45,
+        "promote_draw": false,
+        "promote_min_signals": 3,
+        "promote_margin": 0.005
+      },
+      "train_metrics": {
+        "total": 1500,
+        "correct": 731,
+        "accuracy": 0.487333,
+        "brier": 0.20678,
+        "log_loss": 1.037658,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.253333
+      },
+      "baseline": {
+        "total": 2000,
+        "correct": 982,
+        "accuracy": 0.491,
+        "brier": 0.205461,
+        "log_loss": 1.032145,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.2405
+      },
+      "calibrated": {
+        "total": 2000,
+        "correct": 982,
+        "accuracy": 0.491,
+        "brier": 0.205461,
+        "log_loss": 1.032145,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.2405
+      }
+    },
+    {
+      "train_start": "2020-10-24T18:30:00+00:00",
+      "train_end": "2023-03-19T20:45:00+00:00",
+      "test_start": "2023-03-19T21:00:00+00:00",
+      "test_end": "2023-11-03 00:00:00.000000",
+      "train_size": 6000,
+      "test_size": 2000,
+      "params": {
+        "enabled": true,
+        "elo_diff_threshold": 120.0,
+        "market_draw_threshold": 0.26,
+        "model_draw_threshold": 0.24,
+        "xg_diff_threshold": 0.5,
+        "min_signals": 3,
+        "min_draw_prob": 0.18,
+        "draw_boost": 1.25,
+        "draw_cap": 0.42,
+        "promote_draw": false,
+        "promote_min_signals": 3,
+        "promote_margin": 0.005
+      },
+      "train_metrics": {
+        "total": 1500,
+        "correct": 737,
+        "accuracy": 0.491333,
+        "brier": 0.207718,
+        "log_loss": 1.043904,
+        "draw_prediction_rate": 0.1,
+        "actual_draw_rate": 0.239333
+      },
+      "baseline": {
+        "total": 2000,
+        "correct": 1009,
+        "accuracy": 0.5045,
+        "brier": 0.201311,
+        "log_loss": 1.013293,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.244
+      },
+      "calibrated": {
+        "total": 2000,
+        "correct": 997,
+        "accuracy": 0.4985,
+        "brier": 0.202361,
+        "log_loss": 1.017689,
+        "draw_prediction_rate": 0.102,
+        "actual_draw_rate": 0.244
+      }
+    },
+    {
+      "train_start": "2021-10-23T17:00:00+00:00",
+      "train_end": "2023-11-03 00:00:00.000000",
+      "test_start": "2023-11-03 00:00:00.000000",
+      "test_end": "2024-04-20 00:00:00.000000",
+      "train_size": 6000,
+      "test_size": 2000,
+      "params": {
+        "enabled": true,
+        "elo_diff_threshold": 120.0,
+        "market_draw_threshold": 0.26,
+        "model_draw_threshold": 0.24,
+        "xg_diff_threshold": 0.5,
+        "min_signals": 2,
+        "min_draw_prob": 0.22,
+        "draw_boost": 1.25,
+        "draw_cap": 0.42,
+        "promote_draw": false,
+        "promote_min_signals": 3,
+        "promote_margin": 0.005
+      },
+      "train_metrics": {
+        "total": 1500,
+        "correct": 775,
+        "accuracy": 0.516667,
+        "brier": 0.199107,
+        "log_loss": 1.003187,
+        "draw_prediction_rate": 0.099333,
+        "actual_draw_rate": 0.247333
+      },
+      "baseline": {
+        "total": 2000,
+        "correct": 1018,
+        "accuracy": 0.509,
+        "brier": 0.20182,
+        "log_loss": 1.012513,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.273
+      },
+      "calibrated": {
+        "total": 2000,
+        "correct": 988,
+        "accuracy": 0.494,
+        "brier": 0.202066,
+        "log_loss": 1.013259,
+        "draw_prediction_rate": 0.098,
+        "actual_draw_rate": 0.273
+      }
+    },
+    {
+      "train_start": "2022-09-17 00:00:00.000000",
+      "train_end": "2024-04-20 00:00:00.000000",
+      "test_start": "2024-04-20 00:00:00.000000",
+      "test_end": "2024-12-15 00:00:00.000000",
+      "train_size": 6000,
+      "test_size": 2000,
+      "params": {
+        "enabled": false,
+        "elo_diff_threshold": 120.0,
+        "market_draw_threshold": 0.26,
+        "model_draw_threshold": 0.24,
+        "xg_diff_threshold": 0.5,
+        "min_signals": 2,
+        "min_draw_prob": 0.18,
+        "draw_boost": 1.3,
+        "draw_cap": 0.45,
+        "promote_draw": false,
+        "promote_min_signals": 3,
+        "promote_margin": 0.005
+      },
+      "train_metrics": {
+        "total": 1500,
+        "correct": 780,
+        "accuracy": 0.52,
+        "brier": 0.200673,
+        "log_loss": 1.007524,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.27
+      },
+      "baseline": {
+        "total": 2000,
+        "correct": 1036,
+        "accuracy": 0.518,
+        "brier": 0.197449,
+        "log_loss": 0.993102,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.255
+      },
+      "calibrated": {
+        "total": 2000,
+        "correct": 1036,
+        "accuracy": 0.518,
+        "brier": 0.197449,
+        "log_loss": 0.993102,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.255
+      }
+    },
+    {
+      "train_start": "2023-03-19T21:00:00+00:00",
+      "train_end": "2024-12-15 00:00:00.000000",
+      "test_start": "2024-12-15 00:00:00.000000",
+      "test_end": "2025-05-24 00:00:00.000000",
+      "train_size": 6000,
+      "test_size": 2000,
+      "params": {
+        "enabled": true,
+        "elo_diff_threshold": 120.0,
+        "market_draw_threshold": 0.26,
+        "model_draw_threshold": 0.24,
+        "xg_diff_threshold": 0.5,
+        "min_signals": 3,
+        "min_draw_prob": 0.18,
+        "draw_boost": 1.25,
+        "draw_cap": 0.42,
+        "promote_draw": false,
+        "promote_min_signals": 3,
+        "promote_margin": 0.005
+      },
+      "train_metrics": {
+        "total": 1500,
+        "correct": 759,
+        "accuracy": 0.506,
+        "brier": 0.199929,
+        "log_loss": 1.002367,
+        "draw_prediction_rate": 0.114667,
+        "actual_draw_rate": 0.264
+      },
+      "baseline": {
+        "total": 2000,
+        "correct": 1004,
+        "accuracy": 0.502,
+        "brier": 0.200639,
+        "log_loss": 1.008526,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.2445
+      },
+      "calibrated": {
+        "total": 2000,
+        "correct": 992,
+        "accuracy": 0.496,
+        "brier": 0.201196,
+        "log_loss": 1.011669,
+        "draw_prediction_rate": 0.114,
+        "actual_draw_rate": 0.2445
+      }
+    },
+    {
+      "train_start": "2023-11-03 00:00:00.000000",
+      "train_end": "2025-05-24 00:00:00.000000",
+      "test_start": "2025-05-24 00:00:00.000000",
+      "test_end": "2026-05-04T21:00:00+00:00",
+      "train_size": 6000,
+      "test_size": 1644,
+      "params": {
+        "enabled": false,
+        "elo_diff_threshold": 120.0,
+        "market_draw_threshold": 0.26,
+        "model_draw_threshold": 0.24,
+        "xg_diff_threshold": 0.5,
+        "min_signals": 2,
+        "min_draw_prob": 0.18,
+        "draw_boost": 1.3,
+        "draw_cap": 0.45,
+        "promote_draw": false,
+        "promote_min_signals": 3,
+        "promote_margin": 0.005
+      },
+      "train_metrics": {
+        "total": 1500,
+        "correct": 751,
+        "accuracy": 0.500667,
+        "brier": 0.200505,
+        "log_loss": 1.008243,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.24
+      },
+      "baseline": {
+        "total": 1644,
+        "correct": 737,
+        "accuracy": 0.448297,
+        "brier": 0.217865,
+        "log_loss": 1.086903,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.252433
+      },
+      "calibrated": {
+        "total": 1644,
+        "correct": 737,
+        "accuracy": 0.448297,
+        "brier": 0.217865,
+        "log_loss": 1.086903,
+        "draw_prediction_rate": 0.0,
+        "actual_draw_rate": 0.252433
+      }
+    }
+  ],
+  "accepted": false
+}

@@ -1,0 +1,58 @@
+# Environment files
+.env
+*.env
+
+# Database
+database.sqlite
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+.gstack/
+
+# Agent / workspace artifacts
+.claude/
+.claw/
+.sandbox-*/
+.sandbox-tmp/
+OPENCLAW_MANUAL.md
+.clawd-todos.json
+ARCHITECTURE_V2.md
+AUTOMATION.md
+QUICKSTART.md
+REMEDIATION_PLAN.md
+ODDS_SETUP.md
+
+# Root db is 0-byte placeholder
+football.db
+backend/.soccerdata_cache/
+backend/test_*.db*
+backend/.odds_api_budget.json
+backend/nohup.out

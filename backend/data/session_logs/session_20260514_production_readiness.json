@@ -1,0 +1,147 @@
+{
+  "session_id": "20260514-production-readiness",
+  "session_date": "2026-05-14",
+  "project": "WC Analytics - 足球赛事智能分析平台",
+  "session_goal": "全面测试项目上线就绪度",
+  "session_summary": "核心功能完备可内测，3个CRITICAL安全问题阻塞公网部署，赔率覆盖是最大功能短板",
+
+  "test_results": {
+    "backend_api": {
+      "status": "PASS",
+      "endpoints_tested": 20,
+      "endpoints_passed": 20,
+      "response_time": "正常 (<500ms)",
+      "details": {
+        "/api/teams": {"status": 200, "data_count": 408},
+        "/api/matches": {"status": 200, "data_count": 31073},
+        "/api/validation": {"status": 200, "has_accuracy": true},
+        "/api/jingcai/report": {"status": 200, "reports": 10},
+        "/api/health": {"status": 200}
+      }
+    },
+    "frontend": {
+      "status": "PASS",
+      "index_html": "正常加载",
+      "app_js": "包含loadReportDashboard等新函数",
+      "api_client_js": "包含getReport等新方法"
+    },
+    "scheduler": {
+      "status": "PASS",
+      "jobs_count": 37,
+      "running": true,
+      "warnings": "5场已结束比赛等待结果录入(正常)"
+    },
+    "data_quality": {
+      "status": "PASS_WITH_WARNINGS",
+      "matches": 31073,
+      "teams": 408,
+      "predictions": 155365,
+      "prediction_coverage": "420/420 (100%)",
+      "odds_coverage": "126/420 (30%)",
+      "result_coverage": "30645/31073 (98.7%)",
+      "spf_prob_sanity": "0/100 异常 (0%)",
+      "findings": [
+        {"severity": "info", "category": "timezone", "note": "SQLite不保留tzinfo, 显示层已处理"},
+        {"severity": "info", "category": "match_code", "count": 5345, "note": "历史数据前缀不统一"},
+        {"severity": "warning", "category": "odds_source", "count": 2, "note": "manual/football-data-BW"},
+        {"severity": "warning", "category": "team_name", "count": 42, "note": "别名队名需规范化"}
+      ]
+    },
+    "model_quality": {
+      "direction_accuracy": 0.486,
+      "brier_score": 0.2103,
+      "log_loss": 1.0577,
+      "fusion_weights": {"market": 0.64, "players": 0.19, "poisson": 0.13, "elo": 0.04}
+    }
+  },
+
+  "security_audit": {
+    "critical": [
+      {
+        "id": "SEC-C1",
+        "title": "7个POST端点无鉴权",
+        "files": ["main.py:607,636,684,994,1015,1029,1046"],
+        "endpoints": [
+          "POST /api/live-odds/start",
+          "POST /api/live-odds/stop",
+          "POST /api/live-hedge/position",
+          "POST /api/jingcai/issues",
+          "POST /api/jingcai/issues/{id}/predict",
+          "POST /api/jingcai/issues/{id}/results",
+          "POST /api/jingcai/issues/{id}/verify"
+        ],
+        "risk": "任何人可修改核心数据, 尤其开奖结果录入极危险",
+        "fix": "全部加 Depends(_verify_admin_key)"
+      },
+      {
+        "id": "SEC-C2",
+        "title": "SSL证书验证禁用",
+        "files": ["scheduler.py:323", "openfootball_importer.py:59"],
+        "risk": "MITM攻击可注入恶意赔率数据",
+        "fix": "删除自定义SSL context, 用默认ssl.create_default_context()"
+      },
+      {
+        "id": "SEC-C3",
+        "title": ".env文件含明文密钥",
+        "risk": "文件读取漏洞可暴露所有密钥",
+        "fix": "生产环境用环境变量或密钥管理服务"
+      }
+    ],
+    "high": [
+      {"id": "SEC-H1", "title": "无分页.all()查询", "files": ["main.py多处"], "risk": "数据增长后内存爆炸"},
+      {"id": "SEC-H2", "title": "Feedback N+1查询", "files": ["main.py:1370"], "risk": "100条=101次SQL"},
+      {"id": "SEC-H3", "title": "LiveOdds全局变量不支持多进程", "files": ["main.py:542"], "risk": "多worker只有1个运行"},
+      {"id": "SEC-H4", "title": "GET端点写数据", "files": ["main.py:963"], "risk": "非幂等+并发风险"},
+      {"id": "SEC-H5", "title": "License兑换竞态", "files": ["license_manager.py:54"], "risk": "并发兑换丢失最大值"},
+      {"id": "SEC-H6", "title": "注册泄露用户存在", "files": ["main.py:159"], "risk": "可枚举邮箱"},
+      {"id": "SEC-H7", "title": "ML训练端点无限速", "files": ["main.py:1571"], "risk": "滥用消耗资源"},
+      {"id": "SEC-H8", "title": "CORS回退localhost", "files": ["main.py:120"], "risk": "线上不可用"}
+    ],
+    "medium": 8,
+    "low": 3
+  },
+
+  "production_readiness": {
+    "overall_score": 6.3,
+    "phase": "有条件上线",
+    "phases": {
+      "内测": {"ready": true, "requirements": "当前状态已满足, 仅限信任用户"},
+      "公测": {"ready": false, "blockers": ["修3个CRITICAL安全问题", "加分页", "CORS配置"]},
+      "正式上线": {"ready": false, "blockers": ["SQLite→PostgreSQL", "LiveOdds共享状态", "安全加固", "监控告警"]}
+    }
+  },
+
+  "competitive_analysis": {
+    "vs_amateur": {"wins": ["6数据源 vs 1-2", "5玩法 vs 1", "融合模型 vs 单模型", "风控+自愈 vs 无"], "gap": []},
+    "vs_professional": {"wins": ["数据清洗闭环", "自愈能力"], "gap": ["准确率48.6% vs 55%+", "赔率覆盖30% vs 90%+", "无PostgreSQL", "无MLOps管线"]}
+  },
+
+  "key_metrics": {
+    "data_volume": "31K matches, 155K predictions, 3K odds records",
+    "prediction_accuracy": "48.6% direction, Brier 0.21",
+    "coverage": "100% prediction, 30% odds, 99% results",
+    "scheduler_jobs": 37,
+    "ml_models": 5,
+    "security_issues": "3 CRITICAL, 8 HIGH, 8 MEDIUM, 3 LOW"
+  },
+
+  "for_model_training": {
+    "intent": "训练AI理解项目上线评估流程：功能测试→安全审计→性能评估→风险分级→上线决策",
+    "key_patterns": [
+      "POST端点无鉴权是最常见的安全遗漏",
+      "SQLite不适合生产并发场景",
+      "赔率覆盖率直接影响预测质量",
+      "市场赔率权重0.64说明模型独立性不足",
+      "N+1查询和无分页是常见性能陷阱",
+      "GET端点写数据违反HTTP语义",
+      "SSL验证禁用是安全审计必查项"
+    ],
+    "labels": {
+      "task_type": "production_readiness_audit",
+      "complexity": "high",
+      "scope": "full-stack",
+      "technologies": ["Python", "FastAPI", "SQLite", "APScheduler", "JavaScript"],
+      "outcome": "conditional_launch_approved"
+    }
+  }
+}

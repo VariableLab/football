@@ -1,0 +1,32 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+sqlalchemy==2.0.36
+
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.17
+email-validator==2.3.0
+pydantic==2.9.2
+pydantic-settings==2.6.1
+slowapi==0.1.9
+stripe==11.3.0
+python-dotenv==1.0.1
+apscheduler==3.10.4
+httpx==0.27.2
+numpy==2.1.3
+pandas==2.2.3
+scipy==1.14.1
+torch>=2.2.0
+
+# ─── 新增：第三方数据采集集成 ──────────────────────────
+# SoccerData — 多源足球数据爬虫（FBref / Understat / Football-Data.co.uk / Club Elo 等）
+# 文档：https://soccerdata.readthedocs.io/
+soccerdata>=1.9.0
+
+# OddsHarvester — oddsportal.com 赔率历史采集（CLI 工具，Playwright 驱动）
+# 安装方式：pip install git+https://github.com/jordantete/OddsHarvester.git
+# 也可作为独立 Docker 服务运行，本项目通过 subprocess 桥接调用
+# oddsharvester>=0.2.0
+
+# SSE — Server-Sent Events for live odds push
+sse-starlette>=1.6.5

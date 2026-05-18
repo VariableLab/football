@@ -1,0 +1,6754 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "WC Analytics",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/admin/dashboard": {
+      "get": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "Admin Dashboard",
+        "description": "Get system overview stats.",
+        "operationId": "admin_dashboard_api_admin_dashboard_get",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardStats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/teams": {
+      "post": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "Create Team",
+        "description": "Create a new team.",
+        "operationId": "create_team_api_admin_teams_post",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeamCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "List Teams",
+        "description": "List all teams. Filter by group if provided.",
+        "operationId": "list_teams_api_admin_teams_get",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamOut"
+                  },
+                  "title": "Response List Teams Api Admin Teams Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/teams/{team_id}": {
+      "get": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "Get Team",
+        "operationId": "get_team_api_admin_teams__team_id__get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Team Id"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/matches": {
+      "post": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "Create Match",
+        "description": "Create a new match. Use this when schedule is released.",
+        "operationId": "create_match_api_admin_matches_post",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "List Matches",
+        "description": "List matches with optional filters.",
+        "operationId": "list_matches_api_admin_matches_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group"
+            }
+          },
+          {
+            "name": "stage",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stage"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MatchOut"
+                  },
+                  "title": "Response List Matches Api Admin Matches Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/matches/{match_id}": {
+      "get": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "Get Match",
+        "operationId": "get_match_api_admin_matches__match_id__get",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/matches/{match_id}/result": {
+      "patch": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "Update Match Result",
+        "description": "Update match result. Call this when a match finishes.\nDetermines actual_outcome automatically.",
+        "operationId": "update_match_result_api_admin_matches__match_id__result_patch",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchUpdateResult"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/matches/{match_id}/odds": {
+      "patch": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "Update Match Odds",
+        "description": "Update match odds snapshot.",
+        "operationId": "update_match_odds_api_admin_matches__match_id__odds_patch",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "odds_home",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Odds Home"
+            }
+          },
+          {
+            "name": "odds_draw",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Odds Draw"
+            }
+          },
+          {
+            "name": "odds_away",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Odds Away"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/predictions": {
+      "post": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "Create Prediction",
+        "description": "Lock a prediction snapshot before match starts.\nThis creates an immutable record for post-match validation.",
+        "operationId": "create_prediction_api_admin_predictions_post",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PredictionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "List Predictions",
+        "operationId": "list_predictions_api_admin_predictions_get",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PredictionOut"
+                  },
+                  "title": "Response List Predictions Api Admin Predictions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/licenses/generate": {
+      "post": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "Generate Licenses",
+        "description": "Generate batch license keys.",
+        "operationId": "generate_licenses_api_admin_licenses_generate_post",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LicenseKeyCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/licenses": {
+      "get": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "List Licenses",
+        "description": "List license keys with optional filter.",
+        "operationId": "list_licenses_api_admin_licenses_get",
+        "parameters": [
+          {
+            "name": "used",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Used"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/validation": {
+      "get": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "Run Validation",
+        "description": "Run post-match validation on finished matches.\nCompares locked predictions against actual results.",
+        "operationId": "run_validation_api_admin_validation_get",
+        "parameters": [
+          {
+            "name": "match_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by match_type: world_cup / friendly / warm_up",
+              "title": "Match Type"
+            },
+            "description": "Filter by match_type: world_cup / friendly / warm_up"
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/validation/friendly": {
+      "get": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "Validate Friendly",
+        "description": "Quick endpoint: validate only friendly/warm-up matches.",
+        "operationId": "validate_friendly_api_admin_validation_friendly_get",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/validation/matches/{match_id}": {
+      "get": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "Validate Single Match",
+        "description": "Validate a single finished match.",
+        "operationId": "validate_single_match_api_admin_validation_matches__match_id__get",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/audit-logs": {
+      "get": {
+        "tags": [
+          "Admin (OpenClaw)"
+        ],
+        "summary": "List Audit Logs",
+        "description": "Query audit logs.",
+        "operationId": "list_audit_logs_api_admin_audit_logs_get",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "data_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Data Type"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "description": "\u9996\u9875 \u2014 \u8fd4\u56de\u524d\u7aef\u5165\u53e3",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register",
+        "description": "Register a new user.",
+        "operationId": "register_api_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRegister"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login",
+        "description": "Login and get access token.",
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserLogin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "summary": "Me",
+        "description": "Get current user info.",
+        "operationId": "me_api_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/license/redeem": {
+      "post": {
+        "summary": "Redeem",
+        "description": "Redeem a license key to unlock access.",
+        "operationId": "redeem_api_license_redeem_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LicenseRedeem"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LicenseRedeemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/teams": {
+      "get": {
+        "summary": "List Teams",
+        "description": "List teams with pagination.",
+        "operationId": "list_teams_api_teams_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/matches": {
+      "get": {
+        "summary": "List Matches",
+        "description": "List matches with pagination.\nSupports filtering by status, group, match_type, date (today|tomorrow).",
+        "operationId": "list_matches_api_matches_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Status"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Group"
+            }
+          },
+          {
+            "name": "match_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Match Type"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Date"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/matches/{match_id}": {
+      "get": {
+        "summary": "Get Match",
+        "description": "Get match details - free.",
+        "operationId": "get_match_api_matches__match_id__get",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/matches/{match_id}/strategy": {
+      "get": {
+        "summary": "Get Strategy",
+        "description": "Get prediction strategy for a match.\nRequires paid license unless the match has finished (auto-unlock).",
+        "operationId": "get_strategy_api_matches__match_id__strategy_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "risk_tier",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "balanced",
+              "title": "Risk Tier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/matches/{match_id}/odds-movement": {
+      "get": {
+        "summary": "Get Odds Movement",
+        "description": "Odds movement analysis for a match: opening\u2192closing drift, steam moves, late money.",
+        "operationId": "get_odds_movement_api_matches__match_id__odds_movement_get",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OddsMovementResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/arbitrage": {
+      "get": {
+        "summary": "Get Arbitrage Opportunities",
+        "description": "Scan for cross-bookmaker arbitrage opportunities from MatchBookmakerOdds.",
+        "operationId": "get_arbitrage_opportunities_api_arbitrage_get",
+        "parameters": [
+          {
+            "name": "competition",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Competition"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArbitrageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live-odds/stream": {
+      "get": {
+        "summary": "Live Odds Sse",
+        "description": "SSE endpoint: \u5b9e\u65f6\u8d54\u7387\u63a8\u9001\u3002\u524d\u7aef\u7528 EventSource('/api/live-odds/stream') \u8ba2\u9605\u3002",
+        "operationId": "live_odds_sse_api_live_odds_stream_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live-odds/{match_id}": {
+      "get": {
+        "summary": "Get Live Odds",
+        "description": "\u83b7\u53d6\u67d0\u573a\u6bd4\u8d5b\u7684\u6700\u65b0\u6eda\u7403\u8d54\u7387\u548c\u5386\u53f2\u3002",
+        "operationId": "get_live_odds_api_live_odds__match_id__get",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveOddsSingleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live-odds": {
+      "get": {
+        "summary": "Get All Live Odds",
+        "description": "\u83b7\u53d6\u6240\u6709\u6bd4\u8d5b\u7684\u6700\u65b0\u6eda\u7403\u8d54\u7387\u3002",
+        "operationId": "get_all_live_odds_api_live_odds_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveOddsAllResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live-odds/start": {
+      "post": {
+        "summary": "Start Live Feed",
+        "description": "\u542f\u52a8\u6eda\u7403\u8d54\u7387\u91c7\u96c6\u3002",
+        "operationId": "start_live_feed_api_live_odds_start_post",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live-odds/stop": {
+      "post": {
+        "summary": "Stop Live Feed",
+        "description": "\u505c\u6b62\u6eda\u7403\u8d54\u7387\u91c7\u96c6\u3002",
+        "operationId": "stop_live_feed_api_live_odds_stop_post",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live-hedge/alerts": {
+      "get": {
+        "summary": "Get Live Hedge Alerts",
+        "description": "\u83b7\u53d6\u6eda\u7403\u5bf9\u51b2\u8b66\u62a5\u5217\u8868\u3002",
+        "operationId": "get_live_hedge_alerts_api_live_hedge_alerts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HedgeAlertsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live-hedge/position": {
+      "post": {
+        "summary": "Add Hedge Position",
+        "description": "\u6dfb\u52a0\u5df2\u6709\u4ed3\u4f4d\u7528\u4e8e\u6eda\u7403\u5bf9\u51b2\u8ba1\u7b97\u3002",
+        "operationId": "add_hedge_position_api_live_hedge_position_post",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "selection",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Selection"
+            }
+          },
+          {
+            "name": "odds",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Odds"
+            }
+          },
+          {
+            "name": "stake",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Stake"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HedgePositionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live-hedge/compute/{match_id}": {
+      "get": {
+        "summary": "Compute Live Hedge",
+        "description": "\u8ba1\u7b97\u6eda\u7403\u5bf9\u51b2\u65b9\u6848\u3002",
+        "operationId": "compute_live_hedge_api_live_hedge_compute__match_id__get",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "selection",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "home",
+              "title": "Selection"
+            }
+          },
+          {
+            "name": "odds",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 2.0,
+              "title": "Odds"
+            }
+          },
+          {
+            "name": "stake",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 10.0,
+              "title": "Stake"
+            }
+          },
+          {
+            "name": "fraction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 1.0,
+              "title": "Fraction"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HedgeComputeResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/validation": {
+      "get": {
+        "summary": "Public Validation",
+        "description": "Public validation report \u2014 compares predictions vs actual results.\nNo auth required. Used by the validation dashboard.",
+        "operationId": "public_validation_api_validation_get",
+        "parameters": [
+          {
+            "name": "match_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Match Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/validation/calibration": {
+      "get": {
+        "summary": "Calibration Curve",
+        "description": "Probability calibration curve (reliability diagram).",
+        "operationId": "calibration_curve_api_validation_calibration_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalibrationCurveResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/validation/by-play-type": {
+      "get": {
+        "summary": "Validation By Play Type",
+        "description": "Accuracy breakdown by play type (SPF/RQ/Score/Goals/Half).",
+        "operationId": "validation_by_play_type_api_validation_by_play_type_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayTypeBreakdownResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jingcai/issues/auto-close": {
+      "post": {
+        "summary": "Auto Close Issues",
+        "description": "\u624b\u52a8\u89e6\u53d1\u8fc7\u671f\u671f\u53f7\u81ea\u52a8\u5173\u95ed\u3002",
+        "operationId": "auto_close_issues_api_jingcai_issues_auto_close_post",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jingcai/issues": {
+      "get": {
+        "summary": "List Jingcai Issues",
+        "description": "\u5217\u51fa\u8db3\u5f69\u671f\u53f7\u5217\u8868\uff08\u53ea\u8bfb\uff09\u3002",
+        "operationId": "list_jingcai_issues_api_jingcai_issues_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JingcaiIssueListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Jingcai Issue",
+        "description": "\u521b\u5efa\u8db3\u5f69\u671f\u53f7\u5e76\u5173\u8054\u6bd4\u8d5b",
+        "operationId": "create_jingcai_issue_api_jingcai_issues_post",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JingcaiIssueCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JingcaiIssueOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jingcai/issues/{issue_id}": {
+      "get": {
+        "summary": "Get Jingcai Issue",
+        "description": "\u83b7\u53d6\u5355\u671f\u8db3\u5f69\u8be6\u60c5\uff08\u542b\u6bd4\u8d5b\u548c\u9884\u6d4b\uff09",
+        "operationId": "get_jingcai_issue_api_jingcai_issues__issue_id__get",
+        "parameters": [
+          {
+            "name": "issue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Issue Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JingcaiIssueOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jingcai/issues/{issue_id}/predict": {
+      "post": {
+        "summary": "Predict Jingcai Issue",
+        "description": "\u4e3a\u6574\u671f\u8db3\u5f69\u751f\u6210\u9884\u6d4b",
+        "operationId": "predict_jingcai_issue_api_jingcai_issues__issue_id__predict_post",
+        "parameters": [
+          {
+            "name": "issue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Issue Id"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jingcai/issues/{issue_id}/results": {
+      "post": {
+        "summary": "Record Jingcai Result",
+        "description": "\u5f55\u5165\u5f00\u5956\u7ed3\u679c",
+        "operationId": "record_jingcai_result_api_jingcai_issues__issue_id__results_post",
+        "parameters": [
+          {
+            "name": "issue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Issue Id"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JingcaiIssueResultIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jingcai/issues/{issue_id}/verify": {
+      "post": {
+        "summary": "Verify Jingcai Issue",
+        "description": "\u9a8c\u8bc1\u6a21\u578b\u9884\u6d4b vs \u5f00\u5956\u7ed3\u679c",
+        "operationId": "verify_jingcai_issue_api_jingcai_issues__issue_id__verify_post",
+        "parameters": [
+          {
+            "name": "issue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Issue Id"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jingcai/report": {
+      "get": {
+        "summary": "Jingcai Report",
+        "description": "\u6bcf\u671f\u9884\u6d4b\u62a5\u544a\uff1a\u6700\u9ad8\u80dc\u7387\u6a21\u578b\u4f30\u7b97 + \u7ed3\u679c\u81ea\u5206\u6790",
+        "operationId": "jingcai_report_api_jingcai_report_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JingcaiReportResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/odds/refresh": {
+      "post": {
+        "summary": "Admin Refresh All Odds",
+        "description": "\u624b\u52a8\u89e6\u53d1\u5168\u90e8 upcoming \u6bd4\u8d5b\u7684\u8d54\u7387\u5237\u65b0\u3002\n\u4f18\u5148\u7ea7: BetExplorer \u722c\u866b > football-data > \u5408\u6210\u8d54\u7387\u515c\u5e95\u3002",
+        "operationId": "admin_refresh_all_odds_api_admin_odds_refresh_post",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/odds/refresh/{match_id}": {
+      "post": {
+        "summary": "Admin Refresh Match Odds",
+        "description": "\u624b\u52a8\u89e6\u53d1\u5355\u573a\u6bd4\u8d5b\u7684\u8d54\u7387\u5237\u65b0\u3002",
+        "operationId": "admin_refresh_match_odds_api_admin_odds_refresh__match_id__post",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/odds/status": {
+      "get": {
+        "summary": "Admin Odds Status",
+        "description": "\u67e5\u770b\u5f53\u524d\u8d54\u7387\u6570\u636e\u8986\u76d6\u60c5\u51b5\u3002",
+        "operationId": "admin_odds_status_api_admin_odds_status_get",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheck"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health/detailed": {
+      "get": {
+        "summary": "Health Detailed",
+        "description": "\u8be6\u7ec6\u5065\u5eb7\u62a5\u544a\uff08\u6765\u81ea HealthDaemon \u81ea\u68c0\u5f15\u64ce\uff09",
+        "operationId": "health_detailed_api_health_detailed_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audit/reports": {
+      "get": {
+        "summary": "Audit Reports",
+        "description": "\u83b7\u53d6\u6700\u8fd1 N \u5929\u7684\u6a21\u578b\u590d\u76d8\u62a5\u544a",
+        "operationId": "audit_reports_api_audit_reports_get",
+        "parameters": [
+          {
+            "name": "n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 7,
+              "title": "N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedback": {
+      "get": {
+        "summary": "List Feedback",
+        "operationId": "list_feedback_api_feedback_get",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "match_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Feedback",
+        "operationId": "create_feedback_api_feedback_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedback/{feedback_id}/like": {
+      "post": {
+        "summary": "Like Feedback",
+        "operationId": "like_feedback_api_feedback__feedback_id__like_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "feedback_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Feedback Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackLikeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "summary": "Get User Settings",
+        "operationId": "get_user_settings_api_settings_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update User Settings",
+        "operationId": "update_user_settings_api_settings_put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "risk_tier",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Risk Tier"
+            }
+          },
+          {
+            "name": "default_play_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Default Play Type"
+            }
+          },
+          {
+            "name": "show_ev",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Show Ev"
+            }
+          },
+          {
+            "name": "show_probability",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Show Probability"
+            }
+          },
+          {
+            "name": "notify_odds_change",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Notify Odds Change"
+            }
+          },
+          {
+            "name": "notify_match_start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Notify Match Start"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bet-nn/status": {
+      "get": {
+        "summary": "Bet Nn Status",
+        "description": "\u9884\u6d4b\u795e\u7ecf\u7f51\u7edc\u8bad\u7ec3\u72b6\u6001",
+        "operationId": "bet_nn_status_api_bet_nn_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BetNNStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bet-nn/predict/{match_id}": {
+      "get": {
+        "summary": "Bet Nn Predict",
+        "description": "\u5bf9\u5355\u573a\u6bd4\u8d5b\u63a8\u7406\u9884\u6d4b\u8bc4\u5206",
+        "operationId": "bet_nn_predict_api_bet_nn_predict__match_id__get",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BetNNPredictResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bet-nn/train": {
+      "post": {
+        "summary": "Bet Nn Train",
+        "description": "\u624b\u52a8\u89e6\u53d1\u9884\u6d4b\u7f51\u7edc\u8bad\u7ec3\uff08\u4ec5\u7ba1\u7406\u5458\uff09",
+        "operationId": "bet_nn_train_api_bet_nn_train_post",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BetNNTrainResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sub-models/status": {
+      "get": {
+        "summary": "Sub Models Status",
+        "description": "\u6240\u6709\u5b50\u6a21\u578b\u8bad\u7ec3\u72b6\u6001",
+        "operationId": "sub_models_status_api_sub_models_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sub-models/train/{model_name}": {
+      "post": {
+        "summary": "Sub Model Train",
+        "description": "\u624b\u52a8\u89e6\u53d1\u5b50\u6a21\u578b\u8bad\u7ec3\uff08\u4ec5\u7ba1\u7406\u5458\uff09",
+        "operationId": "sub_model_train_api_sub_models_train__model_name__post",
+        "parameters": [
+          {
+            "name": "model_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Model Name"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predictions/{match_id}/report": {
+      "get": {
+        "summary": "Prediction Report",
+        "description": "\u7efc\u5408\u9884\u6d4b\u62a5\u544a\uff1a\u4e3b\u6a21\u578b + NN + \u5b50\u6a21\u578b",
+        "operationId": "prediction_report_api_predictions__match_id__report_get",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sub-models/train-all": {
+      "post": {
+        "summary": "Sub Model Train All",
+        "description": "\u8bad\u7ec3\u6240\u6709\u5b50\u6a21\u578b\uff08\u4ec5\u7ba1\u7406\u5458\uff09",
+        "operationId": "sub_model_train_all_api_sub_models_train_all_post",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sporttery/sync": {
+      "post": {
+        "summary": "Sporttery Sync",
+        "description": "\u624b\u52a8\u89e6\u53d1 sporttery.cn \u6570\u636e\u540c\u6b65",
+        "operationId": "sporttery_sync_api_sporttery_sync_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days_ahead",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 3,
+              "title": "Days Ahead"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sporttery/backfill": {
+      "post": {
+        "summary": "Sporttery Backfill",
+        "description": "\u624b\u52a8\u89e6\u53d1\u5386\u53f2\u6570\u636e\u56de\u586b",
+        "operationId": "sporttery_backfill_api_sporttery_backfill_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days_back",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 7,
+              "title": "Days Back"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sporttery/lock-closing": {
+      "post": {
+        "summary": "Sporttery Lock Closing",
+        "description": "\u624b\u52a8\u9501\u5b9a\u5df2\u7ed3\u675f\u6bd4\u8d5b\u7684\u6536\u76d8\u4ef7",
+        "operationId": "sporttery_lock_closing_api_sporttery_lock_closing_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/sporttery/status": {
+      "get": {
+        "summary": "Sporttery Status",
+        "description": "\u67e5\u770b sporttery.cn \u6570\u636e\u540c\u6b65\u72b6\u6001",
+        "operationId": "sporttery_status_api_sporttery_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/strategy/params": {
+      "get": {
+        "summary": "Get Strategy Params",
+        "description": "\u83b7\u53d6\u5f53\u524d\u7b56\u7565\u53c2\u6570",
+        "operationId": "get_strategy_params_api_strategy_params_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Strategy Params",
+        "description": "\u66f4\u65b0\u7b56\u7565\u53c2\u6570\uff08\u9700\u7ba1\u7406\u5458\u6743\u9650\uff09",
+        "operationId": "update_strategy_params_api_strategy_params_patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "kwargs",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "title": "Kwargs"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predictions/{match_id}/tier": {
+      "get": {
+        "summary": "Get Match Tier",
+        "description": "\u83b7\u53d6\u5355\u573a\u6bd4\u8d5b\u7684\u5206\u5c42\u7b56\u7565\u5206\u6790",
+        "operationId": "get_match_tier_api_predictions__match_id__tier_get",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/strategy/optimize": {
+      "post": {
+        "summary": "Trigger Param Optimize",
+        "description": "\u624b\u52a8\u89e6\u53d1\u53c2\u6570\u5bfb\u4f18",
+        "operationId": "trigger_param_optimize_api_strategy_optimize_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "max_combinations",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 200,
+              "title": "Max Combinations"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/strategy/monitor": {
+      "get": {
+        "summary": "Get Strategy Monitor Status",
+        "description": "\u83b7\u53d6\u7b56\u7565\u6f02\u79fb\u76d1\u63a7\u72b6\u6001 + \u8fed\u4ee3\u8ba1\u5212",
+        "operationId": "get_strategy_monitor_status_api_strategy_monitor_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/strategy/monitor/check": {
+      "post": {
+        "summary": "Trigger Drift Check",
+        "description": "\u624b\u52a8\u89e6\u53d1\u6f02\u79fb\u68c0\u6d4b",
+        "operationId": "trigger_drift_check_api_strategy_monitor_check_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/strategy/nn-retrain-callback": {
+      "post": {
+        "summary": "Trigger Nn Retrain Callback",
+        "description": "\u624b\u52a8\u89e6\u53d1 NN \u91cd\u8bad\u7ec3\u56de\u8c03\uff08\u751f\u6210\u641c\u7d22\u7a7a\u95f4 + \u4fdd\u5b58\u57fa\u7ebf\uff09",
+        "operationId": "trigger_nn_retrain_callback_api_strategy_nn_retrain_callback_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/strategy/iteration-plan": {
+      "get": {
+        "summary": "Get Iteration Plan",
+        "description": "\u83b7\u53d63\u8f6e\u8fed\u4ee3\u8ba1\u5212",
+        "operationId": "get_iteration_plan_api_strategy_iteration_plan_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/data-quality": {
+      "get": {
+        "summary": "Data Quality Report",
+        "description": "\u6570\u636e\u8d28\u91cf\u5ba1\u8ba1\u62a5\u544a (\u53ea\u8bfb)\u3002",
+        "operationId": "data_quality_report_api_admin_data_quality_get",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/data-clean": {
+      "post": {
+        "summary": "Data Clean",
+        "description": "\u6267\u884c\u6570\u636e\u6e05\u6d17\u3002\u9ed8\u8ba4 dry_run=True \u53ea\u9884\u89c8\u3002",
+        "operationId": "data_clean_api_admin_data_clean_post",
+        "parameters": [
+          {
+            "name": "dry_run",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Dry Run"
+            }
+          },
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jingcai/issues/{issue_id}/optimal-combo": {
+      "get": {
+        "summary": "Get Optimal Combo",
+        "description": "\u83b7\u53d6\u5f53\u671f\u6700\u4f18\u4e32\u5173\u63a8\u8350",
+        "operationId": "get_optimal_combo_api_jingcai_issues__issue_id__optimal_combo_get",
+        "parameters": [
+          {
+            "name": "issue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Issue Id"
+            }
+          },
+          {
+            "name": "top_n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 8,
+              "title": "Top N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimalComboResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ArbitrageOpportunity": {
+        "properties": {
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "best_odds": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Best Odds"
+          },
+          "bookmakers": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Bookmakers"
+          },
+          "implied_total": {
+            "type": "number",
+            "title": "Implied Total"
+          },
+          "profit_pct": {
+            "type": "number",
+            "title": "Profit Pct"
+          },
+          "net_profit_pct": {
+            "type": "number",
+            "title": "Net Profit Pct"
+          },
+          "stakes": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Stakes"
+          },
+          "is_genuine": {
+            "type": "boolean",
+            "title": "Is Genuine"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "best_odds",
+          "bookmakers",
+          "implied_total",
+          "profit_pct",
+          "net_profit_pct",
+          "stakes",
+          "is_genuine"
+        ],
+        "title": "ArbitrageOpportunity"
+      },
+      "ArbitrageResponse": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "opportunities": {
+            "items": {
+              "$ref": "#/components/schemas/ArbitrageOpportunity"
+            },
+            "type": "array",
+            "title": "Opportunities"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "opportunities"
+        ],
+        "title": "ArbitrageResponse"
+      },
+      "BestPickOut": {
+        "properties": {
+          "play_type": {
+            "type": "string",
+            "title": "Play Type"
+          },
+          "selection": {
+            "type": "string",
+            "title": "Selection"
+          },
+          "probability": {
+            "type": "number",
+            "title": "Probability"
+          }
+        },
+        "type": "object",
+        "required": [
+          "play_type",
+          "selection",
+          "probability"
+        ],
+        "title": "BestPickOut"
+      },
+      "BetNNPredictResponse": {
+        "properties": {
+          "ready": {
+            "type": "boolean",
+            "title": "Ready",
+            "default": false
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "match_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Id"
+          },
+          "match_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Code"
+          },
+          "bet_values": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bet Values"
+          },
+          "recommended": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended"
+          },
+          "recommended_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended Label"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          }
+        },
+        "type": "object",
+        "title": "BetNNPredictResponse"
+      },
+      "BetNNStatusResponse": {
+        "properties": {
+          "trained": {
+            "type": "boolean",
+            "title": "Trained"
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready"
+          },
+          "trained_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trained At"
+          },
+          "final_val_accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Val Accuracy"
+          },
+          "epochs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Epochs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trained",
+          "ready"
+        ],
+        "title": "BetNNStatusResponse"
+      },
+      "BetNNTrainResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "epochs_trained": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Epochs Trained"
+          },
+          "best_val_loss": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Val Loss"
+          },
+          "final_val_accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Val Accuracy"
+          },
+          "samples": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Samples"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "BetNNTrainResponse"
+      },
+      "CalibrationBin": {
+        "properties": {
+          "bin": {
+            "type": "string",
+            "title": "Bin"
+          },
+          "avg_predicted_prob": {
+            "type": "number",
+            "title": "Avg Predicted Prob"
+          },
+          "actual_accuracy": {
+            "type": "number",
+            "title": "Actual Accuracy"
+          },
+          "sample_size": {
+            "type": "integer",
+            "title": "Sample Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bin",
+          "avg_predicted_prob",
+          "actual_accuracy",
+          "sample_size"
+        ],
+        "title": "CalibrationBin"
+      },
+      "CalibrationCurveResponse": {
+        "properties": {
+          "curve": {
+            "items": {
+              "$ref": "#/components/schemas/CalibrationBin"
+            },
+            "type": "array",
+            "title": "Curve"
+          },
+          "ece": {
+            "type": "number",
+            "title": "Ece"
+          },
+          "total_samples": {
+            "type": "integer",
+            "title": "Total Samples"
+          }
+        },
+        "type": "object",
+        "required": [
+          "curve",
+          "ece",
+          "total_samples"
+        ],
+        "title": "CalibrationCurveResponse"
+      },
+      "DashboardStats": {
+        "properties": {
+          "total_matches": {
+            "type": "integer",
+            "title": "Total Matches"
+          },
+          "finished_matches": {
+            "type": "integer",
+            "title": "Finished Matches"
+          },
+          "total_predictions": {
+            "type": "integer",
+            "title": "Total Predictions"
+          },
+          "prediction_accuracy": {
+            "type": "number",
+            "title": "Prediction Accuracy"
+          },
+          "total_users": {
+            "type": "integer",
+            "title": "Total Users"
+          },
+          "paid_users": {
+            "type": "integer",
+            "title": "Paid Users"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_matches",
+          "finished_matches",
+          "total_predictions",
+          "prediction_accuracy",
+          "total_users",
+          "paid_users"
+        ],
+        "title": "DashboardStats"
+      },
+      "FeedbackCreate": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "match_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Id"
+          },
+          "is_anonymous": {
+            "type": "boolean",
+            "title": "Is Anonymous",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "content"
+        ],
+        "title": "FeedbackCreate"
+      },
+      "FeedbackCreateResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "FeedbackCreateResponse"
+      },
+      "FeedbackLikeResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "likes": {
+            "type": "integer",
+            "title": "Likes"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "likes",
+          "action"
+        ],
+        "title": "FeedbackLikeResponse"
+      },
+      "FeedbackListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FeedbackOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "FeedbackListResponse"
+      },
+      "FeedbackOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "match_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Id"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "is_anonymous": {
+            "type": "boolean",
+            "title": "Is Anonymous",
+            "default": false
+          },
+          "likes": {
+            "type": "integer",
+            "title": "Likes",
+            "default": 0
+          },
+          "author": {
+            "type": "string",
+            "title": "Author",
+            "default": "\u533f\u540d\u7528\u6237"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "content"
+        ],
+        "title": "FeedbackOut"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthCheck": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "default": "0.1.0"
+          },
+          "checks": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Checks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "checks"
+        ],
+        "title": "HealthCheck"
+      },
+      "HedgeAlertItem": {
+        "properties": {
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "current_odds": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Current Odds"
+          },
+          "profit_pct": {
+            "type": "number",
+            "title": "Profit Pct"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "level",
+          "type",
+          "message",
+          "current_odds",
+          "profit_pct",
+          "timestamp"
+        ],
+        "title": "HedgeAlertItem"
+      },
+      "HedgeAlertsResponse": {
+        "properties": {
+          "alerts": {
+            "items": {
+              "$ref": "#/components/schemas/HedgeAlertItem"
+            },
+            "type": "array",
+            "title": "Alerts"
+          },
+          "positions": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/HedgePositionValue"
+            },
+            "type": "object",
+            "title": "Positions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "alerts",
+          "positions"
+        ],
+        "title": "HedgeAlertsResponse"
+      },
+      "HedgeComputeResult": {
+        "properties": {
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "hedge_available": {
+            "type": "boolean",
+            "title": "Hedge Available"
+          },
+          "hedge_stake": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hedge Stake"
+          },
+          "hedge_odds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hedge Odds"
+          },
+          "guaranteed_profit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guaranteed Profit"
+          },
+          "hedge_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hedge Ratio"
+          },
+          "profit_if_original_wins": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profit If Original Wins"
+          },
+          "profit_if_hedge_wins": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profit If Hedge Wins"
+          },
+          "is_profitable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Profitable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "hedge_available"
+        ],
+        "title": "HedgeComputeResult"
+      },
+      "HedgePositionResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "match_id"
+        ],
+        "title": "HedgePositionResponse"
+      },
+      "HedgePositionValue": {
+        "properties": {
+          "selection": {
+            "type": "string",
+            "title": "Selection"
+          },
+          "odds": {
+            "type": "number",
+            "title": "Odds"
+          },
+          "stake": {
+            "type": "number",
+            "title": "Stake"
+          }
+        },
+        "type": "object",
+        "required": [
+          "selection",
+          "odds",
+          "stake"
+        ],
+        "title": "HedgePositionValue"
+      },
+      "JingcaiIssueCreate": {
+        "properties": {
+          "issue_id": {
+            "type": "string",
+            "title": "Issue Id"
+          },
+          "issue_type": {
+            "type": "string",
+            "title": "Issue Type",
+            "default": "spf14"
+          },
+          "sale_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Start"
+          },
+          "sale_end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale End"
+          },
+          "match_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Match Codes",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "issue_id"
+        ],
+        "title": "JingcaiIssueCreate"
+      },
+      "JingcaiIssueListResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/JingcaiIssueOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "offset",
+          "limit",
+          "items"
+        ],
+        "title": "JingcaiIssueListResponse"
+      },
+      "JingcaiIssueMatchOut": {
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "handicap": {
+            "type": "integer",
+            "title": "Handicap"
+          },
+          "rq_odds": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rq Odds"
+          },
+          "score_odds": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Odds"
+          },
+          "goals_odds": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goals Odds"
+          },
+          "half_odds": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Half Odds"
+          },
+          "match": {
+            "$ref": "#/components/schemas/MatchOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sequence",
+          "handicap",
+          "match"
+        ],
+        "title": "JingcaiIssueMatchOut"
+      },
+      "JingcaiIssueOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "issue_id": {
+            "type": "string",
+            "title": "Issue Id"
+          },
+          "issue_type": {
+            "type": "string",
+            "title": "Issue Type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "sale_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Start"
+          },
+          "sale_end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale End"
+          },
+          "draw_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draw At"
+          },
+          "draw_result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draw Result"
+          },
+          "verification": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/JingcaiIssueMatchOut"
+            },
+            "type": "array",
+            "title": "Matches",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "issue_id",
+          "issue_type",
+          "status"
+        ],
+        "title": "JingcaiIssueOut"
+      },
+      "JingcaiIssueResultIn": {
+        "properties": {
+          "results": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "prizes": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prizes"
+          },
+          "draw_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draw At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "title": "JingcaiIssueResultIn"
+      },
+      "JingcaiReportIssue": {
+        "properties": {
+          "issue_id": {
+            "type": "string",
+            "title": "Issue Id"
+          },
+          "issue_type": {
+            "type": "string",
+            "title": "Issue Type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "sale_end": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale End"
+          },
+          "draw_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draw At"
+          },
+          "total_matches": {
+            "type": "integer",
+            "title": "Total Matches"
+          },
+          "spf_hits": {
+            "type": "integer",
+            "title": "Spf Hits"
+          },
+          "accuracy": {
+            "type": "number",
+            "title": "Accuracy"
+          },
+          "r9_hits": {
+            "type": "integer",
+            "title": "R9 Hits",
+            "default": 0
+          },
+          "analysis": {
+            "type": "string",
+            "title": "Analysis",
+            "default": ""
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/JingcaiReportMatch"
+            },
+            "type": "array",
+            "title": "Matches"
+          }
+        },
+        "type": "object",
+        "required": [
+          "issue_id",
+          "issue_type",
+          "status",
+          "total_matches",
+          "spf_hits",
+          "accuracy",
+          "matches"
+        ],
+        "title": "JingcaiReportIssue"
+      },
+      "JingcaiReportMatch": {
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "home": {
+            "type": "string",
+            "title": "Home"
+          },
+          "away": {
+            "type": "string",
+            "title": "Away"
+          },
+          "handicap": {
+            "type": "integer",
+            "title": "Handicap",
+            "default": 0
+          },
+          "kickoff_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kickoff At"
+          },
+          "best_pick": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BestPickOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actual_outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Outcome"
+          },
+          "actual_home_goals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Home Goals"
+          },
+          "actual_away_goals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Away Goals"
+          },
+          "correct": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sequence",
+          "home",
+          "away"
+        ],
+        "title": "JingcaiReportMatch"
+      },
+      "JingcaiReportResponse": {
+        "properties": {
+          "reports": {
+            "items": {
+              "$ref": "#/components/schemas/JingcaiReportIssue"
+            },
+            "type": "array",
+            "title": "Reports"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reports"
+        ],
+        "title": "JingcaiReportResponse"
+      },
+      "LateMoneyOut": {
+        "properties": {
+          "selection": {
+            "type": "string",
+            "title": "Selection"
+          },
+          "from_odds": {
+            "type": "number",
+            "title": "From Odds"
+          },
+          "to_odds": {
+            "type": "number",
+            "title": "To Odds"
+          },
+          "change_pct": {
+            "type": "number",
+            "title": "Change Pct"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "selection",
+          "from_odds",
+          "to_odds",
+          "change_pct",
+          "direction"
+        ],
+        "title": "LateMoneyOut"
+      },
+      "LicenseKeyCreate": {
+        "properties": {
+          "license_type": {
+            "type": "string",
+            "title": "License Type"
+          },
+          "match_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Id"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "license_type"
+        ],
+        "title": "LicenseKeyCreate"
+      },
+      "LicenseRedeem": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key"
+        ],
+        "title": "LicenseRedeem"
+      },
+      "LicenseRedeemOut": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "license_type": {
+            "type": "string",
+            "title": "License Type"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "license_type",
+          "message"
+        ],
+        "title": "LicenseRedeemOut"
+      },
+      "LiveOddsAllResponse": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "updates": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/LiveOddsUpdateData"
+            },
+            "type": "object",
+            "title": "Updates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "updates"
+        ],
+        "title": "LiveOddsAllResponse"
+      },
+      "LiveOddsSingleResponse": {
+        "properties": {
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "latest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LiveOddsUpdateData"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/LiveOddsUpdateData"
+            },
+            "type": "array",
+            "title": "History"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "history"
+        ],
+        "title": "LiveOddsSingleResponse"
+      },
+      "LiveOddsUpdateData": {
+        "properties": {
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "odds": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Odds"
+          },
+          "match_minute": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Minute"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "changes": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Changes"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "source",
+          "odds",
+          "changes",
+          "timestamp"
+        ],
+        "title": "LiveOddsUpdateData"
+      },
+      "MatchCreate": {
+        "properties": {
+          "match_code": {
+            "type": "string",
+            "title": "Match Code"
+          },
+          "home_team_id": {
+            "type": "integer",
+            "title": "Home Team Id"
+          },
+          "away_team_id": {
+            "type": "integer",
+            "title": "Away Team Id"
+          },
+          "kickoff_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kickoff At"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage",
+            "default": "group"
+          },
+          "venue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Venue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_code",
+          "home_team_id",
+          "away_team_id"
+        ],
+        "title": "MatchCreate"
+      },
+      "MatchListResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MatchOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "offset",
+          "limit",
+          "items"
+        ],
+        "title": "MatchListResponse"
+      },
+      "MatchOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "match_code": {
+            "type": "string",
+            "title": "Match Code"
+          },
+          "home_team": {
+            "$ref": "#/components/schemas/TeamOut"
+          },
+          "away_team": {
+            "$ref": "#/components/schemas/TeamOut"
+          },
+          "kickoff_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kickoff At"
+          },
+          "kickoff_bj": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kickoff Bj"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage"
+          },
+          "match_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Type"
+          },
+          "competition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Competition"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "odds_home": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Odds Home"
+          },
+          "odds_draw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Odds Draw"
+          },
+          "odds_away": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Odds Away"
+          },
+          "odds_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Odds Source"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "odds_degraded": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Odds Degraded",
+            "default": false
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "venue_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Venue Type"
+          },
+          "weather": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weather"
+          },
+          "temperature": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature"
+          },
+          "pitch_condition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pitch Condition"
+          },
+          "schedule_density": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule Density"
+          },
+          "actual_home_goals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Home Goals"
+          },
+          "actual_away_goals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Away Goals"
+          },
+          "actual_outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Outcome"
+          },
+          "predictions": {
+            "items": {
+              "$ref": "#/components/schemas/PredictionOut"
+            },
+            "type": "array",
+            "title": "Predictions",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "match_code",
+          "home_team",
+          "away_team",
+          "kickoff_at",
+          "group",
+          "competition",
+          "status",
+          "odds_home",
+          "odds_draw",
+          "odds_away",
+          "actual_home_goals",
+          "actual_away_goals",
+          "actual_outcome"
+        ],
+        "title": "MatchOut"
+      },
+      "MatchUpdateResult": {
+        "properties": {
+          "actual_home_goals": {
+            "type": "integer",
+            "title": "Actual Home Goals"
+          },
+          "actual_away_goals": {
+            "type": "integer",
+            "title": "Actual Away Goals"
+          }
+        },
+        "type": "object",
+        "required": [
+          "actual_home_goals",
+          "actual_away_goals"
+        ],
+        "title": "MatchUpdateResult"
+      },
+      "OddsMovementResponse": {
+        "properties": {
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "has_opening": {
+            "type": "boolean",
+            "title": "Has Opening"
+          },
+          "opening_odds": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opening Odds"
+          },
+          "closing_odds": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closing Odds"
+          },
+          "drift": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Drift"
+          },
+          "steam_moves": {
+            "items": {
+              "$ref": "#/components/schemas/SteamMoveOut"
+            },
+            "type": "array",
+            "title": "Steam Moves",
+            "default": []
+          },
+          "late_money": {
+            "items": {
+              "$ref": "#/components/schemas/LateMoneyOut"
+            },
+            "type": "array",
+            "title": "Late Money",
+            "default": []
+          },
+          "signal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signal"
+          },
+          "snapshots": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Snapshots"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "has_opening",
+          "drift",
+          "snapshots"
+        ],
+        "title": "OddsMovementResponse"
+      },
+      "OptimalComboPick": {
+        "properties": {
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "match_code": {
+            "type": "string",
+            "title": "Match Code"
+          },
+          "home": {
+            "type": "string",
+            "title": "Home"
+          },
+          "away": {
+            "type": "string",
+            "title": "Away"
+          },
+          "kickoff_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kickoff At"
+          },
+          "play_type": {
+            "type": "string",
+            "title": "Play Type"
+          },
+          "selection": {
+            "type": "string",
+            "title": "Selection"
+          },
+          "selection_label": {
+            "type": "string",
+            "title": "Selection Label"
+          },
+          "probability": {
+            "type": "number",
+            "title": "Probability"
+          },
+          "odds": {
+            "type": "number",
+            "title": "Odds"
+          },
+          "ev": {
+            "type": "number",
+            "title": "Ev"
+          },
+          "handicap": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handicap"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "match_code",
+          "home",
+          "away",
+          "play_type",
+          "selection",
+          "selection_label",
+          "probability",
+          "odds",
+          "ev",
+          "rationale"
+        ],
+        "title": "OptimalComboPick"
+      },
+      "OptimalComboResponse": {
+        "properties": {
+          "issue_id": {
+            "type": "integer",
+            "title": "Issue Id"
+          },
+          "picks": {
+            "items": {
+              "$ref": "#/components/schemas/OptimalComboPick"
+            },
+            "type": "array",
+            "title": "Picks"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "issue_id",
+          "picks",
+          "total"
+        ],
+        "title": "OptimalComboResponse"
+      },
+      "PlayTypeBreakdownItem": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "correct": {
+            "type": "integer",
+            "title": "Correct"
+          },
+          "accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accuracy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "total",
+          "correct"
+        ],
+        "title": "PlayTypeBreakdownItem"
+      },
+      "PlayTypeBreakdownResponse": {
+        "properties": {
+          "SPF": {
+            "$ref": "#/components/schemas/PlayTypeBreakdownItem"
+          },
+          "RQ": {
+            "$ref": "#/components/schemas/PlayTypeBreakdownItem"
+          },
+          "SCORE": {
+            "$ref": "#/components/schemas/PlayTypeBreakdownItem"
+          },
+          "GOALS": {
+            "$ref": "#/components/schemas/PlayTypeBreakdownItem"
+          },
+          "HALF": {
+            "$ref": "#/components/schemas/PlayTypeBreakdownItem"
+          }
+        },
+        "type": "object",
+        "required": [
+          "SPF",
+          "RQ",
+          "SCORE",
+          "GOALS",
+          "HALF"
+        ],
+        "title": "PlayTypeBreakdownResponse"
+      },
+      "PredictionCreate": {
+        "properties": {
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "play_type": {
+            "type": "string",
+            "title": "Play Type"
+          },
+          "probabilities": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Probabilities"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version",
+            "default": "v1.0"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "play_type",
+          "probabilities"
+        ],
+        "title": "PredictionCreate"
+      },
+      "PredictionOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "play_type": {
+            "type": "string",
+            "title": "Play Type"
+          },
+          "probabilities": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Probabilities"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "input_checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Checksum"
+          },
+          "locked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "match_id",
+          "play_type",
+          "probabilities",
+          "model_version"
+        ],
+        "title": "PredictionOut"
+      },
+      "SettingsResponse": {
+        "properties": {
+          "risk_tier": {
+            "type": "string",
+            "title": "Risk Tier"
+          },
+          "default_play_type": {
+            "type": "string",
+            "title": "Default Play Type"
+          },
+          "show_ev": {
+            "type": "boolean",
+            "title": "Show Ev"
+          },
+          "show_probability": {
+            "type": "boolean",
+            "title": "Show Probability"
+          },
+          "notify_odds_change": {
+            "type": "boolean",
+            "title": "Notify Odds Change"
+          },
+          "notify_match_start": {
+            "type": "boolean",
+            "title": "Notify Match Start"
+          }
+        },
+        "type": "object",
+        "required": [
+          "risk_tier",
+          "default_play_type",
+          "show_ev",
+          "show_probability",
+          "notify_odds_change",
+          "notify_match_start"
+        ],
+        "title": "SettingsResponse"
+      },
+      "SettingsUpdateResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "SettingsUpdateResponse"
+      },
+      "StatusResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "StatusResponse"
+      },
+      "SteamMoveOut": {
+        "properties": {
+          "selection": {
+            "type": "string",
+            "title": "Selection"
+          },
+          "from_odds": {
+            "type": "number",
+            "title": "From Odds"
+          },
+          "to_odds": {
+            "type": "number",
+            "title": "To Odds"
+          },
+          "change_pct": {
+            "type": "number",
+            "title": "Change Pct"
+          },
+          "window_minutes": {
+            "type": "number",
+            "title": "Window Minutes"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "selection",
+          "from_odds",
+          "to_odds",
+          "change_pct",
+          "window_minutes",
+          "direction"
+        ],
+        "title": "SteamMoveOut"
+      },
+      "StrategyPickOut": {
+        "properties": {
+          "strategy_name": {
+            "type": "string",
+            "title": "Strategy Name"
+          },
+          "strategy_type": {
+            "type": "string",
+            "title": "Strategy Type"
+          },
+          "play_type": {
+            "type": "string",
+            "title": "Play Type"
+          },
+          "play_label": {
+            "type": "string",
+            "title": "Play Label"
+          },
+          "selection": {
+            "type": "string",
+            "title": "Selection"
+          },
+          "selection_label": {
+            "type": "string",
+            "title": "Selection Label"
+          },
+          "probability": {
+            "type": "number",
+            "title": "Probability"
+          },
+          "odds": {
+            "type": "number",
+            "title": "Odds"
+          },
+          "ev": {
+            "type": "number",
+            "title": "Ev"
+          },
+          "kelly_fraction": {
+            "type": "number",
+            "title": "Kelly Fraction"
+          },
+          "stake_pct": {
+            "type": "number",
+            "title": "Stake Pct"
+          },
+          "confidence": {
+            "type": "string",
+            "title": "Confidence"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale"
+          },
+          "risk_level": {
+            "type": "string",
+            "title": "Risk Level"
+          },
+          "risk_tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Tier"
+          },
+          "model_prob_calibrated": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Prob Calibrated"
+          },
+          "market_prob": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Prob"
+          },
+          "edge": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edge"
+          },
+          "var_95": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Var 95"
+          },
+          "cvar_95": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cvar 95"
+          },
+          "risk_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Score"
+          },
+          "is_recommended": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Recommended"
+          }
+        },
+        "type": "object",
+        "required": [
+          "strategy_name",
+          "strategy_type",
+          "play_type",
+          "play_label",
+          "selection",
+          "selection_label",
+          "probability",
+          "odds",
+          "ev",
+          "kelly_fraction",
+          "stake_pct",
+          "confidence",
+          "rationale",
+          "risk_level"
+        ],
+        "title": "StrategyPickOut"
+      },
+      "StrategyResponse": {
+        "properties": {
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "confidence": {
+            "type": "string",
+            "title": "Confidence",
+            "default": "medium"
+          },
+          "odds_degraded": {
+            "type": "boolean",
+            "title": "Odds Degraded",
+            "default": false
+          },
+          "risk_tier": {
+            "type": "string",
+            "title": "Risk Tier",
+            "default": "balanced"
+          },
+          "strategies": {
+            "items": {
+              "$ref": "#/components/schemas/StrategyPickOut"
+            },
+            "type": "array",
+            "title": "Strategies"
+          },
+          "predictions": {
+            "items": {
+              "$ref": "#/components/schemas/PredictionOut"
+            },
+            "type": "array",
+            "title": "Predictions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "status",
+          "strategies",
+          "predictions"
+        ],
+        "title": "StrategyResponse"
+      },
+      "TeamCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "name_en": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name En"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "flag": {
+            "type": "string",
+            "title": "Flag",
+            "default": "\ud83c\udff3\ufe0f"
+          },
+          "fifa_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fifa Rank"
+          },
+          "elo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elo"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "continent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Continent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "title": "TeamCreate"
+      },
+      "TeamListResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TeamOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "offset",
+          "limit",
+          "items"
+        ],
+        "title": "TeamListResponse"
+      },
+      "TeamOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "name_en": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name En"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "flag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag"
+          },
+          "fifa_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fifa Rank"
+          },
+          "elo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elo"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "form_factor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Form Factor"
+          },
+          "avg_goals_scored": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Goals Scored"
+          },
+          "avg_goals_conceded": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Goals Conceded"
+          },
+          "recent_results": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recent Results"
+          },
+          "recent_goals_scored": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recent Goals Scored"
+          },
+          "recent_goals_conceded": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recent Goals Conceded"
+          },
+          "home_away_factor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Home Away Factor"
+          },
+          "weather_adaptability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weather Adaptability"
+          },
+          "tactical_style": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tactical Style"
+          },
+          "coach_rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coach Rating"
+          },
+          "rest_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rest Days"
+          },
+          "key_injuries": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Injuries"
+          },
+          "squad_fatigue_index": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Squad Fatigue Index"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "name_en",
+          "code",
+          "fifa_rank",
+          "elo",
+          "group",
+          "form_factor",
+          "avg_goals_scored",
+          "avg_goals_conceded"
+        ],
+        "title": "TeamOut"
+      },
+      "Token": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token"
+        ],
+        "title": "Token"
+      },
+      "UserLogin": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "UserLogin"
+      },
+      "UserOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "is_paid": {
+            "type": "boolean",
+            "title": "Is Paid"
+          },
+          "paid_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid Until"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "is_paid",
+          "paid_until"
+        ],
+        "title": "UserOut"
+      },
+      "UserRegister": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "UserRegister"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "ValidationMatchItem": {
+        "properties": {
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "match_code": {
+            "type": "string",
+            "title": "Match Code"
+          },
+          "home_team": {
+            "type": "string",
+            "title": "Home Team"
+          },
+          "away_team": {
+            "type": "string",
+            "title": "Away Team"
+          },
+          "actual_outcome": {
+            "type": "string",
+            "title": "Actual Outcome"
+          },
+          "predicted_outcome": {
+            "type": "string",
+            "title": "Predicted Outcome"
+          },
+          "probabilities": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Probabilities"
+          },
+          "direction_correct": {
+            "type": "boolean",
+            "title": "Direction Correct"
+          },
+          "brier_score": {
+            "type": "number",
+            "title": "Brier Score"
+          },
+          "log_loss": {
+            "type": "number",
+            "title": "Log Loss"
+          },
+          "max_prob": {
+            "type": "number",
+            "title": "Max Prob"
+          },
+          "confidence": {
+            "type": "string",
+            "title": "Confidence"
+          },
+          "actual_score": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Score"
+          },
+          "predicted_top_score": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicted Top Score"
+          },
+          "score_correct": {
+            "type": "boolean",
+            "title": "Score Correct",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "match_code",
+          "home_team",
+          "away_team",
+          "actual_outcome",
+          "predicted_outcome",
+          "probabilities",
+          "direction_correct",
+          "brier_score",
+          "log_loss",
+          "max_prob",
+          "confidence"
+        ],
+        "title": "ValidationMatchItem"
+      },
+      "ValidationReportResponse": {
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/ValidationSummary"
+          },
+          "by_play_type": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "By Play Type"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationMatchItem"
+            },
+            "type": "array",
+            "title": "Matches"
+          },
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "summary",
+          "by_play_type",
+          "matches",
+          "generated_at"
+        ],
+        "title": "ValidationReportResponse"
+      },
+      "ValidationSummary": {
+        "properties": {
+          "total_matches": {
+            "type": "integer",
+            "title": "Total Matches"
+          },
+          "finished_matches": {
+            "type": "integer",
+            "title": "Finished Matches"
+          },
+          "validated_matches": {
+            "type": "integer",
+            "title": "Validated Matches"
+          },
+          "direction_accuracy": {
+            "type": "number",
+            "title": "Direction Accuracy"
+          },
+          "high_conf_accuracy": {
+            "type": "number",
+            "title": "High Conf Accuracy"
+          },
+          "medium_conf_accuracy": {
+            "type": "number",
+            "title": "Medium Conf Accuracy"
+          },
+          "low_conf_accuracy": {
+            "type": "number",
+            "title": "Low Conf Accuracy"
+          },
+          "avg_brier_score": {
+            "type": "number",
+            "title": "Avg Brier Score"
+          },
+          "avg_log_loss": {
+            "type": "number",
+            "title": "Avg Log Loss"
+          },
+          "avg_max_prob": {
+            "type": "number",
+            "title": "Avg Max Prob"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_matches",
+          "finished_matches",
+          "validated_matches",
+          "direction_accuracy",
+          "high_conf_accuracy",
+          "medium_conf_accuracy",
+          "low_conf_accuracy",
+          "avg_brier_score",
+          "avg_log_loss",
+          "avg_max_prob"
+        ],
+        "title": "ValidationSummary"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {},
+            "tokenUrl": "api/auth/login"
+          }
+        }
+      }
+    }
+  }
+}
