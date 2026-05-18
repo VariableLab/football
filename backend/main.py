@@ -2047,7 +2047,7 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
                 "Content-Type": "application/json",
             },
             json={
-                "model": "moonshotai/kimi-k2.6",
+                "model": "qwen/qwen3.5-397b-a17b",
                 "messages": messages,
                 "max_tokens": 2048,
                 "temperature": 0.7,
