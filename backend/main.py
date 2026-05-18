@@ -2052,7 +2052,7 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
                 "max_tokens": 2048,
                 "temperature": 0.7,
             },
-            timeout=60,
+            timeout=120,
         )
         resp.raise_for_status()
         data = resp.json()

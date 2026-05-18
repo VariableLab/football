@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-18T16:37:21.754120+00:00",
+  "timestamp": "2026-05-18T16:57:21.844922+00:00",
   "overall": "critical",
   "checks": [
     {
@@ -47,7 +47,7 @@
     {
       "name": "backup_freshness",
       "status": "ok",
-      "message": "最新备份 21.8 小时前 (5 个)",
+      "message": "最新备份 22.0 小时前 (5 个)",
       "repaired": false,
       "repair_action": ""
     }
