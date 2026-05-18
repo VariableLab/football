@@ -179,7 +179,7 @@ function renderNavUser() {
 
 // ─── Section Tabs ───
 function switchSection(section) {
-  const sections = { matches: 'sectionMatches', report: 'sectionReport', validation: 'sectionValidation', feedback: 'sectionFeedback' };
+  const sections = { matches: 'sectionMatches', report: 'sectionReport', validation: 'sectionValidation', feedback: 'sectionFeedback', ai: 'sectionAI' };
   for (const [key, id] of Object.entries(sections)) {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('hidden', key !== section);
@@ -628,7 +628,10 @@ async function openModal(matchId) {
         <div class="text-sm text-warm-gray font-light mt-0.5">${m.competition || ''} · ${fmtBJ(m.kickoff_at)}</div>
         ${matchCountdown(m.kickoff_at) ? `<div class="text-sm text-accent-yellow num font-light mt-0.5">${matchCountdown(m.kickoff_at)}</div>` : ''}
       </div>
-      <button onclick="closeModal()" class="text-warm-gray hover:text-charcoal text-xl leading-none transition-colors duration-300">&times;</button>
+      <div class="flex items-center gap-2">
+        <button onclick="sendAiMessage(${m.id});closeModal()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-colors">AI 分析</button>
+        <button onclick="closeModal()" class="text-warm-gray hover:text-charcoal text-xl leading-none transition-colors duration-300">&times;</button>
+      </div>
     </div>
 
     <div class="px-5 py-2.5 bg-accent/5 border-b border-accent/10">
@@ -872,9 +875,84 @@ function renderPagination(totalItems) {
   let html = '<div class="col-span-full flex items-center justify-center gap-2 mt-8">';
   for (let p = 1; p <= totalPages; p++) {
     html += `<button onclick="goToPage(${p})" class="w-8 h-8 text-base rounded-lg ${p === AppState.page ? 'bg-charcoal text-cream-light' : 'text-warm-gray hover:text-charcoal border border-charcoal/10'} transition-all duration-300 num font-light">${p}</button>`;
+    }
+    html += '</div>';
+    grid.innerHTML = html;
+}
+
+// ─── AI 分析聊天 ───────────────────────────────
+const AiState = { history: [], loading: false };
+
+function addAiMessage(text, isUser) {
+  const container = document.getElementById('aiChatMessages');
+  const div = document.createElement('div');
+  div.className = 'flex items-start gap-3 ai-message ' + (isUser ? 'ai-user' : 'ai-bot');
+  if (isUser) {
+    div.innerHTML = [
+      '<div class="bg-charcoal text-cream-light rounded-2xl rounded-tr-sm px-5 py-3 text-sm leading-relaxed max-w-[80%] ml-auto">',
+      escapeHtml(text),
+      '</div>',
+      '<div class="w-8 h-8 rounded-full bg-charcoal/10 flex items-center justify-center flex-shrink-0 mt-1">',
+      '<svg class="w-4 h-4 text-charcoal" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>',
+      '</div>',
+    ].join('');
+  } else {
+    div.innerHTML = [
+      '<div class="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-1">',
+      '<svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>',
+      '</div>',
+      '<div class="bg-warm-gray/5 rounded-2xl rounded-tl-sm px-5 py-4 text-sm leading-relaxed">',
+      '<p class="font-medium text-accent mb-1">AI 分析助手</p>',
+      '<div>' + markedParse(text) + '</div>',
+      '</div>',
+    ].join('');
   }
-  html += '</div>';
-  return html;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function markedParse(text) {
+  return text.replace(/### (.+)/g, '<h3 class="text-base font-medium mt-3 mb-1">$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong class="font-medium">$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
+async function sendAiMessage(matchId) {
+  const input = document.getElementById('aiInput');
+  const text = (matchId ? null : input.value.trim());
+  if (!text && !matchId) return;
+  if (AiState.loading) return;
+
+  const msg = matchId ? '请分析这场比赛的数据，给出专业的赛前分析。' : text;
+  if (!matchId) {
+    addAiMessage(msg, true);
+    input.value = '';
+    AiState.history.push({ role: 'user', content: msg });
+  }
+
+  AiState.loading = true;
+  const btn = document.querySelector('#sectionAI .btn-primary');
+  if (btn) btn.textContent = '分析中...';
+
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg, match_id: matchId || undefined, history: AiState.history.slice(-10) }),
+    });
+    const data = await resp.json();
+    if (resp.ok) {
+      addAiMessage(data.reply, false);
+      AiState.history.push({ role: 'assistant', content: data.reply });
+    } else {
+      addAiMessage('抱歉，AI 服务暂时不可用。' + (data.detail ? ' (' + data.detail + ')' : ''), false);
+    }
+  } catch (e) {
+    addAiMessage('网络错误，请稍后重试。', false);
+  } finally {
+    AiState.loading = false;
+    if (btn) btn.textContent = '发送';
+  }
 }
 
 function goToPage(page) {

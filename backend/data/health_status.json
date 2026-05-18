@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-18T13:57:21.726565+00:00",
+  "timestamp": "2026-05-18T16:37:21.754120+00:00",
   "overall": "critical",
   "checks": [
     {
@@ -33,7 +33,7 @@
     {
       "name": "model_drift",
       "status": "fail",
-      "message": "方向准确率 46.7% < 48% 阈值 (147/315)",
+      "message": "方向准确率 46.2% < 48% 阈值 (147/318)",
       "repaired": false,
       "repair_action": "self_heal_cycle_status=skipped"
     },
@@ -47,7 +47,7 @@
     {
       "name": "backup_freshness",
       "status": "ok",
-      "message": "最新备份 19.0 小时前 (5 个)",
+      "message": "最新备份 21.8 小时前 (5 个)",
       "repaired": false,
       "repair_action": ""
     }
