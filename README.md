@@ -1,6 +1,8 @@
 # WC Analytics — 竞彩足球预测系统
 
 > 数据驱动的竞彩足球预测平台 · 多层模型融合 · 全自动化管线
+>
+> 🌐 [football.nett.to](https://football.nett.to)
 
 ---
 
