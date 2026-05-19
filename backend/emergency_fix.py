@@ -278,12 +278,19 @@ def main():
     parser.add_argument("--fix", action="store_true", help="尝试自动修复可修复的问题")
     parser.add_argument("--verbose", action="store_true", help="输出详细日志")
     parser.add_argument("--json", action="store_true", help="以JSON格式输出结果")
+    parser.add_argument("--cron", action="store_true", help="静默模式：仅JSON输出，检测到问题时返回非0退出码")
     args = parser.parse_args()
+
+    if args.cron:
+        args.json = True
 
     results = run_diagnostics(fix=args.fix, verbose=args.verbose)
 
-    if args.json:
-        print(json.dumps(results, indent=2, ensure_ascii=False))
+    if args.json or args.cron:
+        print(json.dumps(results, indent=2 if not args.cron else None, ensure_ascii=False))
+
+    if args.cron and results.get("_meta", {}).get("overall") != "pass":
+        sys.exit(1)
 
 
 if __name__ == "__main__":
