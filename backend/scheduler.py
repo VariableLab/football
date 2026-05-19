@@ -1029,44 +1029,33 @@ def start_scheduler():
     )
 
     # ────────────────────────────
-    # Task: sporttery.cn 数据同步（主力数据源）
+    # Task: zgzcw 数据同步（主力数据源，替代 sporttery.cn）
     # ────────────────────────────
-    def sporttery_daily_wrapper():
-        from sporttery_sync import sporttery_daily_sync_job
-        sporttery_daily_sync_job()
+    def zgzcw_daily_sync_wrapper():
+        from zgzcw_jc_sync import sync_jc_matches
+        result = sync_jc_matches()
+        logger.info(f"[zgzcw-daily-sync] Sync result: {result}")
 
-    def sporttery_odds_refresh_wrapper():
-        from sporttery_sync import sporttery_odds_refresh_job
-        sporttery_odds_refresh_job()
+    def zgzcw_odds_refresh_wrapper():
+        from zgzcw_jc_sync import sync_jc_matches
+        result = sync_jc_matches()
+        logger.info(f"[zgzcw-odds-refresh] Sync result: {result}")
 
-    def sporttery_backfill_wrapper():
-        from sporttery_sync import sporttery_backfill_job
-        sporttery_backfill_job()
-
-    # 每日同步 sporttery.cn 在售比赛 + 生成预测：每天 08:00
+    # 每日同步 zgzcw 竞彩比赛 + 期号关联 + 赔率历史：每天 08:00
     scheduler.add_job(
-        sporttery_daily_wrapper,
+        zgzcw_daily_sync_wrapper,
         trigger=CronTrigger(hour=8, minute=0),
-        id="sporttery_daily_sync",
-        name="Sporttery Daily Match Sync + Prediction",
+        id="zgzcw_daily_sync",
+        name="Zgzcw Daily Match + Issue Sync",
         replace_existing=True,
     )
 
-    # 每3小时刷新赔率（不重新生成预测）
+    # 每3小时刷新赔率
     scheduler.add_job(
-        sporttery_odds_refresh_wrapper,
+        zgzcw_odds_refresh_wrapper,
         trigger=CronTrigger(hour="*/3", minute=17),
-        id="sporttery_odds_refresh",
-        name="Sporttery Odds Refresh (3h)",
-        replace_existing=True,
-    )
-
-    # 每周回填历史数据：周一 05:30
-    scheduler.add_job(
-        sporttery_backfill_wrapper,
-        trigger=CronTrigger(day_of_week="mon", hour=5, minute=30),
-        id="sporttery_weekly_backfill",
-        name="Sporttery Weekly Historical Backfill",
+        id="zgzcw_odds_refresh",
+        name="Zgzcw Odds Refresh (3h)",
         replace_existing=True,
     )
 
