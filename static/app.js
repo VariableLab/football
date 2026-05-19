@@ -37,7 +37,7 @@ function fmtOdds(v) {
 }
 
 function fmtBJ(kickoffAt) {
-  if (!kickoffAt) return '待定';
+  if (!kickoffAt) return I18n.t('match.countdown');
   const d = new Date(kickoffAt);
   return d.toLocaleString('zh-CN', {
     timeZone: 'Asia/Shanghai',
@@ -62,7 +62,7 @@ function freshnessTag(updatedAt) {
   const diffMin = Math.round((now - then) / 60000);
   if (diffMin < 0) return '';
   let color, text;
-  if (diffMin < 5) { color = 'text-accent-green'; text = '刚刚更新'; }
+  if (diffMin < 5) { color = 'text-accent-green'; text = I18n.t('data.refresh'); }
   else if (diffMin < 30) { color = 'text-accent-green'; text = diffMin + '分钟前'; }
   else if (diffMin < 120) { color = 'text-accent-yellow'; text = Math.floor(diffMin / 60) + '小时前'; }
   else { color = 'text-accent-red'; text = Math.floor(diffMin / 60) + '小时前'; }
@@ -97,8 +97,8 @@ function lockOverlay(html) {
   <div class="relative">
     <div class="lock-blur select-none pointer-events-none">${html}</div>
     <div class="absolute bottom-0 left-0 right-0 flex flex-col items-center gap-1.5 py-4 bg-gradient-to-t from-cream-light via-cream-light/80 to-transparent">
-      <div class="text-sm text-warm-gray">付费解锁查看策略</div>
-      <button onclick="showRedeemModal()" class="text-sm px-3 py-1 border border-beige/30 text-beige rounded-lg hover:bg-charcoal hover:text-cream-light hover:border-charcoal transition-all duration-300">兑换卡密</button>
+      <div class="text-sm text-warm-gray">${I18n.t('match.lockOverlay')}</div>
+      <button onclick="showRedeemModal()" class="text-sm px-3 py-1 border border-beige/30 text-beige rounded-lg hover:bg-charcoal hover:text-cream-light hover:border-charcoal transition-all duration-300">${I18n.t('modal.redeemTitle')}</button>
     </div>
   </div>`;
 }
@@ -167,13 +167,13 @@ function renderNavUser() {
     ${AppState.user.is_paid
       ? '<span class="text-xs px-2 py-0.5 rounded border border-beige/30 text-beige font-medium tracking-wide">PRO</span>'
       : '<span class="text-xs px-2 py-0.5 rounded border border-charcoal/10 text-warm-gray font-light">Free</span>'}
-    <button onclick="showRedeemModal()" class="text-sm font-light text-warm-gray hover:text-beige transition-colors duration-300">兑换</button>
-    <button onclick="openSettingsModal()" class="text-sm font-light text-warm-gray hover:text-beige transition-colors duration-300">设置</button>
-    <button onclick="handleLogout()" class="text-sm font-light text-warm-gray hover:text-accent-red transition-colors duration-300">退出</button>`;
+    <button onclick="showRedeemModal()" class="text-sm font-light text-warm-gray hover:text-beige transition-colors duration-300">${I18n.t('nav.redeem')}</button>
+    <button onclick="openSettingsModal()" class="text-sm font-light text-warm-gray hover:text-beige transition-colors duration-300">${I18n.t('nav.settings')}</button>
+    <button onclick="handleLogout()" class="text-sm font-light text-warm-gray hover:text-accent-red transition-colors duration-300">${I18n.t('nav.logout')}</button>`;
   } else {
     c.innerHTML = `
-    <span class="text-sm font-light text-warm-gray">预测仅供参考</span>
-    <button onclick="showLoginModal()" class="text-sm px-4 py-1.5 border border-charcoal/15 text-charcoal hover:bg-charcoal hover:text-cream-light font-light tracking-wide rounded-lg transition-all duration-300">登录</button>`;
+    <span class="text-sm font-light text-warm-gray">${I18n.t('nav.proPredict')}</span>
+    <button onclick="showLoginModal()" class="text-sm px-4 py-1.5 border border-charcoal/15 text-charcoal hover:bg-charcoal hover:text-cream-light font-light tracking-wide rounded-lg transition-all duration-300">${I18n.t('nav.login')}</button>`;
   }
 }
 
@@ -223,7 +223,7 @@ async function loadJingcaiView() {
     if (onSale.length && !AppState.selectedIssueId) { AppState.selectedIssueId = onSale[0].issue_id; }
     renderJingcaiHome();
   } catch (e) {
-    grid.innerHTML = `<div class="col-span-full text-center py-24 text-warm-gray"><div class="text-base font-light">加载失败</div><div class="text-sm mt-2 text-warm-gray">${escapeHtml(e.message)}</div></div>`;
+    grid.innerHTML = `<div class="col-span-full text-center py-24 text-warm-gray"><div class="text-base font-light">${I18n.t('loading.failed')}</div><div class="text-sm mt-2 text-warm-gray">${escapeHtml(e.message)}</div></div>`;
   }
 }
 
@@ -237,12 +237,12 @@ function renderJingcaiHome() {
   for (const issue of onSale) {
     const mc = (issue.matches || []).length;
     const isActive = issue.issue_id === AppState.selectedIssueId;
-    issueTabs += `<button onclick="selectIssue('${escapeHtml(issue.issue_id)}')" class="px-3 py-1.5 text-sm font-light tracking-wide rounded-lg transition-all duration-300 ${isActive ? 'border border-charcoal/15 bg-charcoal text-cream-light' : 'border border-charcoal/10 text-charcoal hover:bg-charcoal hover:text-cream-light hover:border-charcoal'}">第${escapeHtml(issue.issue_id)}期 <span class="num text-xs opacity-60">${mc}场</span></button>`;
-    issueTabs += `<button onclick="showOptimalCombo(${issue.id})" class="px-3 py-1.5 text-sm font-light tracking-wide rounded-lg transition-all duration-300 border border-accent-yellow/30 text-accent-yellow hover:bg-accent-yellow/10">✨ 智能推荐</button>`;
+    issueTabs += `<button onclick="selectIssue('${escapeHtml(issue.issue_id)}')" class="px-3 py-1.5 text-sm font-light tracking-wide rounded-lg transition-all duration-300 ${isActive ? 'border border-charcoal/15 bg-charcoal text-cream-light' : 'border border-charcoal/10 text-charcoal hover:bg-charcoal hover:text-cream-light hover:border-charcoal'}">${I18n.t('match.issuePrefix')}${escapeHtml(issue.issue_id)}${I18n.t('match.issueSuffix')} <span class="num text-xs opacity-60">${mc}场</span></button>`;
+    issueTabs += `<button onclick="showOptimalCombo(${issue.id})" class="px-3 py-1.5 text-sm font-light tracking-wide rounded-lg transition-all duration-300 border border-accent-yellow/30 text-accent-yellow hover:bg-accent-yellow/10">✨ ${I18n.t('match.optimalCombo')}</button>`;
   }
   const closedIssues = allIssues.filter(i => i.status !== 'on_sale');
   if (closedIssues.length) {
-    issueTabs += `<button onclick="toggleClosedIssues()" class="px-2 py-1 text-sm font-light text-warm-gray hover:text-charcoal transition-colors duration-300">已停售 (${closedIssues.length})</button>`;
+    issueTabs += `<button onclick="toggleClosedIssues()" class="px-2 py-1 text-sm font-light text-warm-gray hover:text-charcoal transition-colors duration-300">${I18n.t('data.locked')} (${closedIssues.length})</button>`;
   }
   issueTabs += '</div>';
 
@@ -250,10 +250,10 @@ function renderJingcaiHome() {
   for (const issue of closedIssues) {
     const mc = (issue.matches || []).length;
     closedHtml += `<div class="flex items-center justify-between py-2.5 border-b border-charcoal/10 last:border-0">
-      <span class="text-base font-light text-charcoal">第${escapeHtml(issue.issue_id)}期</span>
-      <span class="text-sm px-2 py-0.5 rounded border border-beige/30 text-beige font-light">已停售</span>
+      <span class="text-base font-light text-charcoal">${I18n.t('match.issuePrefix')}${escapeHtml(issue.issue_id)}${I18n.t('match.issueSuffix')}</span>
+      <span class="text-sm px-2 py-0.5 rounded border border-beige/30 text-beige font-light">${I18n.t('data.locked')}</span>
       <span class="text-base font-light text-warm-gray num">${mc}场</span>
-      <button onclick="selectIssue('${escapeHtml(issue.issue_id)}')" class="text-sm font-light text-warm-gray hover:text-beige transition-colors duration-300">查看</button>
+      <button onclick="selectIssue('${escapeHtml(issue.issue_id)}')" class="text-sm font-light text-warm-gray hover:text-beige transition-colors duration-300">${I18n.t('match.view')}</button>
     </div>`;
   }
   closedHtml += '</div>';
@@ -289,8 +289,8 @@ function renderJingcaiCard(im, isOnSale) {
   const m = im.match;
   if (!m) return '';
 
-  const homeName = m.home_team?.name || '主队';
-  const awayName = m.away_team?.name || '客队';
+  const homeName = m.home_team?.name || I18n.t('match.defaultHome');
+  const awayName = m.away_team?.name || I18n.t('match.defaultAway');
   const homeFlag = m.home_team?.flag || '';
   const awayFlag = m.away_team?.flag || '';
   const kickoff = fmtBJ(m.kickoff_at);
@@ -318,7 +318,7 @@ function renderJingcaiCard(im, isOnSale) {
 
   const spfMax = Math.max(spf.home || 0, spf.draw || 0, spf.away || 0);
   const spfMaxKey = spf.home === spfMax ? 'home' : spf.away === spfMax ? 'away' : 'draw';
-  const spfMaxLabel = { home: '主胜', draw: '平', away: '客胜' }[spfMaxKey];
+  const spfMaxLabel = { home: I18n.t('match.homeWin'), draw: I18n.t('match.draw'), away: I18n.t('match.awayWin') }[spfMaxKey];
 
   const rqEVHome = calcEV(rq.home, rqHome);
   const rqEVDraft = calcEV(rq.draw, rqDraw);
@@ -368,7 +368,7 @@ function renderJingcaiCard(im, isOnSale) {
 
     <div class="mt-3 pt-2 border-t border-accent/10 flex items-center justify-between">
       <div class="flex items-center gap-2 text-base">
-        <span class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium">倾向</span>
+        <span class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium">${I18n.t('match.prediction')}</span>
         <span class="font-medium ${spfMaxKey === 'home' ? 'text-beige' : spfMaxKey === 'away' ? 'text-accent-cyan' : 'text-warm-gray'}">${spfMaxLabel}</span>
         <span class="num text-warm-gray font-light">${fmtPct(spf[spfMaxKey])}</span>
       </div>
@@ -463,8 +463,8 @@ function renderCards() {
   }
 
   if (!matches.length) {
-    const labelMap = { world_cup: '世界杯', friendly: '热身赛', today: '今日', tomorrow: '明日' };
-    grid.innerHTML = `<div class="col-span-full text-center py-24 text-warm-gray"><div class="text-base font-light">暂无${labelMap[AppState.filter] || ''}比赛数据</div></div>`;
+    const labelMap = { world_cup: I18n.t('filter.world_cup'), friendly: I18n.t('filter.friendly'), today: I18n.t('filter.today'), tomorrow: I18n.t('filter.tomorrow') };
+    grid.innerHTML = `<div class="col-span-full text-center py-24 text-warm-gray"><div class="text-base font-light">暂无${labelMap[AppState.filter] || ''}比赛${I18n.t('feedback.data')}</div></div>`;
     return;
   }
 
@@ -474,8 +474,8 @@ function renderCards() {
 }
 
 function renderMatchCard(m) {
-  const homeTeam = AppState.teams.find(t => t.id === m.home_team_id) || { name: m.home_team?.name || '主队', flag: '', fifa_rank: '-' };
-  const awayTeam = AppState.teams.find(t => t.id === m.away_team_id) || { name: m.away_team?.name || '客队', flag: '', fifa_rank: '-' };
+  const homeTeam = AppState.teams.find(t => t.id === m.home_team_id) || { name: m.home_team?.name || I18n.t('match.defaultHome'), flag: '', fifa_rank: '-' };
+  const awayTeam = AppState.teams.find(t => t.id === m.away_team_id) || { name: m.away_team?.name || I18n.t('match.defaultAway'), flag: '', fifa_rank: '-' };
 
   const spf = m.predictions?.find(p => p.play_type === 'SPF')?.probabilities || {};
   const score = m.predictions?.find(p => p.play_type === 'SCORE')?.probabilities || {};
@@ -514,7 +514,7 @@ function renderMatchCard(m) {
     </div>
     <div class="mt-3 pt-3 border-t border-accent/10">
       <div class="flex justify-between text-base font-light text-warm-gray mb-3">
-        <span class="flex items-center gap-1.5"><span class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium">赔率</span> ${m.odds_source ? `<span class="px-1.5 py-0.5 rounded text-sm ${m.odds_source === 'synthetic' ? 'border border-accent/15 text-warm-gray' : 'border border-accent/30 text-accent'} font-light">${m.odds_source === 'synthetic' ? '合成' : '真实'}</span>` : ''}</span>
+        <span class="flex items-center gap-1.5"><span class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium">${I18n.t('match.oddsSource')}</span> ${m.odds_source ? `<span class="px-1.5 py-0.5 rounded text-sm ${m.odds_source === 'synthetic' ? 'border border-accent/15 text-warm-gray' : 'border border-accent/30 text-accent'} font-light">${m.odds_source === 'synthetic' ? '合成' : '真实'}</span>` : ''}</span>
         <span class="num">${m.odds_home || '-'} / ${m.odds_draw || '-'} / ${m.odds_away || '-'}${m.odds_degraded ? ' <span class="text-sm px-1.5 py-0.5 rounded border border-accent-yellow/30 text-accent-yellow font-light">赔率缺失</span>' : ''}</span>
       </div>
       ${spf.home ? `
@@ -568,11 +568,11 @@ async function openModal(matchId) {
   try { strategyData = await WCApi.Strategy.getStrategy(matchId, 'balanced'); AppState.strategyCache[matchId] = strategyData; } catch (e) { strategyError = escapeHtml(e.message); }
 
   const locked = isLocked(m);
-  const homeTeam = m.home_team || AppState.teams.find(t => t.id === m.home_team_id) || { name: '主队', flag: '' };
-  const awayTeam = m.away_team || AppState.teams.find(t => t.id === m.away_team_id) || { name: '客队', flag: '' };
-  const outcomeMap = { home: '主胜', draw: '平', away: '客胜' };
+  const homeTeam = m.home_team || AppState.teams.find(t => t.id === m.home_team_id) || { name: I18n.t('match.defaultHome'), flag: '' };
+  const awayTeam = m.away_team || AppState.teams.find(t => t.id === m.away_team_id) || { name: I18n.t('match.defaultAway'), flag: '' };
+  const outcomeMap = { home: I18n.t('match.homeWin'), draw: I18n.t('match.draw'), away: I18n.t('match.awayWin') };
 
-  const tabs = ['胜平负', '让球', '比分', '总进球', '半全场'];
+  const tabs = [I18n.t('match.spf'), I18n.t('match.rq'), I18n.t('match.score'), I18n.t('match.goals'), I18n.t('match.half')];
   const preds = strategyData?.predictions || m.predictions || [];
   const spf = preds.find(p => p.play_type === 'SPF')?.probabilities || {};
   const score = preds.find(p => p.play_type === 'SCORE')?.probabilities || {};
@@ -607,9 +607,9 @@ async function openModal(matchId) {
     strategySection = `
     <div class="px-6 py-4 bg-accent/5 border-b border-accent/10">
       <div class="text-sm text-warm-gray font-light mb-3 flex items-center gap-2">
-        <span class="font-serif text-lg font-medium text-charcoal">模型估算策略</span>
+        <span class="font-serif text-lg font-medium text-charcoal">${I18n.t('match.strategy')}</span>
         <span class="text-charcoal/15">·</span>
-        <span>概率校准 + Kelly仓位</span>
+        <span>${I18n.t('match.kellyDesc')}</span>
       </div>
       ${renderStrategies(strategyData.strategies)}
       <div id="nnBetValue" class="mt-3"></div>
@@ -629,7 +629,7 @@ async function openModal(matchId) {
         ${matchCountdown(m.kickoff_at) ? `<div class="text-sm text-accent-yellow num font-light mt-0.5">${matchCountdown(m.kickoff_at)}</div>` : ''}
       </div>
       <div class="flex items-center gap-2">
-        <button onclick="sendAiMessage(${m.id});closeModal()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-colors">AI 分析</button>
+        <button onclick="sendAiMessage(${m.id});closeModal()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-colors">${I18n.t('tab.ai')}</button>
         <button onclick="closeModal()" class="text-warm-gray hover:text-charcoal text-xl leading-none transition-colors duration-300">&times;</button>
       </div>
     </div>
@@ -671,7 +671,7 @@ async function openModal(matchId) {
 
 function renderStrategies(strategies) {
   if (!strategies || !strategies.length) return '';
-  const riskLabels = { low: '低风险', medium: '中风险', high: '高风险' };
+  const riskLabels = { low: I18n.t('strategy.low'), medium: I18n.t('strategy.medium'), high: I18n.t('strategy.high') };
   const riskColors = { low: 'text-accent-green', medium: 'text-accent-yellow', high: 'text-accent-red' };
 
   return `<div class="grid grid-cols-1 gap-2">
@@ -728,11 +728,11 @@ function switchTab(btn, tabName, matchId) {
 function renderTabContent(tabName, match, strategyData, locked, error) {
   const preds = strategyData?.predictions || [];
   switch (tabName) {
-    case '胜平负': return renderSPFTab(preds, match, locked);
-    case '让球': return renderRQTab(preds, match, locked);
-    case '比分': return renderScoreTab(preds, match, locked);
-    case '总进球': return renderGoalsTab(preds, match, locked);
-    case '半全场': return renderHalfTab(preds, match, locked);
+    case I18n.t('match.spf'): return renderSPFTab(preds, match, locked);
+    case I18n.t('match.rq'): return renderRQTab(preds, match, locked);
+    case I18n.t('match.score'): return renderScoreTab(preds, match, locked);
+    case I18n.t('match.goals'): return renderGoalsTab(preds, match, locked);
+    case I18n.t('match.half'): return renderHalfTab(preds, match, locked);
     default: return '';
   }
 }
@@ -741,13 +741,13 @@ function renderSPFTab(preds, match, locked) {
   const spf = preds.find(p => p.play_type === 'SPF')?.probabilities || {};
   const odds = { home: match.odds_home || null, draw: match.odds_draw || null, away: match.odds_away || null };
   const items = [
-    { key: 'home', label: '主胜', prob: spf.home, odds: odds.home },
-    { key: 'draw', label: '平', prob: spf.draw, odds: odds.draw },
-    { key: 'away', label: '客胜', prob: spf.away, odds: odds.away },
+    { key: 'home', label: I18n.t('match.homeWin'), prob: spf.home, odds: odds.home },
+    { key: 'draw', label: I18n.t('match.draw'), prob: spf.draw, odds: odds.draw },
+    { key: 'away', label: I18n.t('match.awayWin'), prob: spf.away, odds: odds.away },
   ].map(x => ({ ...x, ev: calcEV(x.prob, x.odds) }));
 
   const html = `
-  <div class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-4">胜平负 · 模型概率 + 赔率 EV</div>
+  <div class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-4">${I18n.t('match.spfTab')}</div>
   <div class="space-y-3">
     ${items.map((x, i) => `
     <div class="flex items-center gap-3">
@@ -769,14 +769,14 @@ function renderRQTab(preds, match, locked) {
   const handicap = match?._jingcaiOdds?.handicap || 0;
   const handicapLabel = handicap ? `让${handicap > 0 ? '+' : ''}${handicap}` : '';
 
-  const items = [{ key: 'home', label: '让胜' }, { key: 'draw', label: '让平' }, { key: 'away', label: '让负' }].map(x => {
+  const items = [{ key: 'home', label: I18n.t('match.rqWin') }, { key: 'draw', label: I18n.t('match.rqDraw') }, { key: 'away', label: I18n.t('match.rqLose') }].map(x => {
     const prob = rq[x.key] || 0;
     const odds = rqOdds ? rqOdds[x.key] : null;
     return { ...x, prob, odds, ev: calcEV(prob, odds) };
   });
 
   const html = `
-  <div class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-4">让球 · 模型概率${rqOdds ? ' + 赛事赔率 EV' : '分布'}</div>
+  <div class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-4">${I18n.t('match.rq')} · ${I18n.t('match.model')}${I18n.t('strategy.probability')}${rqOdds ? ' + 赛事赔率 EV' : '分布'}</div>
   ${handicapLabel ? `<div class="text-center mb-4"><span class="text-sm px-2 py-0.5 rounded border border-accent-yellow/30 text-accent-yellow font-light">${escapeHtml(handicapLabel)}</span></div>` : ''}
   <div class="space-y-3">
     ${items.map((x, i) => `
@@ -799,7 +799,7 @@ function renderScoreTab(preds, match, locked) {
   const entries = Object.entries(score).sort((a, b) => b[1] - a[1]).slice(0, 8);
 
   const html = `
-  <div class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-4">比分${scoreOdds ? ' + 市场EV' : '概率'}</div>
+  <div class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-4">${I18n.t('match.score')}${scoreOdds ? ' + 市场EV' : '概率'}</div>
   <div class="grid grid-cols-4 gap-2">
     ${entries.map(([s, p]) => {
       const odds = scoreOdds ? scoreOdds[s] : null;
@@ -822,7 +822,7 @@ function renderGoalsTab(preds, match, locked) {
   const entries = Object.entries(goals).sort((a, b) => parseInt(a[0].replace('+', '')) - parseInt(b[0].replace('+', '')));
 
   const html = `
-  <div class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-4">总进球${goalsOdds ? ' + 市场EV' : ''}</div>
+  <div class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-4">${I18n.t('match.goals')}${goalsOdds ? ' + 市场EV' : ''}</div>
   <div class="space-y-2">
     ${entries.map(([g, p], i) => {
       const odds = goalsOdds ? goalsOdds[g] : null;
@@ -848,7 +848,7 @@ function renderHalfTab(preds, match, locked) {
   const entries = Object.entries(half).sort((a, b) => b[1] - a[1]).slice(0, 6);
 
   const html = `
-  <div class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-4">半全场${halfOdds ? ' + 市场EV' : ''}</div>
+  <div class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-4">${I18n.t('match.half')}${halfOdds ? ' + 市场EV' : ''}</div>
   <div class="space-y-2">
     ${entries.map(([h, p], i) => {
       const odds = halfOdds ? halfOdds[h] : null;
@@ -923,7 +923,7 @@ async function sendAiMessage(matchId) {
   if (!text && !matchId) return;
   if (AiState.loading) return;
 
-  const msg = matchId ? '请分析这场比赛的数据，给出专业的赛前分析。' : text;
+  const msg = matchId ? I18n.t('ai.requestAnalyze') : text;
   if (!matchId) {
     addAiMessage(msg, true);
     input.value = '';
@@ -932,7 +932,7 @@ async function sendAiMessage(matchId) {
 
   AiState.loading = true;
   const btn = document.querySelector('#sectionAI .btn-primary');
-  if (btn) btn.textContent = '分析中...';
+  if (btn) btn.textContent = I18n.t('ai.analyzing');
 
   try {
     const resp = await fetch('/api/chat', {
@@ -948,10 +948,10 @@ async function sendAiMessage(matchId) {
       addAiMessage('抱歉，AI 服务暂时不可用。' + (data.detail ? ' (' + data.detail + ')' : ''), false);
     }
   } catch (e) {
-    addAiMessage('网络错误，请稍后重试。', false);
+    addAiMessage(I18n.t('ai.networkError'), false);
   } finally {
     AiState.loading = false;
-    if (btn) btn.textContent = '发送';
+    if (btn) btn.textContent = I18n.t('feedback.submit');
   }
 }
 
@@ -999,7 +999,7 @@ async function handleLogin(e) {
     closeLoginModal(); renderNavUser(); loadJingcaiView();
   } catch (err) {
     const errorEl = document.getElementById('loginError');
-    errorEl.textContent = err.message || '登录失败';
+    errorEl.textContent = err.message || I18n.t('modal.loginFailed');
     errorEl.classList.remove('hidden');
   }
 }
@@ -1014,7 +1014,7 @@ async function handleRegister(e) {
     closeLoginModal(); renderNavUser(); loadJingcaiView();
   } catch (err) {
     const errorEl = document.getElementById('loginError');
-    errorEl.textContent = err.message || '注册失败';
+    errorEl.textContent = err.message || I18n.t('modal.registerFailed');
     errorEl.classList.remove('hidden');
   }
 }
@@ -1034,14 +1034,14 @@ async function handleRedeem(e) {
   try {
     const result = await WCApi.License.redeem(key);
     errorEl.classList.add('hidden');
-    successEl.textContent = result.message || '激活成功！';
+    successEl.textContent = result.message || I18n.t('modal.redeemSuccess');
     successEl.classList.remove('hidden');
     AppState.user = await WCApi.Auth.me();
     renderNavUser();
     setTimeout(() => { closeRedeemModal(); successEl.classList.add('hidden'); }, 1500);
   } catch (err) {
     successEl.classList.add('hidden');
-    errorEl.textContent = err.message || '激活失败';
+    errorEl.textContent = err.message || I18n.t('modal.redeemFailed');
     errorEl.classList.remove('hidden');
   }
 }
@@ -1053,7 +1053,7 @@ function startWcCountdown() {
   if (!el) return;
   function tick() {
     const diff = wcOpen - new Date();
-    if (diff <= 0) { el.textContent = '已开幕!'; return; }
+    if (diff <= 0) { el.textContent = I18n.t('countdown.opened'); return; }
     const days = Math.floor(diff / 86400000);
     const hours = Math.floor((diff % 86400000) / 3600000);
     el.textContent = `${days}天 ${hours}小时`;
@@ -1068,7 +1068,7 @@ async function loadValidationDashboard() {
   try {
     const health = await (await fetch('/api/health')).json();
     if (health.status !== 'ok') {
-      container.innerHTML = `<div class="glass p-5 border border-accent-yellow/20"><div class="text-base text-accent-yellow font-medium">系统状态异常</div><div class="text-sm text-warm-gray font-light mt-1">${escapeHtml(health.checks?.alerts || '')}</div></div>`;
+      container.innerHTML = `<div class="glass p-5 border border-accent-yellow/20"><div class="text-base text-accent-yellow font-medium">${I18n.t('validation.systemError')}</div><div class="text-sm text-warm-gray font-light mt-1">${escapeHtml(health.checks?.alerts || '')}</div></div>`;
     }
   } catch { /* best-effort */ }
   try {
@@ -1084,7 +1084,7 @@ function renderValidationHtml(report) {
     return '<div class="glass p-8 text-center"><div class="text-base text-warm-gray font-light">暂无已验证比赛</div><div class="text-base text-warm-gray font-light mt-1">比赛结束后自动更新</div></div>';
   }
 
-  const outcomeMap = { home: '主胜', draw: '平', away: '客胜' };
+  const outcomeMap = { home: I18n.t('match.homeWin'), draw: I18n.t('match.draw'), away: I18n.t('match.awayWin') };
   const matchRows = matches.map(m => `
   <div class="flex items-center gap-3 py-3 border-b border-charcoal/10 last:border-0">
     <div class="w-6 text-center">${m.direction_correct ? '<span class="text-accent-green text-base">&#10003;</span>' : '<span class="text-accent-red text-base">&#10007;</span>'}</div>
@@ -1097,13 +1097,13 @@ function renderValidationHtml(report) {
 
   return `
   <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-    <div class="glass p-6 text-center"><div class="text-2xl font-bold num ${s.direction_accuracy >= 0.6 ? 'text-accent-green' : 'text-accent-yellow'}">${(s.direction_accuracy * 100).toFixed(0)}%</div><div class="text-base text-warm-gray font-light mt-1">方向准确率</div></div>
+    <div class="glass p-6 text-center"><div class="text-2xl font-bold num ${s.direction_accuracy >= 0.6 ? 'text-accent-green' : 'text-accent-yellow'}">${(s.direction_accuracy * 100).toFixed(0)}%</div><div class="text-base text-warm-gray font-light mt-1">${I18n.t('validation.directionAccuracy')}</div></div>
     <div class="glass p-6 text-center"><div class="text-2xl font-bold num text-accent-cyan">${s.avg_brier_score.toFixed(3)}</div><div class="text-base text-warm-gray font-light mt-1">Brier Score</div></div>
-    <div class="glass p-6 text-center"><div class="text-2xl font-bold num text-charcoal">${s.validated_matches}</div><div class="text-base text-warm-gray font-light mt-1">已验证场次</div></div>
-    <div class="glass p-6 text-center"><div class="text-2xl font-bold num text-charcoal">${(s.avg_max_prob * 100).toFixed(0)}%</div><div class="text-base text-warm-gray font-light mt-1">平均最高概率</div></div>
+    <div class="glass p-6 text-center"><div class="text-2xl font-bold num text-charcoal">${s.validated_matches}</div><div class="text-base text-warm-gray font-light mt-1">${I18n.t('validation.validatedCount')}</div></div>
+    <div class="glass p-6 text-center"><div class="text-2xl font-bold num text-charcoal">${(s.avg_max_prob * 100).toFixed(0)}%</div><div class="text-base text-warm-gray font-light mt-1">${I18n.t('validation.avgMaxProb')}</div></div>
   </div>
   <div class="glass p-6">
-    <div class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-3">逐场验证明细</div>
+    <div class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-3">${I18n.t('validation.detail')}</div>
     <div>${matchRows}</div>
   </div>`;
 }
@@ -1130,18 +1130,18 @@ function renderFeedbackBoard(items) {
   if (!el) return;
 
   const categories = [
-    { key: 'all', label: '全部' },
-    { key: 'discussion', label: '讨论' },
-    { key: 'suggestion', label: '反馈' },
-    { key: 'bug', label: '问题' },
-    { key: 'data_issue', label: '数据' },
+    { key: 'all', label: I18n.t('filter.all') },
+    { key: 'discussion', label: I18n.t('feedback.discussion') },
+    { key: 'suggestion', label: I18n.t('feedback.suggestion') },
+    { key: 'bug', label: I18n.t('feedback.bug') },
+    { key: 'data_issue', label: I18n.t('feedback.data') },
   ];
 
   const categoryTabs = categories.map(c =>
     `<button onclick="setFeedbackCategory('${c.key}')" class="px-4 py-2 text-sm font-light tracking-wide border-b-2 transition-all duration-300 ${feedbackCategory === c.key ? 'border-charcoal text-charcoal font-medium' : 'border-transparent text-warm-gray hover:text-charcoal'}">${c.label}</button>`
   ).join('');
 
-  const catLabel = { suggestion: '反馈', bug: '问题', data_issue: '数据', discussion: '讨论' };
+  const catLabel = { suggestion: I18n.t('feedback.suggestion'), bug: I18n.t('feedback.bug'), data_issue: I18n.t('feedback.data'), discussion: I18n.t('feedback.discussion') };
 
   const list = items.length > 0 ? items.map(fb => `
   <div class="glass p-5">
@@ -1159,18 +1159,18 @@ function renderFeedbackBoard(items) {
   el.innerHTML = `
   <div class="flex items-center gap-1.5 mb-5 flex-wrap">${categoryTabs}</div>
   <div class="glass p-5 mb-5">
-    <textarea id="feedbackInput" rows="2" placeholder="说点什么...（至少5个字）" class="w-full bg-transparent text-base text-charcoal font-light placeholder-warm-gray-light focus:outline-none resize-none"></textarea>
+    <textarea id="feedbackInput" rows="2" placeholder="${I18n.t('feedback.placeholder')}" class="w-full bg-transparent text-base text-charcoal font-light placeholder-warm-gray-light focus:outline-none resize-none"></textarea>
     <div id="feedbackStatus" class="text-sm text-accent-red font-light mb-2 hidden"></div>
     <div class="flex items-center justify-between mt-2">
       <select id="feedbackCat" class="bg-cream border border-charcoal/10 rounded-lg text-sm text-charcoal font-light px-2 py-1 focus:outline-none focus:border-beige transition-colors">
-        <option value="discussion">讨论</option>
-        <option value="suggestion">反馈</option>
-        <option value="bug">问题</option>
-        <option value="data_issue">数据</option>
+        <option value="discussion">${I18n.t('feedback.discussion')}</option>
+        <option value="suggestion">${I18n.t('feedback.suggestion')}</option>
+        <option value="bug">${I18n.t('feedback.bug')}</option>
+        <option value="data_issue">${I18n.t('feedback.data')}</option>
       </select>
       <div class="flex items-center gap-3">
-        <label class="flex items-center gap-1 text-sm text-warm-gray font-light"><input type="checkbox" id="feedbackAnon" class="rounded border-charcoal/10"> 匿名</label>
-        <button onclick="submitFeedback()" class="px-4 py-1.5 border border-charcoal/15 text-charcoal hover:bg-charcoal hover:text-cream-light text-sm font-medium tracking-wide rounded-lg transition-all duration-300">发送</button>
+        <label class="flex items-center gap-1 text-sm text-warm-gray font-light"><input type="checkbox" id="feedbackAnon" class="rounded border-charcoal/10"> ${I18n.t('feedback.anonymous')}</label>
+        <button onclick="submitFeedback()" class="px-4 py-1.5 border border-charcoal/15 text-charcoal hover:bg-charcoal hover:text-cream-light text-sm font-medium tracking-wide rounded-lg transition-all duration-300">${I18n.t('feedback.submit')}</button>
       </div>
     </div>
   </div>
@@ -1188,7 +1188,7 @@ async function submitFeedback() {
   status.classList.add('hidden');
   const content = input.value.trim();
   if (!content || content.length < 5) {
-    status.textContent = '至少输入5个字';
+    status.textContent = I18n.t('feedback.minLength');
     status.classList.remove('hidden');
     input.focus();
     return;
@@ -1216,14 +1216,14 @@ async function openSettingsModal() {
   try {
     const s = await WCApi.Settings.get();
     const riskTiers = [
-      { value: 'conservative', label: '保守型', desc: '只投高置信度' },
-      { value: 'balanced', label: '均衡型', desc: '风险与收益平衡' },
-      { value: 'aggressive', label: '积极型', desc: '追求更高回报' },
-      { value: 'speculative', label: '投机型', desc: '高风险高回报' },
+      { value: 'conservative', label: I18n.t('settings.conservative'), desc: I18n.t('settings.conservativeDesc') },
+      { value: 'balanced', label: I18n.t('settings.balanced'), desc: I18n.t('settings.balancedDesc') },
+      { value: 'aggressive', label: I18n.t('settings.aggressive'), desc: I18n.t('settings.aggressiveDesc') },
+      { value: 'speculative', label: I18n.t('settings.speculative'), desc: I18n.t('settings.speculativeDesc') },
     ];
     content.innerHTML = `
     <div>
-      <label class="block text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-2">风险偏好</label>
+      <label class="block text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-2">${I18n.t('settings.riskTier')}</label>
       <div class="grid grid-cols-2 gap-2">
         ${riskTiers.map(t => `
         <button onclick="setRiskTier('${t.value}')" class="p-3 rounded-xl text-left transition-all duration-300 ${s.risk_tier === t.value ? 'border border-beige/30 bg-beige/5' : 'bg-white border border-charcoal/10 hover:border-beige/30'}">
@@ -1233,19 +1233,19 @@ async function openSettingsModal() {
       </div>
     </div>
     <div class="flex items-center justify-between py-2.5">
-      <span class="text-base text-charcoal font-light">显示 EV</span>
+      <span class="text-base text-charcoal font-light">${I18n.t('settings.showEV')}</span>
       <label class="relative inline-flex cursor-pointer"><input type="checkbox" ${s.show_ev ? 'checked' : ''} onchange="toggleSetting('show_ev', this.checked)" class="sr-only peer"><div class="w-8 h-4 bg-cream-dark peer-checked:bg-beige rounded-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4"></div></label>
     </div>
     <div class="flex items-center justify-between py-2.5">
-      <span class="text-base text-charcoal font-light">显示概率</span>
+      <span class="text-base text-charcoal font-light">${I18n.t('settings.showProbability')}</span>
       <label class="relative inline-flex cursor-pointer"><input type="checkbox" ${s.show_probability ? 'checked' : ''} onchange="toggleSetting('show_probability', this.checked)" class="sr-only peer"><div class="w-8 h-4 bg-cream-dark peer-checked:bg-beige rounded-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4"></div></label>
     </div>
     <div class="flex items-center justify-between py-2.5">
-      <span class="text-base text-charcoal font-light">赔率变动通知</span>
+      <span class="text-base text-charcoal font-light">${I18n.t('settings.notifyOdds')}</span>
       <label class="relative inline-flex cursor-pointer"><input type="checkbox" ${s.notify_odds_change ? 'checked' : ''} onchange="toggleSetting('notify_odds_change', this.checked)" class="sr-only peer"><div class="w-8 h-4 bg-cream-dark peer-checked:bg-beige rounded-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4"></div></label>
     </div>
     <div class="flex items-center justify-between py-2.5">
-      <span class="text-base text-charcoal font-light">开球提醒</span>
+      <span class="text-base text-charcoal font-light">${I18n.t('settings.notifyMatch')}</span>
       <label class="relative inline-flex cursor-pointer"><input type="checkbox" ${s.notify_match_start ? 'checked' : ''} onchange="toggleSetting('notify_match_start', this.checked)" class="sr-only peer"><div class="w-8 h-4 bg-cream-dark peer-checked:bg-beige rounded-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4"></div></label>
     </div>`;
   } catch { content.innerHTML = '<div class="text-center py-4 text-warm-gray text-sm font-light">加载设置失败</div>'; }
@@ -1269,7 +1269,7 @@ async function loadNNBetValue(matchId) {
     const data = await WCApi.BetNN.predict(matchId);
     if (!data.ready) { el.innerHTML = '<div class="text-sm text-warm-gray font-light">NN模型尚未训练</div>'; return; }
     const vals = data.bet_values;
-    const selMap = { home: '主胜', draw: '平', away: '客胜' };
+    const selMap = { home: I18n.t('match.homeWin'), draw: I18n.t('match.draw'), away: I18n.t('match.awayWin') };
     const maxVal = Math.max(vals.home, vals.draw, vals.away);
     const bars = ['home', 'draw', 'away'].map(sel => {
       const v = vals[sel]; const isBest = v === maxVal; const pct = (v * 100).toFixed(0);
@@ -1282,12 +1282,12 @@ async function loadNNBetValue(matchId) {
     }).join('');
     el.innerHTML = `
     <div class="text-sm text-warm-gray font-light mb-1.5 flex items-center gap-1">
-      <span class="text-beige font-medium">NN评分</span>
+      <span class="text-beige font-medium">${I18n.t('nn.title')}</span>
       <span class="text-charcoal/15">·</span>
-      <span>神经网络参考</span>
+      <span>${I18n.t('nn.desc')}</span>
     </div>
     ${bars}
-    <div class="text-sm text-beige font-light mt-1">模型估算: ${selMap[data.recommended]} (${(data.confidence * 100).toFixed(0)}%)</div>`;
+    <div class="text-sm text-beige font-light mt-1">${I18n.t('match.model')}估算: ${selMap[data.recommended]} (${(data.confidence * 100).toFixed(0)}%)</div>`;
   } catch { el.innerHTML = ''; }
 }
 
@@ -1301,7 +1301,7 @@ async function loadReportDashboard() {
     const reports = data.reports || [];
     if (!reports.length) { el.innerHTML = '<div class="text-center py-12 text-warm-gray text-base font-light">暂无期号数据</div>'; return; }
     el.innerHTML = reports.map(r => renderIssueReport(r)).join('');
-  } catch (err) { el.innerHTML = `<div class="text-center py-12 text-accent-red text-base font-light">加载失败: ${err.message}  </div>`;
+  } catch (err) { el.innerHTML = `<div class="text-center py-12 text-accent-red text-base font-light">${I18n.t('loading.failed')}: ${err.message}  </div>`;
 }
 }
 
@@ -1310,12 +1310,12 @@ function renderIssueReport(r) {
   const finishedMatches = (r.matches || []).filter(m => m.actual_outcome != null);
   const showAccuracy = finishedMatches.length > 0;
   const statusColors = { on_sale: 'text-accent-green', locked: 'text-accent-yellow', drawn: 'text-accent-cyan', verified: 'text-accent-cyan', closed: 'text-warm-gray' };
-  const statusLabels = { on_sale: '在售', locked: '已锁定', drawn: '已开奖', verified: '已验证', closed: '已关闭' };
+  const statusLabels = { on_sale: I18n.t('data.onSale'), locked: '已锁定', drawn: I18n.t('data.drawn'), verified: I18n.t('data.verified'), closed: '已关闭' };
   const statusColor = statusColors[r.status] || 'text-warm-gray';
   const statusLabel = statusLabels[r.status] || r.status;
 
   const accuracyBar = showAccuracy
-    ? `<div class="flex items-center gap-2 text-sm"><span class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium">命中率</span><div class="flex-1 h-1.5 bg-accent/10 rounded-full overflow-hidden"><div class="h-full rounded-full ${r.accuracy >= 0.5 ? 'bg-accent-green' : 'bg-accent-red'}" style="width:${(r.accuracy * 100).toFixed(0)}%"></div></div><span class="num ${r.accuracy >= 0.5 ? 'text-accent-green' : 'text-accent-red'}">${(r.accuracy * 100).toFixed(1)}%</span></div>`
+    ? `<div class="flex items-center gap-2 text-sm"><span class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium">${I18n.t('report.accuracyLabel')}</span><div class="flex-1 h-1.5 bg-accent/10 rounded-full overflow-hidden"><div class="h-full rounded-full ${r.accuracy >= 0.5 ? 'bg-accent-green' : 'bg-accent-red'}" style="width:${(r.accuracy * 100).toFixed(0)}%"></div></div><span class="num ${r.accuracy >= 0.5 ? 'text-accent-green' : 'text-accent-red'}">${(r.accuracy * 100).toFixed(1)}%</span></div>`
     : '';
 
   const matchRows = (r.matches || []).map(m => renderReportMatch(m, m.actual_outcome != null)).join('');
@@ -1339,9 +1339,9 @@ function renderIssueReport(r) {
 
 function renderReportMatch(m, hasResult) {
   const pick = m.best_pick;
-  const playLabels = { SPF: '胜平负', RQ: '让球', SCORE: '比分', GOALS: '总进球', HALF: '半全场' };
-  const selLabels = { home: '主胜', draw: '平局', away: '客胜' };
-  const outcomeMap = { '3': '主胜', '1': '平局', '0': '客胜' };
+  const playLabels = { SPF: I18n.t('match.spf'), RQ: I18n.t('match.rq'), SCORE: I18n.t('match.score'), GOALS: I18n.t('match.goals'), HALF: I18n.t('match.half') };
+  const selLabels = { home: I18n.t('match.homeWin'), draw: I18n.t('match.drawWord'), away: I18n.t('match.awayWin') };
+  const outcomeMap = { '3': I18n.t('match.homeWin'), '1': I18n.t('match.drawWord'), '0': I18n.t('match.awayWin') };
 
   let pickHtml = '';
   if (pick) {
