@@ -18,8 +18,10 @@ zgzcw_jc_sync.py — 从 zgzcw 同步竞彩比赛到数据库
 
 import httpx
 import json
+import random
 import re
 import sqlite3
+import time
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
@@ -111,13 +113,31 @@ def fetch_jc_matches() -> List[Dict]:
             "AppleWebKit/537.36 (KHTML, like Gecko) "
             "Chrome/125.0.0.0 Safari/537.36"
         ),
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
         "Referer": "https://www.zgzcw.com/",
+        "Connection": "keep-alive",
+        "Cache-Control": "max-age=0",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "DNT": "1",
     }
 
     try:
+        time.sleep(random.uniform(0.3, 1.0))
         resp = httpx.get(url, headers=headers, timeout=15.0, follow_redirects=True)
+        # 418 反爬时重试一次（换 UA）
+        if resp.status_code == 418:
+            headers["User-Agent"] = (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/131.0.0.0 Safari/537.36"
+            )
+            time.sleep(random.uniform(1.0, 2.0))
+            resp = httpx.get(url, headers=headers, timeout=15.0, follow_redirects=True)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
 
