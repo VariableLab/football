@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-18T16:57:21.844922+00:00",
+  "timestamp": "2026-05-19T17:21:59.279738+00:00",
   "overall": "critical",
   "checks": [
     {
@@ -12,7 +12,7 @@
     {
       "name": "odds_freshness",
       "status": "fail",
-      "message": "99/99 场比赛赔率过期",
+      "message": "97/97 场比赛赔率过期",
       "repaired": true,
       "repair_action": "triggered_emergency_odds_tier1"
     },
@@ -26,14 +26,14 @@
     {
       "name": "data_completeness",
       "status": "warn",
-      "message": "共 53 场 | 缺赔率:53 | 缺球队数据:106",
+      "message": "共 51 场 | 缺赔率:51 | 缺球队数据:102",
       "repaired": false,
       "repair_action": ""
     },
     {
       "name": "model_drift",
       "status": "fail",
-      "message": "方向准确率 46.2% < 48% 阈值 (147/318)",
+      "message": "方向准确率 44.7% < 48% 阈值 (167/374)",
       "repaired": false,
       "repair_action": "self_heal_cycle_status=skipped"
     },
@@ -47,7 +47,7 @@
     {
       "name": "backup_freshness",
       "status": "ok",
-      "message": "最新备份 22.0 小时前 (5 个)",
+      "message": "最新备份 22.4 小时前 (6 个)",
       "repaired": false,
       "repair_action": ""
     }

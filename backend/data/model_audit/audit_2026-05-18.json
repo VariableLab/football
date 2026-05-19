@@ -1,0 +1,36 @@
+{
+  "date": "2026-05-18",
+  "total": 9,
+  "correct": 2,
+  "direction_accuracy": 0.2222,
+  "high_prob_total": 1,
+  "high_prob_correct": 0,
+  "high_prob_accuracy": 0.0,
+  "low_prob_total": 8,
+  "low_prob_correct": 2,
+  "low_prob_accuracy": 0.25,
+  "brier_score": 0.2699,
+  "per_outcome": {
+    "home": {
+      "total": 1,
+      "correct": 1,
+      "accuracy": 1.0,
+      "avg_confidence": 0.3802
+    },
+    "draw": {
+      "total": 3,
+      "correct": 1,
+      "accuracy": 0.3333,
+      "avg_confidence": 0.3984
+    },
+    "away": {
+      "total": 5,
+      "correct": 0,
+      "accuracy": 0.0,
+      "avg_confidence": 0.4388
+    }
+  },
+  "weight_adjustment": null,
+  "self_heal_triggered": false,
+  "self_heal_result": null
+}
