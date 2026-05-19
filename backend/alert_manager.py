@@ -1,6 +1,6 @@
 """
 监控告警管理 — 检测连续失败、数据过期、引擎异常
-告警方式：日志 + 文件标记（可供前端/health读取）
+告警方式：日志 + 文件标记 + Webhook（可选）
 """
 import json
 import os
@@ -11,8 +11,11 @@ from logger import get_logger
 
 logger = get_logger("alert")
 
-ALERT_FILE = "./data/alerts.json"
+_BASE = os.path.dirname(os.path.abspath(__file__))
+ALERT_FILE = os.path.join(_BASE, "data", "alerts.json")
 MAX_ALERT_AGE_HOURS = 24
+# 从环境变量读取外部通知 Webhook（支持 ServerChan/Bark/企业微信等）
+ALERT_WEBHOOK_URL = os.environ.get("ALERT_WEBHOOK_URL", "")
 
 
 def _load_alerts() -> list:
@@ -34,6 +37,22 @@ def _save_alerts(alerts: list) -> None:
         json.dump(fresh[-50:], f, indent=2)
 
 
+def _notify_webhook(source: str, level: str, message: str) -> None:
+    if not ALERT_WEBHOOK_URL:
+        return
+    try:
+        import httpx
+        payload = {
+            "source": source,
+            "level": level,
+            "message": message,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        httpx.post(ALERT_WEBHOOK_URL, json=payload, timeout=5)
+    except Exception:
+        logger.warning(f"[alert] webhook notification failed (ignored)")
+
+
 def fire_alert(source: str, level: str, message: str) -> None:
     """发出告警并持久化"""
     alert = {
@@ -53,6 +72,7 @@ def fire_alert(source: str, level: str, message: str) -> None:
         _save_alerts(alerts)
         log_fn = logger.critical if level == "critical" else logger.warning
         log_fn(f"[ALERT] {source} | {level} | {message}")
+        _notify_webhook(source, level, message)
 
 
 def check_consecutive_failures(source: str, max_failures: int = 3) -> None:

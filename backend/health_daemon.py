@@ -13,9 +13,10 @@ from alert_manager import fire_alert, get_active_alerts, check_consecutive_failu
 
 logger = get_logger("health_daemon")
 
-DB_PATH = "./database.sqlite"
-BACKUP_DIR = "./backup"
-HEALTH_FILE = "./data/health_status.json"
+_BASE = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(_BASE, "database.sqlite")
+BACKUP_DIR = os.path.join(_BASE, "backup")
+HEALTH_FILE = os.path.join(_BASE, "data", "health_status.json")
 
 # 阈值常量
 ODDS_STALE_HOURS = 2
@@ -69,6 +70,8 @@ class HealthDaemon:
         self._check_odds_freshness()
         self._check_scheduler_jobs()
         self._check_data_completeness()
+        self._check_zgzcw_sync()
+        self._check_jingcai_issues()
         self._check_model_drift()
         self._check_consecutive_failures()
         self._check_backup_freshness()
@@ -183,21 +186,31 @@ class HealthDaemon:
         self._report.checks.append(result)
 
     def _trigger_emergency_odds_collection(self, result: CheckResult) -> None:
-        """触发紧急赔率采集"""
+        """触发紧急赔率采集 + zgzcw 竞彩同步"""
+        actions = []
         try:
             from odds_collector import collect_odds_tier1_primary
             from models import SessionLocal
-
             session = SessionLocal()
             try:
                 collect_odds_tier1_primary(session)
-                result.repaired = True
-                result.repair_action = "triggered_emergency_odds_tier1"
+                actions.append("tier1")
             finally:
                 session.close()
         except Exception as e:
-            result.repair_action = f"emergency_collection_failed: {e}"
-            fire_alert("health_daemon", "critical", f"紧急赔率采集失败: {e}")
+            fire_alert("health_daemon", "warning", f"紧急赔率采集(tier1)失败: {e}")
+
+        try:
+            from zgzcw_jc_sync import sync_jc_matches
+            sync_result = sync_jc_matches(DB_PATH)
+            if sync_result.get("matches", 0) > 0:
+                actions.append(f"zgzcw({sync_result['matches']})")
+        except Exception as e:
+            fire_alert("health_daemon", "warning", f"zgzcw紧急同步失败: {e}")
+
+        if actions:
+            result.repaired = True
+            result.repair_action = "triggered: " + ", ".join(actions)
 
     # ────────────────────────────
     # Check 3: 调度器任务健康
@@ -270,11 +283,7 @@ class HealthDaemon:
                     missing_pred += 1
 
                 # 缺少赔率
-                has_odds = (
-                    getattr(match, "home_odds", None)
-                    or getattr(match, "draw_odds", None)
-                    or getattr(match, "away_odds", None)
-                )
+                has_odds = match.odds_home is not None
                 if not has_odds:
                     missing_odds += 1
 
@@ -325,7 +334,57 @@ class HealthDaemon:
             fire_alert("health_daemon", "warning", f"自动预测锁定失败: {e}")
 
     # ────────────────────────────
-    # Check 5: 模型漂移检测
+    # Check 5: zgzcw 竞彩同步检测
+    # ────────────────────────────
+    def _check_zgzcw_sync(self) -> None:
+        result = CheckResult(name="zgzcw_sync")
+        from zgzcw_jc_sync import sync_jc_matches
+        try:
+            sync_result = sync_jc_matches(DB_PATH)
+            m = sync_result.get("matches", 0)
+            e = sync_result.get("errors", 0)
+            linked = sync_result.get("issues_linked", 0)
+            if m == 0 and e > 0:
+                result.status = "fail"
+                result.message = f"同步失败: {e} errors"
+            else:
+                result.message = f"同步 {m} 场, 关联期号 {linked} 场"
+        except Exception as ex:
+            result.status = "fail"
+            result.message = f"zgzcw 同步异常: {ex}"
+        self._report.checks.append(result)
+
+    # ────────────────────────────
+    # Check 6: 竞彩期号完整性
+    # ────────────────────────────
+    def _check_jingcai_issues(self) -> None:
+        result = CheckResult(name="jingcai_issues")
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            cur = conn.cursor()
+            cur.execute("SELECT status, COUNT(*) FROM jingcai_issues GROUP BY status")
+            rows = cur.fetchall()
+            conn.close()
+
+            if not rows:
+                result.status = "warn"
+                result.message = "无竞彩期号记录"
+            else:
+                parts = [f"{s}={c}" for s, c in rows]
+                total = sum(c for _, c in rows)
+                result.message = f"共 {total} 期: " + ", ".join(parts)
+
+                on_sale = sum(c for s, c in rows if s == "on_sale")
+                if on_sale == 0:
+                    result.status = "warn"
+                    result.message += " (无在售期号)"
+        except Exception as e:
+            result.status = "fail"
+            result.message = f"期号检查异常: {e}"
+        self._report.checks.append(result)
+
+    # ────────────────────────────
+    # Check 7: 模型漂移检测
     # ────────────────────────────
     def _check_model_drift(self) -> None:
         result = CheckResult(name="model_drift")
@@ -436,7 +495,7 @@ class HealthDaemon:
             fire_alert("health_daemon", "critical", f"权重重学失败: {e}")
 
     # ────────────────────────────
-    # Check 6: 连续失败检测
+    # Check 8: 连续失败检测
     # ────────────────────────────
     def _check_consecutive_failures(self) -> None:
         result = CheckResult(name="consecutive_failures")
@@ -473,7 +532,7 @@ class HealthDaemon:
         self._report.checks.append(result)
 
     # ────────────────────────────
-    # Check 7: 备份新鲜度
+    # Check 9: 备份新鲜度
     # ────────────────────────────
     def _check_backup_freshness(self) -> None:
         result = CheckResult(name="backup_freshness")
