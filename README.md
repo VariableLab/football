@@ -30,6 +30,21 @@ WC Analytics 是一个**三层融合架构**的足球赛事概率建模系统，
 
 ---
 
+## 📸 界面预览
+
+<table>
+  <tr>
+    <td><img src="screenshots/1.png" alt="赛事分析" width="100%"></td>
+    <td><img src="screenshots/2.png" alt="概率校准" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/3.png" alt="模型验证" width="100%"></td>
+    <td><img src="screenshots/4.png" alt="预测报告" width="100%"></td>
+  </tr>
+</table>
+
+---
+
 ## 🎯 Maker Story
 
 我们是一组关注体育数据分析的研究者。开发这个工具是因为发现很多"预测模型"缺乏可复现性和概率校准。我们希望推动更严谨的体育预测研究——如果你也在做相关研究，欢迎一起改进模型！

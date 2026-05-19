@@ -30,6 +30,21 @@ WC Analytics is a **3-layer fusion football match probability modeling system** 
 
 ---
 
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td><img src="screenshots/1.png" alt="Match Analysis" width="100%"></td>
+    <td><img src="screenshots/2.png" alt="Probability Calibration" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/3.png" alt="Model Validation" width="100%"></td>
+    <td><img src="screenshots/4.png" alt="Prediction Report" width="100%"></td>
+  </tr>
+</table>
+
+---
+
 ## 🎯 Maker Story
 
 We are a group of researchers focused on sports data analytics. We built this tool because we found many "prediction models" lack reproducibility and probability calibration. We hope to promote more rigorous football prediction research — if you're working on similar research, contributions are welcome!
