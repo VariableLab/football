@@ -128,3 +128,19 @@ backend/                     # 后端核心
 ## ⚠️ 免责声明
 
 本项目为学术研究工具，输出结果为数学概率校准值，不构成任何投注建议。请遵守所在地法律法规，理性看待体育竞赛。
+
+---
+
+## 文档
+
+详细文档移步 `docs/` 目录：
+
+| 文档 | 说明 |
+|------|------|
+| [ARCHITECTURE_V2.md](docs/ARCHITECTURE_V2.md) | 系统架构文档 |
+| [AUTOMATION.md](docs/AUTOMATION.md) | 自动化管线说明 |
+| [ODDS_SETUP.md](docs/ODDS_SETUP.md) | 赔率数据配置 |
+| [QUICKSTART.md](docs/QUICKSTART.md) | 快速上手指南 |
+| [REMEDIATION_PLAN.md](docs/REMEDIATION_PLAN.md) | 修复计划 |
+| [AUDIT_REPORT_20260519.md](docs/AUDIT_REPORT_20260519.md) | 审计报告 |
+| [QUICK_FIX_GUIDE.md](docs/QUICK_FIX_GUIDE.md) | 快速修复指南 |

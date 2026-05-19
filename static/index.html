@@ -3,7 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WC Analytics</title>
+  <title>WC Analytics — Open-Source Football Probability Calibration Framework</title>
+  <meta name="description" content="An open-source 3-layer fusion football match probability modeling system covering 31K+ matches and 462 teams. Academic research, pre-match snapshots, fully reproducible." />
+  <meta name="keywords" content="football prediction, probability calibration, open source, sports analytics, machine learning" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="WC Analytics — Football Probability Calibration Framework" />
+  <meta property="og:description" content="Open-source 3-layer fusion prediction system. 31K+ matches, 462 teams, pre-match snapshots. For academic research." />
+  <meta property="og:image" content="https://football.nett.to/static/og-image.png" />
+  <meta property="og:url" content="https://football.nett.to" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="WC Analytics" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="WC Analytics — Football Probability Calibration Framework" />
+  <meta name="twitter:description" content="Open-source 3-layer fusion football prediction system for academic research." />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@200;300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/tailwind.css?v=20260519">
@@ -28,8 +44,44 @@
 
   <!-- Hero -->
   <section class="mb-12">
-    <h1 class="font-serif text-4xl lg:text-5xl font-semibold tracking-wide mb-3 hero-title">赛事智能分析</h1>
-    <p class="text-sm font-light leading-relaxed text-warm-gray max-w-lg">市场数据追踪 · 概率校准模型 · 预测结果参考</p>
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-6">
+      <div>
+        <h1 class="font-serif text-4xl lg:text-5xl font-semibold tracking-wide mb-3 hero-title">赛事智能分析</h1>
+        <p class="text-sm font-light leading-relaxed text-warm-gray max-w-xl">市场数据追踪 · 概率校准模型 · 预测结果参考</p>
+      </div>
+      <a href="https://github.com/VariableLab/football" target="_blank"
+         class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium bg-charcoal text-white/90 rounded-full hover:bg-charcoal/80 transition-all duration-300 flex-shrink-0">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        <span>Star on GitHub</span>
+      </a>
+    </div>
+    <div class="flex flex-wrap gap-3 text-xs text-warm-gray font-light">
+      <span class="px-3 py-1.5 bg-warm-gray/5 rounded-full">31K+ matches</span>
+      <span class="px-3 py-1.5 bg-warm-gray/5 rounded-full">462 teams</span>
+      <span class="px-3 py-1.5 bg-warm-gray/5 rounded-full">157K predictions</span>
+      <span class="px-3 py-1.5 bg-warm-gray/5 rounded-full">3-layer fusion</span>
+      <span class="px-3 py-1.5 bg-warm-gray/5 rounded-full">Open source</span>
+    </div>
+  </section>
+
+  <!-- Maker Story (collapsible) -->
+  <section class="mb-10">
+    <details class="group">
+      <summary class="flex items-center gap-2 cursor-pointer text-sm text-warm-gray hover:text-charcoal transition-colors font-light select-none">
+        <span class="text-accent font-medium">About this project</span>
+        <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </summary>
+      <div class="mt-4 p-5 bg-warm-gray/5 rounded-xl border border-warm-gray/10">
+        <p class="text-sm font-light leading-relaxed text-warm-gray mb-3">
+          We are researchers focused on sports data analytics. We built this because many "prediction models"
+          lack reproducibility and proper probability calibration. WC Analytics is our attempt to bring rigor
+          to football prediction — open-source, pre-match snapshots, fully reproducible.
+        </p>
+        <p class="text-sm font-light leading-relaxed text-warm-gray">
+          <span class="text-accent font-medium">Stack:</span> FastAPI · Python · Logistic Regression (L1) · Residual NN · Elo · Poisson (Dixon-Coles) · 43 features · Platt scaling
+        </p>
+      </div>
+    </details>
   </section>
 
   <!-- Tabs -->

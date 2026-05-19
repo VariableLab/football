@@ -42,13 +42,13 @@ node_modules/
 .claw/
 .sandbox-*/
 .sandbox-tmp/
-OPENCLAW_MANUAL.md
+/OPENCLAW_MANUAL.md
 .clawd-todos.json
-ARCHITECTURE_V2.md
-AUTOMATION.md
-QUICKSTART.md
-REMEDIATION_PLAN.md
-ODDS_SETUP.md
+/ARCHITECTURE_V2.md
+/AUTOMATION.md
+/QUICKSTART.md
+/REMEDIATION_PLAN.md
+/ODDS_SETUP.md
 
 # Root db is 0-byte placeholder
 football.db

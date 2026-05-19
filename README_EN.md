@@ -128,3 +128,19 @@ backend/
 ## ⚠️ Disclaimer
 
 This project is an academic research tool. Outputs are mathematically calibrated probabilities and do not constitute betting advice. Please comply with local laws and regulations, and maintain a rational perspective on sports competitions.
+
+---
+
+## Docs
+
+Internal documentation moved to `docs/`:
+
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE_V2.md](docs/ARCHITECTURE_V2.md) | System architecture |
+| [AUTOMATION.md](docs/AUTOMATION.md) | Automation pipeline |
+| [ODDS_SETUP.md](docs/ODDS_SETUP.md) | Odds data configuration |
+| [QUICKSTART.md](docs/QUICKSTART.md) | Getting started guide |
+| [REMEDIATION_PLAN.md](docs/REMEDIATION_PLAN.md) | Remediation plan |
+| [AUDIT_REPORT_20260519.md](docs/AUDIT_REPORT_20260519.md) | Audit report |
+| [QUICK_FIX_GUIDE.md](docs/QUICK_FIX_GUIDE.md) | Quick fix guide |
