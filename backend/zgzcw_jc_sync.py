@@ -18,7 +18,6 @@ zgzcw_jc_sync.py — 从 zgzcw 同步竞彩比赛到数据库
 
 import httpx
 import json
-import os
 import random
 import re
 import sqlite3
@@ -129,12 +128,7 @@ def fetch_jc_matches() -> List[Dict]:
 
     try:
         time.sleep(random.uniform(0.3, 1.0))
-        proxy_url = os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY") or os.environ.get("https_proxy") or os.environ.get("http_proxy")
-        client_kwargs = dict(headers=headers, timeout=15.0, follow_redirects=True)
-        if proxy_url:
-            client_kwargs["proxies"] = proxy_url
-            logger.info(f"[zgzcw_jc] using proxy: {proxy_url}")
-        resp = httpx.get(url, **client_kwargs)
+        resp = httpx.get(url, headers=headers, timeout=15.0, follow_redirects=True)
         # 418 反爬时重试一次（换 UA）
         if resp.status_code == 418:
             headers["User-Agent"] = (
@@ -143,8 +137,7 @@ def fetch_jc_matches() -> List[Dict]:
                 "Chrome/131.0.0.0 Safari/537.36"
             )
             time.sleep(random.uniform(1.0, 2.0))
-            client_kwargs["headers"] = headers
-            resp = httpx.get(url, **client_kwargs)
+            resp = httpx.get(url, headers=headers, timeout=15.0, follow_redirects=True)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
 
