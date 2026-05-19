@@ -103,7 +103,7 @@ def push_to_server(dry_run: bool = False) -> bool:
         sql_path = f.name
 
     try:
-        scp_cmd = [
+        scp_sql_cmd = [
             "scp", "-i", SSH_KEY,
             "-o", "ConnectTimeout=10",
             "-o", "StrictHostKeyChecking=no",
@@ -111,24 +111,24 @@ def push_to_server(dry_run: bool = False) -> bool:
             f"{SSH_USER}@{SSH_HOST}:{REMOTE_PROJECT}/backend/_jc_sync_temp.sql",
         ]
         log(f"SCP 上传...")
-        subprocess.run(scp_cmd, check=True, capture_output=True)
+        subprocess.run(scp_sql_cmd, check=True, capture_output=True)
         log("✅ 上传完成")
 
-        ssh_cmd = [
-            "ssh", "-i", SSH_KEY,
-            "-o", "ConnectTimeout=10",
-            "-o", "StrictHostKeyChecking=no",
-            f"{SSH_USER}@{SSH_HOST}",
-            f"cd {REMOTE_PROJECT}/backend && "
-            f"venv/bin/python -c \"import sqlite3; conn=sqlite3.connect('database.sqlite'); conn.executescript(open('_jc_sync_temp.sql').read()); conn.commit(); conn.close(); print('Applied')"
-        ]
         if dry_run:
             log(f"⏭️  dry-run 模式，跳过执行")
             log(f"SQL 文件: {sql_path}")
             return True
 
+        # 用 Python 执行导入（sqlite3 命令行不可用时用 venv 里的 Python）
+        ssh_apply_cmd = [
+            "ssh", "-i", SSH_KEY,
+            "-o", "ConnectTimeout=10",
+            "-o", "StrictHostKeyChecking=no",
+            f"{SSH_USER}@{SSH_HOST}",
+            f"cd {REMOTE_PROJECT}/backend && venv/bin/python -c 'import sqlite3; conn=sqlite3.connect(\"database.sqlite\"); conn.executescript(open(\"_jc_sync_temp.sql\").read()); conn.commit(); conn.close(); print(\"Applied\")' && rm _jc_sync_temp.sql"
+        ]
         log(f"SSH 执行导入...")
-        result = subprocess.run(ssh_cmd, check=True, capture_output=True, text=True, timeout=30)
+        result = subprocess.run(ssh_apply_cmd, check=True, capture_output=True, text=True, timeout=30)
         log(f"✅ {result.stdout.strip()}")
 
         clean_cmd = [
