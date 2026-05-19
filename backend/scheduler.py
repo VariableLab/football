@@ -322,7 +322,11 @@ _OPENFOOTBALL_LEAGUES = {
 _OPENFOOTBALL_LOCAL = os.getenv("OPENFOOTBALL_LOCAL_DIR", "")  # 本地数据目录优先
 
 import ssl as _ssl
-_ctx = _ssl.create_default_context()
+try:
+    import certifi
+    _ctx = _ssl.create_default_context(cafile=certifi.where())
+except ImportError:
+    _ctx = _ssl.create_default_context()
 
 
 def _fetch_openfootball_json(league_code: str, season: str = _OPENFOOTBALL_SEASON):
