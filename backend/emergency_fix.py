@@ -42,9 +42,14 @@ def check_zgzcw_sync(db_path: str = DB_PATH) -> Dict:
     try:
         from zgzcw_jc_sync import sync_jc_matches
         result = sync_jc_matches(db_path)
-        if result.get("errors", 0) > 0 and result.get("matches", 0) == 0:
-            return {"status": "fail", "detail": f"sync errors: {result}"}
-        return {"status": "pass", "detail": f"synced {result['matches']} matches, {result['issues_linked']} linked"}
+        if not isinstance(result, dict):
+            return {"status": "fail", "detail": f"unexpected return: {result}"}
+        errs = result.get("errors", 0)
+        matches = result.get("matches", 0)
+        linked = result.get("issues_linked", 0)
+        if errs > 0 and matches == 0:
+            return {"status": "fail", "detail": f"sync errors: {errs}, matches={matches}"}
+        return {"status": "pass", "detail": f"synced {matches} matches, {linked} linked"}
     except Exception as e:
         return {"status": "fail", "detail": f"sync exception: {e}"}
 
