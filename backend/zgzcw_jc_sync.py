@@ -319,7 +319,7 @@ def sync_jc_matches(db_path: str = "database.sqlite") -> Dict:
                         (m["sp_home"], m["sp_draw"], m["sp_away"], now_utc.isoformat(), match_id),
                     )
                 # 赔率有变化则记录历史
-                if prev_odds_home != m["sp_home"]:
+                if prev_odds_home != m["sp_home"] and m["sp_home"] is not None:
                     cur.execute(
                         """
                         INSERT INTO odds_history (match_id, source, odds_home, odds_draw, odds_away, recorded_at)
