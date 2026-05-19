@@ -1,3 +1,4 @@
+import { Audio, staticFile } from "remotion";
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
 import { Title } from "./scenes/Title";
@@ -23,31 +24,34 @@ const timing = linearTiming({ durationInFrames: TRANSITION_FRAMES });
 
 export const MyComposition: React.FC = () => {
   return (
-    <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={S1}>
-        <Title />
-      </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={fade()} timing={timing} />
-      <TransitionSeries.Sequence durationInFrames={S2}>
-        <Scale />
-      </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={fade()} timing={timing} />
-      <TransitionSeries.Sequence durationInFrames={S3}>
-        <Architecture />
-      </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={fade()} timing={timing} />
-      <TransitionSeries.Sequence durationInFrames={S4}>
-        <Performance />
-      </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={fade()} timing={timing} />
-      <TransitionSeries.Sequence durationInFrames={S5}>
-        <OpenSource />
-      </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={fade()} timing={timing} />
-      <TransitionSeries.Sequence durationInFrames={S6}>
-        <CTA />
-      </TransitionSeries.Sequence>
-    </TransitionSeries>
+    <>
+      <Audio src={staticFile("voiceover_en.wav")} />
+      <TransitionSeries>
+        <TransitionSeries.Sequence durationInFrames={S1}>
+          <Title />
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={fade()} timing={timing} />
+        <TransitionSeries.Sequence durationInFrames={S2}>
+          <Scale />
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={fade()} timing={timing} />
+        <TransitionSeries.Sequence durationInFrames={S3}>
+          <Architecture />
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={fade()} timing={timing} />
+        <TransitionSeries.Sequence durationInFrames={S4}>
+          <Performance />
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={fade()} timing={timing} />
+        <TransitionSeries.Sequence durationInFrames={S5}>
+          <OpenSource />
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={fade()} timing={timing} />
+        <TransitionSeries.Sequence durationInFrames={S6}>
+          <CTA />
+        </TransitionSeries.Sequence>
+      </TransitionSeries>
+    </>
   );
 };
 

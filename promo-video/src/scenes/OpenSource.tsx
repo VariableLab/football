@@ -2,7 +2,6 @@ import { useCurrentFrame, interpolate, Easing } from "remotion";
 
 const BG = "#1a1a1a";
 const ACCENT = "#c8a86e";
-const TEXT = "#e8e4de";
 const MUTED = "#9e9488";
 
 const badges = [
