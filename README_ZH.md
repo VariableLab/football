@@ -15,9 +15,11 @@
 
 ## 演示视频
 
-[![点击播放演示视频](screenshots/1.png)](https://github.com/VariableLab/football/blob/master/demo.mp4)
+<p align="center">
+  <img src="demo_preview.gif" alt="WC Analytics 演示预览" width="100%">
+</p>
 
-*点击上方的截图即可播放演示视频（30秒，含语音解说）*
+⬇️ [下载完整演示视频 (30秒, MP4, 1.8 MB)](demo.mp4) · 🌐 [在线体验](https://football.nett.to)
 
 ---
 

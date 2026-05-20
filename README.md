@@ -15,9 +15,11 @@
 
 ## Demo Video
 
-[![Demo Video](screenshots/1.png)](https://github.com/VariableLab/football/blob/master/demo.mp4)
+<p align="center">
+  <img src="demo_preview.gif" alt="WC Analytics Demo Preview" width="100%">
+</p>
 
-*Click the screenshot above to play the demo video (30s, with voiceover)*
+⬇️ [Download full demo video (30s, MP4, 1.8 MB)](demo.mp4) · 🌐 [Live Demo](https://football.nett.to)
 
 ---
 
