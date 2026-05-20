@@ -1,6 +1,6 @@
-# WC Analytics — 开源足球概率校准框架
+# WC Analytics — Open-Source Football Probability Calibration Framework
 
-> **研究用 · 非投注工具**
+> **For Research · Not a Betting Tool**
 
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC_BY--NC--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
@@ -9,37 +9,48 @@
 
 🌐 [football.nett.to](https://football.nett.to)
 
----
-
-## 🎯 一句话介绍
-
-WC Analytics 是一个**开源的足球概率校准研究框架**，帮助研究人员验证预测模型的有效性，而非提供投注建议。
-
-🔬 学术用途 · 📊 概率输出 · 🔐 赛前快照锁定 · 🌐 全开源可复现
+**🇬🇧 English** · [🇨🇳 中文](README_ZH.md)
 
 ---
 
-## 📝 项目描述
+## Demo Video
 
-WC Analytics 是一个**三层融合架构**的足球赛事概率建模系统，覆盖 **31K+ 历史比赛**、**462 支球队**。我们开源代码与数据管线，供学术界验证预测模型有效性。所有输出为数学概率，赛前锁定可追溯，不提供任何投注建议。
-
-**核心原则**：
-- ✅ 只展示数学模型计算的概率数字
-- ✅ 赛前快照锁定，可追溯验证
-- ❌ 不构成投注建议
+<video src="promo-video/wc-analytics-demo.mp4" controls width="100%">
+  Your browser does not support the video tag.
+  <a href="promo-video/wc-analytics-demo.mp4">Download MP4</a>
+</video>
 
 ---
 
-## 📸 界面预览
+## 🎯 One-Liner
+
+WC Analytics is an **open-source football probability calibration research framework** for validating predictive models — not for providing betting advice.
+
+🔬 Academic Use · 📊 Probability Output · 🔐 Pre-Match Snapshot Locking · 🌐 Fully Open-Source & Reproducible
+
+---
+
+## 📝 Description
+
+WC Analytics is a **3-layer fusion football match probability modeling system** covering **31K+ historical matches** and **462 teams**. We open-source the code and data pipeline for academic validation of predictive models. All outputs are mathematical probabilities, pre-match locked for traceability, and never constitute betting advice.
+
+**Core Principles**:
+- ✅ Display only mathematically computed probabilities
+- ✅ Pre-match snapshot locking for verifiability
+- ❌ Never constitutes betting advice
+
+---
+
+## 📸 Screenshots
 
 <table>
   <tr>
-    <td><img src="screenshots/1.png" alt="赛事分析" width="100%"></td>
-    <td><img src="screenshots/2.png" alt="概率校准" width="100%"></td>
+    <td><img src="screenshots/1.png" alt="Match Analysis" width="100%"></td>
+    <td><img src="screenshots/2.png" alt="Probability Calibration" width="100%"></td>
   </tr>
   <tr>
-    <td><img src="screenshots/3.png" alt="模型验证" width="100%"></td>
-    <td><img src="screenshots/4.png" alt="预测报告" width="100%"></td>
+    <td><img src="screenshots/3.png" alt="Model Validation" width="100%"></td>
+    <td><img src="screenshots/4.png" alt="Prediction Report" width="100%"></td>
   </tr>
 </table>
 
@@ -47,115 +58,115 @@ WC Analytics 是一个**三层融合架构**的足球赛事概率建模系统，
 
 ## 🎯 Maker Story
 
-我们是一组关注体育数据分析的研究者。开发这个工具是因为发现很多"预测模型"缺乏可复现性和概率校准。我们希望推动更严谨的体育预测研究——如果你也在做相关研究，欢迎一起改进模型！
+We are a group of researchers focused on sports data analytics. We built this tool because we found many "prediction models" lack reproducibility and probability calibration. We hope to promote more rigorous football prediction research — if you're working on similar research, contributions are welcome!
 
 ---
 
-## 📊 当前状态
+## 📊 Current Status
 
-| 指标 | 数值 | 说明 |
-|------|------|------|
-| 比赛总数 | 31,402 | 覆盖 46 个联赛/赛事 |
-| 已结束 | 31,238 | 含 230 场世界杯淘汰赛（1930-2022） |
-| 球队 | 462 | 自动发现 + 手动录入 |
-| 预测总数 | 157,030 | 5 种玩法全覆盖 |
-| 竞彩期号 | 14 期 | 自动同步 zgzcw |
-| 赔率源 | 多通道 | zgzcw + 历史数据回补 |
+| Metric | Value | Notes |
+|--------|-------|-------|
+| Total Matches | 31,402 | 46 leagues/tournaments |
+| Finished | 31,238 | Includes 230 World Cup KO matches (1930-2022) |
+| Teams | 462 | Auto-discovered + manual entry |
+| Total Predictions | 157,030 | 5 play types fully covered |
+| Jingcai Issues | 14 | Auto-synced from zgzcw |
+| Odds Sources | Multi-channel | zgzcw + historical backfill |
 
 ---
 
-## 预测架构
+## Architecture
 
 ```
-Layer 1: 特征生成层
-  ├── EloModel → 实力基线
-  ├── PoissonModel(Dixon-Coles) → 攻防概率矩阵
-  ├── MarketModel → 多源赔率去水
-  ├── AdjustmentModels → 8 种修正因子
-  ├── FormMarkovModel → 时序状态特征
-  └── H2HModel → 历史交锋特征
+Layer 1: Feature Generation
+  ├── EloModel → Strength baseline
+  ├── PoissonModel(Dixon-Coles) → Attack/defense matrix
+  ├── MarketModel → Multi-source odds de-vig
+  ├── AdjustmentModels → 8 correction factors
+  ├── FormMarkovModel → Time-series form features
+  └── H2HModel → Head-to-head features
 
-Layer 2: 逻辑回归融合层
+Layer 2: Logistic Regression Fusion
   └── LogisticRegression(L1, L-BFGS-B, class_weight)
-      → 43 维特征 → SPF 概率输出 (全量 30K+ 训练)
+      → 43 features → SPF probability (30K+ matches trained)
 
-Layer 3: 神经网络残差修正层
-  └── ResidualNN (3 层 MLP)
-      → 修正 LR 系统性偏差
+Layer 3: Residual Neural Network
+  └── ResidualNN (3-layer MLP)
+      → Corrects LR systematic bias
 
-Layer 4: 策略输出层
-  ├── Platt Scaling 概率校准
-  ├── EV 边际计算 (模型概率 vs 赔率隐含)
-  ├── 4 档风险过滤
-  └── Kelly 仓位优化
+Layer 4: Strategy Output
+  ├── Platt Scaling calibration
+  ├── EV calculation (model prob vs odds-implied)
+  ├── 4-tier risk filtering
+  └── Kelly stake optimization
 ```
 
 ---
 
-## 性能指标
+## Performance
 
-| 指标 | LR 融合 | 目标 |
-|------|:-:|:-:|
-| SPF 方向准确率 | **56.6%** (回测) | ≥ 55% |
+| Metric | LR Fusion | Target |
+|--------|:-:|:-:|
+| SPF Direction Accuracy | **56.6%** (backtest) | ≥ 55% |
 | Brier Score | **~0.185** | ≤ 0.190 |
-| 淘汰赛准确率 | **49.3%** | ≥ 45% |
+| Knockout Match Accuracy | **49.3%** | ≥ 45% |
 
 ---
 
-## 快速启动
+## Quick Start
 
 ```bash
 cd backend
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
-# 访问 http://localhost:8000/static/index.html
+# Visit http://localhost:8000/static/index.html
 ```
 
 ---
 
-## 项目结构
+## Project Structure
 
 ```
-backend/                     # 后端核心
-├── main.py                  # FastAPI 应用
-├── models.py                # ORM 模型 (12 表)
-├── prediction_engine.py     # 预测引擎 (3 层融合)
-├── scheduler.py             # 定时任务调度
-├── zgzcw_jc_sync.py         # 竞彩数据同步
-├── health_daemon.py         # 自检自修引擎
-├── emergency_fix.py         # 诊断修复工具
+backend/
+├── main.py                  # FastAPI application
+├── models.py                # ORM models (12 tables)
+├── prediction_engine.py     # 3-layer fusion engine
+├── scheduler.py             # Task scheduler
+├── zgzcw_jc_sync.py         # Jingcai match sync
+├── health_daemon.py         # Self-check & repair
+├── emergency_fix.py         # Diagnostic tool
 │
-├── features/                # 特征生成层
-├── fusion/                  # LR 融合层
-├── nn/                      # 神经网络
-└── data/                    # 权重 & 审计数据
+├── features/                # Feature generation layer
+├── fusion/                  # LR fusion layer
+├── nn/                      # Neural networks
+└── data/                    # Weights & audit data
 ```
 
 ---
 
 ## License
 
-[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) — 允许非商业学术使用，需署名+相同方式共享
+[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) — Non-commercial academic use, attribution required, share-alike.
 
 ---
 
-## ⚠️ 免责声明
+## ⚠️ Disclaimer
 
-本项目为学术研究工具，输出结果为数学概率校准值，不构成任何投注建议。请遵守所在地法律法规，理性看待体育竞赛。
+This project is an academic research tool. Outputs are mathematically calibrated probabilities and do not constitute betting advice. Please comply with local laws and regulations, and maintain a rational perspective on sports competitions.
 
 ---
 
-## 文档
+## Docs
 
-详细文档移步 `docs/` 目录：
+Internal documentation moved to `docs/`:
 
-| 文档 | 说明 |
-|------|------|
-| [ARCHITECTURE_V2.md](docs/ARCHITECTURE_V2.md) | 系统架构文档 |
-| [AUTOMATION.md](docs/AUTOMATION.md) | 自动化管线说明 |
-| [ODDS_SETUP.md](docs/ODDS_SETUP.md) | 赔率数据配置 |
-| [QUICKSTART.md](docs/QUICKSTART.md) | 快速上手指南 |
-| [REMEDIATION_PLAN.md](docs/REMEDIATION_PLAN.md) | 修复计划 |
-| [AUDIT_REPORT_20260519.md](docs/AUDIT_REPORT_20260519.md) | 审计报告 |
-| [QUICK_FIX_GUIDE.md](docs/QUICK_FIX_GUIDE.md) | 快速修复指南 |
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE_V2.md](docs/ARCHITECTURE_V2.md) | System architecture |
+| [AUTOMATION.md](docs/AUTOMATION.md) | Automation pipeline |
+| [ODDS_SETUP.md](docs/ODDS_SETUP.md) | Odds data configuration |
+| [QUICKSTART.md](docs/QUICKSTART.md) | Getting started guide |
+| [REMEDIATION_PLAN.md](docs/REMEDIATION_PLAN.md) | Remediation plan |
+| [AUDIT_REPORT_20260519.md](docs/AUDIT_REPORT_20260519.md) | Audit report |
+| [QUICK_FIX_GUIDE.md](docs/QUICK_FIX_GUIDE.md) | Quick fix guide |
