@@ -15,10 +15,9 @@
 
 ## Demo Video
 
-<video src="https://github.com/VariableLab/football/raw/master/demo.mp4" controls width="100%">
-  Your browser does not support the video tag.
-  <a href="https://github.com/VariableLab/football/raw/master/demo.mp4">Download MP4</a>
-</video>
+[![Demo Video](screenshots/1.png)](demo.mp4)
+
+*Click the screenshot above to watch the demo video (30s, with voiceover)*
 
 ---
 

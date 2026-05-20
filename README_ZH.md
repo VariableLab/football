@@ -15,10 +15,9 @@
 
 ## 演示视频
 
-<video src="https://github.com/VariableLab/football/raw/master/demo.mp4" controls width="100%">
-  您的浏览器不支持视频播放。
-  <a href="https://github.com/VariableLab/football/raw/master/demo.mp4">下载 MP4</a>
-</video>
+[![点击播放演示视频](screenshots/1.png)](demo.mp4)
+
+*点击上方的截图即可播放演示视频（30秒，含语音解说）*
 
 ---
 
