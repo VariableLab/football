@@ -15,9 +15,9 @@
 
 ## Demo Video
 
-[![Demo Video](screenshots/1.png)](demo.mp4)
+[![Demo Video](screenshots/1.png)](https://github.com/VariableLab/football/blob/master/demo.mp4)
 
-*Click the screenshot above to watch the demo video (30s, with voiceover)*
+*Click the screenshot above to play the demo video (30s, with voiceover)*
 
 ---
 

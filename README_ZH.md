@@ -15,7 +15,7 @@
 
 ## 演示视频
 
-[![点击播放演示视频](screenshots/1.png)](demo.mp4)
+[![点击播放演示视频](screenshots/1.png)](https://github.com/VariableLab/football/blob/master/demo.mp4)
 
 *点击上方的截图即可播放演示视频（30秒，含语音解说）*
 
