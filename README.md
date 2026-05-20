@@ -15,9 +15,9 @@
 
 ## Demo Video
 
-<video src="promo-video/wc-analytics-demo.mp4" controls width="100%">
+<video src="https://github.com/VariableLab/football/raw/master/demo.mp4" controls width="100%">
   Your browser does not support the video tag.
-  <a href="promo-video/wc-analytics-demo.mp4">Download MP4</a>
+  <a href="https://github.com/VariableLab/football/raw/master/demo.mp4">Download MP4</a>
 </video>
 
 ---

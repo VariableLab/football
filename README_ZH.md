@@ -15,9 +15,9 @@
 
 ## 演示视频
 
-<video src="promo-video/wc-analytics-demo.mp4" controls width="100%">
+<video src="https://github.com/VariableLab/football/raw/master/demo.mp4" controls width="100%">
   您的浏览器不支持视频播放。
-  <a href="promo-video/wc-analytics-demo.mp4">下载 MP4</a>
+  <a href="https://github.com/VariableLab/football/raw/master/demo.mp4">下载 MP4</a>
 </video>
 
 ---
