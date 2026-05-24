@@ -35,135 +35,29 @@ from models import (
     JingcaiIssue,
 )
 
+import yaml
+import os
+
 logger = logging.getLogger(__name__)
 
 # ─── 受控词表 ───
-
-VALID_ODDS_SOURCES = frozenset({
-    "sporttery", "jingcai", "zgzcw", "500",
-    "football-data-B365", "football-data-PS", "football-data-PH",
-    "betexplorer", "oddsapi", "synthetic",
-    "soccerdata", "combined", "opening",
-})
-
-VALID_MATCH_CODE_PREFIXES = frozenset({
-    "JC",   # sporttery / jingcai
-    "INT",  # historical international
-    "OF",   # openfootball
-    "FR",   # friendly / real fixtures
-    "WC",   # world cup
-})
-
+...
 VALID_PLAY_TYPES = frozenset({"SPF", "RQ", "SCORE", "GOALS", "HALF"})
 
-# ─── 队名别名映射 (合并 zgzcw + 500.com + 常见变体) ───
+# ─── 队名别名映射 (支持 YAML 动态加载) ───
+_TEAM_CFG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "team_aliases.yaml")
 
-TEAM_ALIASES: Dict[str, str] = {
-    # 中文别名 → 规范名
-    "巴黎圣日尔曼": "巴黎圣日耳曼",
-    "巴黎": "巴黎圣日耳曼",
-    "PSG": "巴黎圣日耳曼",
-    "巴塞隆拿": "巴塞罗那",
-    "巴萨": "巴塞罗那",
-    "Barcelona": "巴塞罗那",
-    "皇马": "皇家马德里",
-    "利雅胜利": "利雅得胜利",
-    "利雅新月": "利雅得新月",
-    "利物浦": "利物浦",
-    "车路士": "切尔西",
-    "切尔西": "切尔西",
-    "曼城": "曼彻斯特城",
-    "曼聯": "曼彻斯特联",
-    "曼联": "曼彻斯特联",
-    "阿仙奴": "阿森纳",
-    "阿森纳": "阿森纳",
-    "热刺": "托特纳姆热刺",
-    "托特纳姆": "托特纳姆热刺",
-    "拜仁": "拜仁慕尼黑",
-    "多特": "多特蒙德",
-    "尤文": "尤文图斯",
-    "祖云达斯": "尤文图斯",
-    "国米": "国际米兰",
-    "米兰": "AC米兰",
-    "AC米蘭": "AC米兰",
-    "马体会": "马德里竞技",
-    "马竞": "马德里竞技",
-    "车仔": "切尔西",
-    "圣日门": "巴黎圣日耳曼",
-    "修咸顿": "南安普顿",
-    "南安普顿": "南安普顿",
-    "修咸頓": "南安普顿",
-    "纽卡素": "纽卡斯尔联",
-    "纽卡斯尔": "纽卡斯尔联",
-    "阿斯顿维拉": "阿斯顿维拉",
-    "阿士东维拉": "阿斯顿维拉",
-    "白礼顿": "布莱顿",
-    "布莱顿": "布莱顿",
-    "水晶宫": "水晶宫",
-    "富勒姆": "富勒姆",
-    "富咸": "富勒姆",
-    "狼队": "伍尔弗汉普顿",
-    "狼隊": "伍尔弗汉普顿",
-    "爱华顿": "埃弗顿",
-    "埃弗顿": "埃弗顿",
-    "诺丁汉": "诺丁汉森林",
-    "般尼": "伯恩利",
-    "伯恩利": "伯恩利",
-    "西布朗": "西布罗姆维奇",
-    "列斯联": "利兹联",
-    "利兹联": "利兹联",
-    "贝迪斯": "皇家贝蒂斯",
-    "贝蒂斯": "皇家贝蒂斯",
-    "切尔达": "塞尔塔",
-    "塞尔塔": "塞尔塔",
-    "维拉利尔": "比利亚雷亚尔",
-    "比利亚雷亚尔": "比利亚雷亚尔",
-    "塞维利亚": "塞维利亚",
-    "西维尔": "塞维利亚",
-    "华伦西亚": "巴伦西亚",
-    "巴伦西亚": "巴伦西亚",
-    "皇家苏斯达": "皇家社会",
-    "皇家社会": "皇家社会",
-    "拉科鲁尼亚": "拉科鲁尼亚",
-    "赫罗纳": "赫罗纳",
-    "基罗纳": "赫罗纳",
-    "马略卡": "马略卡",
-    "奥萨苏纳": "奥萨苏纳",
-    "拉斯彭马斯": "拉斯帕尔马斯",
-    "巴列卡诺": "巴列卡诺",
-    "艾尔切": "埃尔切",
-    "埃尔切": "埃尔切",
-    "加的斯": "加的斯",
-    "阿尔梅里亚": "阿尔梅里亚",
-    "罗马": "罗马",
-    "拿玻里": "那不勒斯",
-    "那不勒斯": "那不勒斯",
-    "亚特兰大": "亚特兰大",
-    "拉齐奥": "拉齐奥",
-    "拉素": "拉齐奥",
-    "佛罗伦萨": "佛罗伦萨",
-    "费伦天拿": "佛罗伦萨",
-    "博洛尼亚": "博洛尼亚",
-    "博洛尼亞": "博洛尼亚",
-    "都灵": "都灵",
-    "蒙扎": "蒙扎",
-    "萨索洛": "萨索洛",
-    "乌迪内斯": "乌迪内斯",
-    "莱切": "莱切",
-    "维罗纳": "维罗纳",
-    "卡利亚里": "卡利亚里",
-    "恩波利": "恩波利",
-    "弗洛西诺内": "弗洛西诺内",
-    "萨勒尼塔纳": "萨勒尼塔纳",
-    "圣旺红星": "圣旺红星",
-    "罗德兹": "罗德兹",
-    "神户胜利": "神户胜利船",
-    "京都": "京都不死鸟",
-    "富川FC": "富川FC",
-    "全北现代": "全北现代",
-    "南安普敦": "南安普顿",
-    "米堡": "米德尔斯堡",
-}
+def load_team_aliases() -> Dict[str, str]:
+    """从 YAML 加载队名映射，失败时返回空字典"""
+    if os.path.exists(_TEAM_CFG_PATH):
+        try:
+            with open(_TEAM_CFG_PATH, "r", encoding="utf-8") as f:
+                return yaml.safe_load(f) or {}
+        except Exception as e:
+            logger.warning(f"[config] Failed to load team_aliases.yaml: {e}")
+    return {}
+
+TEAM_ALIASES = load_team_aliases()
 
 
 def resolve_team_name(raw: str) -> str:
@@ -171,7 +65,9 @@ def resolve_team_name(raw: str) -> str:
     if not raw:
         return raw
     stripped = raw.strip()
+    # 优先查动态加载的别名库
     return TEAM_ALIASES.get(stripped, stripped)
+
 
 
 def resolve_team_db(db, raw_name: str) -> Optional[int]:

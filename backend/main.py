@@ -51,6 +51,7 @@ from admin import router as admin_router
 from routers.matches import router as matches_router
 from routers.feedback import router as feedback_router
 from routers.monitor import router as monitor_router
+from routers.advisor import router as advisor_router
 from validation_engine import ValidationEngine
 from odds_collector import OddsCollector, collect_odds_tier1_primary
 
@@ -166,6 +167,7 @@ app.include_router(admin_router)
 app.include_router(matches_router)
 app.include_router(feedback_router)
 app.include_router(monitor_router)
+app.include_router(advisor_router)
 
 # Static files — 使用绝对路径
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
@@ -1497,87 +1499,6 @@ async def sse_events():
         },
     )
 
-
-# ─── AI 分析聊天 ───────────────────────────────
-_CHAT_API_URL = "https://deepstock.zone.id/v1/chat/completions"
-_CHAT_API_KEY = "sk-vPaHbZkwC9EUJmSe6a42099869Ab47539bA7B69cCd564d10"
-
-class ChatRequest(BaseModel):
-    message: str
-    match_id: Optional[int] = None
-    history: list = []
-
-class ChatResponse(BaseModel):
-    reply: str
-
-@app.post("/api/chat", response_model=ChatResponse)
-def chat(req: ChatRequest, db: Session = Depends(get_db)):
-    context_parts = []
-
-    if req.match_id:
-        match = db.query(Match).filter(Match.id == req.match_id).first()
-        if match:
-            home = db.query(Team).filter(Team.id == match.home_team_id).first()
-            away = db.query(Team).filter(Team.id == match.away_team_id).first()
-            pred = db.query(Prediction).filter(Prediction.match_id == match.id).first()
-
-            ctx = f"""比赛信息:
-- 主队: {home.name if home else '?'} | 客队: {away.name if away else '?'}
-- 时间: {match.kickoff_at}
-- 联赛: {match.league_name}
-- 比分: {match.home_score if match.home_score is not None else '-'} : {match.away_score if match.away_score is not None else '-'}
-"""
-            if pred:
-                ctx += f"""
-模型预测 (SPF):
-- 胜 {pred.spf_home*100 if pred.spf_home else '?'}% / 平 {pred.spf_draw*100 if pred.spf_draw else '?'}% / 负 {pred.spf_away*100 if pred.spf_away else '?'}%
-- 让球胜 {pred.handicap_home*100 if pred.handicap_home else '?'}% / 让球负 {pred.handicap_away*100 if pred.handicap_away else '?'}%
-- 大小球大 {pred.over*100 if pred.over else '?'}% / 小 {pred.under*100 if pred.under else '?'}%
-"""
-            context_parts.append(ctx)
-
-    system_prompt = """你是一个专业的足球比赛分析助手，基于数据模型提供客观的赛事分析。
-当前分析的是竞彩足球数据系统。请用中文回答，简洁专业。
-你可以分析比赛概率、解读赔率、对比球队实力等。
-注意：你的分析仅供参考，不构成投注建议。"""
-
-    if context_parts:
-        system_prompt += "\n\n当前参考数据:\n" + "\n".join(context_parts)
-
-    messages = [{"role": "system", "content": system_prompt}]
-    messages.extend(req.history)
-    messages.append({"role": "user", "content": req.message})
-
-    import httpx
-    try:
-        resp = httpx.post(
-            _CHAT_API_URL,
-            headers={
-                "Authorization": f"Bearer {_CHAT_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "qwen/qwen3.5-397b-a17b",
-                "messages": messages,
-                "max_tokens": 2048,
-                "temperature": 0.7,
-            },
-            timeout=120,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        reply = data["choices"][0]["message"]["content"]
-        return ChatResponse(reply=reply)
-    except Exception as e:
-        logger.error(f"[chat] API call failed: {e}")
-        raise HTTPException(status_code=502, detail=f"AI 服务暂时不可用: {str(e)}")
-
-
-if __name__ == "__main__":
-    import uvicorn
-    host = "127.0.0.1" if settings.DEBUG else "0.0.0.0"
-    uvicorn.run("main:app", host=host, port=8000, reload=True)
-
 # ─── 智能串关推荐 ───────────────────────────────
 @app.get("/api/jingcai/issues/{issue_id}/optimal-combo", response_model=OptimalComboResponse)
 def get_optimal_combo(issue_id: int, top_n: int = 8, db: Session = Depends(get_db)):
@@ -1585,3 +1506,8 @@ def get_optimal_combo(issue_id: int, top_n: int = 8, db: Session = Depends(get_d
     from optimal_combo import compute_optimal_combo
     picks = compute_optimal_combo(db, issue_id, top_n)
     return {"issue_id": issue_id, "picks": picks, "total": len(picks)}
+
+if __name__ == "__main__":
+    import uvicorn
+    host = "127.0.0.1" if settings.DEBUG else "0.0.0.0"
+    uvicorn.run("main:app", host=host, port=8000, reload=True)

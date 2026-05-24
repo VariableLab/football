@@ -89,6 +89,13 @@ def fetch_json_local(local_root: Path, season: str, league_code: str) -> dict | 
 # ─── 队名匹配 ───
 
 def normalize_team_name(name: str) -> str:
+    from data_cleaner import resolve_team_name
+    # 1. 尝试使用中心别名库
+    norm = resolve_team_name(name)
+    if norm != name:
+        return norm
+
+    # 2. 回退到基础正则清理 (保持向后兼容)
     s = name.lower().strip()
     for suffix in [" fc", " cf", " sc", " afc", " ac", " bfc", " sv", " e.v",
                     " 1846", " 1848", " 1909", " 1907", " 1910", " 04",
@@ -101,37 +108,9 @@ def normalize_team_name(name: str) -> str:
     # 清理前导数字+点 (如 "1." 开头)
     import re
     s = re.sub(r"^\d+\.\s*", "", s)
-    aliases = {
-        "wolverhampton wanderers": "wolves", "nottingham forest": "nottingham forest",
-        "bayer 04 leverkusen": "leverkusen", "bayer leverkusen": "leverkusen",
-        "bayern munchen": "bayern", "bayern muenchen": "bayern",
-        "st. pauli": "st pauli", "sankt pauli": "st pauli",
-        "fc koln": "koln", "1. fc koln": "koln", "1 fc koln": "koln",
-        "hamburger sv": "hamburg", "vfl wolfsburg": "wolfsburg",
-        "atletico de madrid": "atletico", "atletico madrid": "atletico",
-        "athletic club": "athletic bilbao",
-        "valencia cf": "valencia", "levante ud": "levante", "elche cf": "elche",
-        "bologna fc": "bologna", "ssc napoli": "napoli",
-        "como 1907": "como", "ac pisa 1909": "pisa",
-        "tottenham hotspur": "tottenham",
-        "manchester united": "man united", "manchester city": "man city",
-        "brighton & hove albion": "brighton", "west ham united": "west ham",
-        "newcastle united": "newcastle", "sheffield united": "sheffield utd",
-        "aston villa": "aston villa",
-        "borussia dortmund": "dortmund",
-        "borussia monchengladbach": "monchengladbach", "borussia mgladbach": "monchengladbach",
-        "paris saint-germain": "psg", "paris saint germain": "psg",
-        "olympique lyonnais": "lyon", "olympique marseille": "marseille",
-        "as monaco": "monaco",
-        "inter milan": "inter", "ac milan": "milan",
-        "as roma": "roma", "lazio roma": "lazio",
-        "hellas verona": "verona", "fc barcelona": "barcelona",
-        "heidenheim 1846": "heidenheim", "1. fc heidenheim": "heidenheim",
-        "1 fc heidenheim": "heidenheim",
-        "everton fc": "everton", "everton": "everton",
-    }
-    s = s.strip()
-    return aliases.get(s, s)
+    
+    return s.strip()
+
 
 
 class TeamMatcher:
