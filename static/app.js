@@ -100,15 +100,17 @@ function openSettingsModal() { window.dispatchEvent(new CustomEvent('open-settin
 
 // ─── 比赛数据加载 ───
 async function loadMatchView() {
-  const grid = document.getElementById('matchGrid');
   try {
-    const matches = await WCApi.Data.getMatches({ status: AppState.filter === 'all' ? undefined : AppState.filter });
-    AppState.matches = matches.items || [];
+    const status = AppState.filter === 'all' ? undefined : AppState.filter;
+    // 注意：api_client.js 中的 getMatches 是 positional arguments: (status, group, matchType)
+    const matches = await WCApi.Data.getMatches(status);
+    AppState.matches = matches || []; // api_client 已经 unwrapItems 了
     renderCards();
   } catch (e) {
     console.error('Load matches failed', e);
   }
 }
+
 
 function renderCards() {
   const matches = AppState.matches;
