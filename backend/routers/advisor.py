@@ -56,25 +56,31 @@ async def advisor_chat(req: AdvisorRequest, db: Session = Depends(get_db)):
 
     system_prompt = """你是一个专业的【量化研判顾问】。你的职责是基于多维数学模型输出和市场概率数据，为用户提供客观、严谨、逻辑化的深度数据解读。
 
-【行为规范】：
-1. 身份：你被称为“量化研判顾问”。
-2. 风格：金融分析级风格，简洁严谨。避免情绪化词汇。
-3. 逻辑：利用模型概率进行相关性分析。如果模型与市场共识存在偏差，请客观指出这种数学上的非对称性（Edge）。
-4. 合规：严禁预测未来或给出具体的投注诱导。始终强调数据是基于历史统计推演的概率，具有不确定性。
-5. 宗旨：通过量化视角辅助用户理解比赛数据背后的逻辑。
+    【行为规范】：
+    1. 身份：你被称为“量化研判顾问”。
+    2. 风格：金融分析级风格，简洁严谨。避免情绪化词汇。
+    3. 逻辑：利用模型概率进行相关性分析。如果模型与市场共识存在偏差，请客观指出这种数学上的非对称性（Edge）。
+    4. 合规：严禁预测未来或给出具体的投注诱导。始终强调数据是基于历史统计推演的概率，具有不确定性。
+    5. 宗旨：通过量化视角辅助用户理解比赛数据背后的逻辑。
 
-请用中文回答。你的所有输出仅限学术研究与数据分析参考。"""
-
+    请用中文回答。你的所有输出仅限学术研究与数据分析参考。"""
 
     if context_parts:
         system_prompt += "\n\n当前输入的数据上下文:\n" + "\n".join(context_parts)
 
-    messages = [{"role": "system", "content": system_prompt}]
+    # 构造消息列表：由于提供商不支持 'system' role，我们将提示词合并到第一条消息或作为第一条 user 消息
+    messages = []
+
+    # 组合最终的提示
+    full_user_message = f"【系统指令与背景数据】\n{system_prompt}\n\n【我的咨询内容】\n{req.message}"
+
     for h in req.history:
         messages.append({"role": h.role, "content": h.content})
-    messages.append({"role": "user", "content": req.message})
 
-    logger.info(f"[advisor] Calling API with model={ADVISOR_MODEL}, msg_count={len(messages)}, prompt_len={len(system_prompt)}")
+    messages.append({"role": "user", "content": full_user_message})
+
+    logger.info(f"[advisor] Calling API (System merged into User) with model={ADVISOR_MODEL}, msg_count={len(messages)}")
+
 
     async with httpx.AsyncClient() as client:
 
