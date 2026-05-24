@@ -74,7 +74,10 @@ async def advisor_chat(req: AdvisorRequest, db: Session = Depends(get_db)):
         messages.append({"role": h.role, "content": h.content})
     messages.append({"role": "user", "content": req.message})
 
+    logger.info(f"[advisor] Calling API with model={ADVISOR_MODEL}, msg_count={len(messages)}, prompt_len={len(system_prompt)}")
+
     async with httpx.AsyncClient() as client:
+
         try:
             resp = await client.post(
                 ADVISOR_API_URL,
