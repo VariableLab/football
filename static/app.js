@@ -108,8 +108,11 @@ async function loadMatchView() {
     renderCards();
   } catch (e) {
     console.error('Load matches failed', e);
+    // 即使失败也停止加载动画，并清空列表
+    window.dispatchEvent(new CustomEvent('matches-updated', { detail: { matches: [] } }));
   }
 }
+
 
 
 function renderCards() {

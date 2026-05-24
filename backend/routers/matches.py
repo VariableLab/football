@@ -72,10 +72,13 @@ def list_matches(
 ):
     """
     List matches with pagination.
-    Supports filtering by status, group, match_type, date (today|tomorrow).
+    Supports filtering by status (including 'jingcai'), group, match_type, date (today|tomorrow).
     """
-    if status and status not in _VALID_STATUSES:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Valid values: {sorted(_VALID_STATUSES)}")
+    if status == "jingcai":
+        pass # 特殊处理，见下文 join 逻辑
+    elif status and status not in _VALID_STATUSES:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Valid values: {sorted(_VALID_STATUSES | {'jingcai'})}")
+    
     if match_type and match_type not in _VALID_MATCH_TYPES:
         raise HTTPException(status_code=400, detail=f"Invalid match_type. Valid values: {sorted(_VALID_MATCH_TYPES)}")
 
@@ -84,8 +87,13 @@ def list_matches(
         joinedload(Match.away_team),
         joinedload(Match.predictions)
     )
-    if status:
+
+    if status == "jingcai":
+        from models import JingcaiIssueMatch
+        q = q.join(JingcaiIssueMatch, Match.id == JingcaiIssueMatch.match_id)
+    elif status:
         q = q.filter(Match.status == status)
+
     if group:
         q = q.filter(Match.group == group.upper())
     if match_type:
