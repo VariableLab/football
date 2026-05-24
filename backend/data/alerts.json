@@ -1,33 +1,5 @@
 [
   {
-    "source": "odds_freshness",
-    "level": "critical",
-    "message": "6\u5c0f\u65f6\u5185 75 \u573a\u6bd4\u8d5b\u6709 96 \u573a\u8d54\u7387\u8fc7\u671f",
-    "ts": 1779574812.249076,
-    "time": "2026-05-23T22:20:12.249095+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "critical",
-    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 39.9%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
-    "ts": 1779575085.014354,
-    "time": "2026-05-23T22:24:45.014359+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "warning",
-    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
-    "ts": 1779575085.033438,
-    "time": "2026-05-23T22:24:45.033456+00:00"
-  },
-  {
-    "source": "odds_freshness",
-    "level": "critical",
-    "message": "6\u5c0f\u65f6\u5185 74 \u573a\u6bd4\u8d5b\u6709 94 \u573a\u8d54\u7387\u8fc7\u671f",
-    "ts": 1779576013.457404,
-    "time": "2026-05-23T22:40:13.457423+00:00"
-  },
-  {
     "source": "health_daemon",
     "level": "critical",
     "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 39.9%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
@@ -348,5 +320,33 @@
     "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
     "ts": 1779584670.928127,
     "time": "2026-05-24T01:04:30.928144+00:00"
+  },
+  {
+    "source": "odds_freshness",
+    "level": "critical",
+    "message": "6\u5c0f\u65f6\u5185 70 \u573a\u6bd4\u8d5b\u6709 77 \u573a\u8d54\u7387\u8fc7\u671f",
+    "ts": 1779616779.109913,
+    "time": "2026-05-24T09:59:39.109931+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 40.1%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
+    "ts": 1779617038.642139,
+    "time": "2026-05-24T10:03:58.642141+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "warning",
+    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
+    "ts": 1779617038.663409,
+    "time": "2026-05-24T10:03:58.663419+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "\u7cfb\u7edf\u5065\u5eb7\u68c0\u67e5\u5931\u8d25: 77/77 \u573a\u6bd4\u8d5b\u8d54\u7387\u8fc7\u671f, \u65b9\u5411\u51c6\u786e\u7387 40.1% < 48% \u9608\u503c (153/382)",
+    "ts": 1779617038.691353,
+    "time": "2026-05-24T10:03:58.691357+00:00"
   }
 ]
