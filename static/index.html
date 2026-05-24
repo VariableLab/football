@@ -14,7 +14,7 @@
   <meta property="og:url" content="https://football.nett.to" />
 
   <link rel="icon" type="image/png" href="/static/logo.png" />
-  <link rel="stylesheet" href="/static/tailwind.css?v=20260524-godmode" />
+  <link rel="stylesheet" href="/static/tailwind.css?v=20260524-perfection" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');
     :root { --cream: #FDFCF8; --charcoal: #1A1A1A; --accent: #D4AF37; }
@@ -363,7 +363,7 @@
                 <svg class="w-4 h-4 text-charcoal" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
               </template>
             </div>
-            <div class="rounded-2xl px-5 py-4 text-sm leading-relaxed" :class="msg.role === 'assistant' ? 'bg-[#1A1A1B] border border-white/5 text-white' : 'bg-charcoal text-white rounded-tr-sm shadow-md'">
+            <div class="rounded-2xl px-5 py-4 text-sm leading-relaxed" :class="msg.role === 'assistant' ? 'bg-[#1A1A1B] border border-white/5 text-white' : 'bg-[#1E1E1E] border border-white/5 text-white rounded-2xl shadow-md'">
               <p class="font-bold mb-1.5" :class="msg.role === 'assistant' ? 'text-accent' : 'text-white-light'" x-text="msg.role === 'assistant' ? '量化研判顾问' : '数据咨询'"></p>
               <div class="whitespace-pre-wrap" x-text="msg.content"></div>
             </div>
@@ -900,17 +900,17 @@
 
 <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-<script src="/static/i18n.js?v=20260524-godmode"></script>
-<script src="/static/api_client.js?v=20260524-godmode"></script>
-<script src="/static/app.js?v=20260524-godmode"></script>
-<script src="/static/src/components/MatchCard.js?v=20260524-godmode"></script>
-<script src="/static/src/components/MonitorDashboard.js?v=20260524-godmode"></script>
-<script src="/static/src/components/ValidationDashboard.js?v=20260524-godmode"></script>
-<script src="/static/src/components/FeedbackBoard.js?v=20260524-godmode"></script>
-<script src="/static/src/components/AdvisorChat.js?v=20260524-godmode"></script>
-<script src="/static/src/components/MatchDetailModal.js?v=20260524-godmode"></script>
-<script src="/static/src/components/AuthModal.js?v=20260524-godmode"></script>
-<script src="/static/src/components/RedeemModal.js?v=20260524-godmode"></script>
-<script src="/static/src/components/SettingsModal.js?v=20260524-godmode"></script>
+<script src="/static/i18n.js?v=20260524-perfection"></script>
+<script src="/static/api_client.js?v=20260524-perfection"></script>
+<script src="/static/app.js?v=20260524-perfection"></script>
+<script src="/static/src/components/MatchCard.js?v=20260524-perfection"></script>
+<script src="/static/src/components/MonitorDashboard.js?v=20260524-perfection"></script>
+<script src="/static/src/components/ValidationDashboard.js?v=20260524-perfection"></script>
+<script src="/static/src/components/FeedbackBoard.js?v=20260524-perfection"></script>
+<script src="/static/src/components/AdvisorChat.js?v=20260524-perfection"></script>
+<script src="/static/src/components/MatchDetailModal.js?v=20260524-perfection"></script>
+<script src="/static/src/components/AuthModal.js?v=20260524-perfection"></script>
+<script src="/static/src/components/RedeemModal.js?v=20260524-perfection"></script>
+<script src="/static/src/components/SettingsModal.js?v=20260524-perfection"></script>
 </body>
 </html>

@@ -1,19 +1,5 @@
 [
   {
-    "source": "odds_freshness",
-    "level": "critical",
-    "message": "6\u5c0f\u65f6\u5185 74 \u573a\u6bd4\u8d5b\u6709 94 \u573a\u8d54\u7387\u8fc7\u671f",
-    "ts": 1779579618.809891,
-    "time": "2026-05-23T23:40:18.809905+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "critical",
-    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 39.9%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
-    "ts": 1779580009.421088,
-    "time": "2026-05-23T23:46:49.421101+00:00"
-  },
-  {
     "source": "health_daemon",
     "level": "warning",
     "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
@@ -348,5 +334,19 @@
     "message": "6\u5c0f\u65f6\u5185 72 \u573a\u6bd4\u8d5b\u6709 105 \u573a\u8d54\u7387\u8fc7\u671f",
     "ts": 1779620924.377965,
     "time": "2026-05-24T11:08:44.377986+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 40.1%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
+    "ts": 1779621321.373533,
+    "time": "2026-05-24T11:15:21.373544+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "warning",
+    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
+    "ts": 1779621321.398215,
+    "time": "2026-05-24T11:15:21.398262+00:00"
   }
 ]
