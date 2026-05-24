@@ -80,6 +80,9 @@
         params.append("limit", "200");
         const res = await apiFetch(`/api/matches?${params.toString()}`);
         return unwrapItems(res);
+      },
+      async getMatch(matchId) {
+        return apiFetch(`/api/matches/${matchId}`);
       }
     },
     Strategy: {

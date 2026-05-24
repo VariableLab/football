@@ -1,61 +1,5 @@
 [
   {
-    "source": "health_daemon",
-    "level": "critical",
-    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 39.9%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
-    "ts": 1779576364.608645,
-    "time": "2026-05-23T22:46:04.608648+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "warning",
-    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
-    "ts": 1779576364.644429,
-    "time": "2026-05-23T22:46:04.644440+00:00"
-  },
-  {
-    "source": "odds_freshness",
-    "level": "critical",
-    "message": "6\u5c0f\u65f6\u5185 74 \u573a\u6bd4\u8d5b\u6709 94 \u573a\u8d54\u7387\u8fc7\u671f",
-    "ts": 1779576612.343909,
-    "time": "2026-05-23T22:50:12.343926+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "critical",
-    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 39.9%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
-    "ts": 1779576907.115723,
-    "time": "2026-05-23T22:55:07.115726+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "warning",
-    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
-    "ts": 1779576907.149754,
-    "time": "2026-05-23T22:55:07.149770+00:00"
-  },
-  {
-    "source": "odds_freshness",
-    "level": "critical",
-    "message": "6\u5c0f\u65f6\u5185 74 \u573a\u6bd4\u8d5b\u6709 94 \u573a\u8d54\u7387\u8fc7\u671f",
-    "ts": 1779577212.738317,
-    "time": "2026-05-23T23:00:12.738333+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "critical",
-    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 39.9%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
-    "ts": 1779577491.329861,
-    "time": "2026-05-23T23:04:51.329864+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "warning",
-    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
-    "ts": 1779577491.38433,
-    "time": "2026-05-23T23:04:51.384341+00:00"
-  },
-  {
     "source": "odds_freshness",
     "level": "critical",
     "message": "6\u5c0f\u65f6\u5185 74 \u573a\u6bd4\u8d5b\u6709 94 \u573a\u8d54\u7387\u8fc7\u671f",
@@ -348,5 +292,61 @@
     "message": "\u7cfb\u7edf\u5065\u5eb7\u68c0\u67e5\u5931\u8d25: 77/77 \u573a\u6bd4\u8d5b\u8d54\u7387\u8fc7\u671f, \u65b9\u5411\u51c6\u786e\u7387 40.1% < 48% \u9608\u503c (153/382)",
     "ts": 1779617038.691353,
     "time": "2026-05-24T10:03:58.691357+00:00"
+  },
+  {
+    "source": "odds_freshness",
+    "level": "critical",
+    "message": "6\u5c0f\u65f6\u5185 72 \u573a\u6bd4\u8d5b\u6709 105 \u573a\u8d54\u7387\u8fc7\u671f",
+    "ts": 1779617923.529454,
+    "time": "2026-05-24T10:18:43.529460+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 40.1%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
+    "ts": 1779618236.475283,
+    "time": "2026-05-24T10:23:56.475285+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "warning",
+    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
+    "ts": 1779618236.479917,
+    "time": "2026-05-24T10:23:56.479922+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "\u7cfb\u7edf\u5065\u5eb7\u68c0\u67e5\u5931\u8d25: 105/105 \u573a\u6bd4\u8d5b\u8d54\u7387\u8fc7\u671f, \u65b9\u5411\u51c6\u786e\u7387 40.1% < 48% \u9608\u503c (153/382)",
+    "ts": 1779618236.48985,
+    "time": "2026-05-24T10:23:56.489851+00:00"
+  },
+  {
+    "source": "odds_freshness",
+    "level": "critical",
+    "message": "6\u5c0f\u65f6\u5185 72 \u573a\u6bd4\u8d5b\u6709 105 \u573a\u8d54\u7387\u8fc7\u671f",
+    "ts": 1779618526.137076,
+    "time": "2026-05-24T10:28:46.137093+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 40.1%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
+    "ts": 1779618849.443514,
+    "time": "2026-05-24T10:34:09.443520+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "warning",
+    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
+    "ts": 1779618849.456365,
+    "time": "2026-05-24T10:34:09.456382+00:00"
+  },
+  {
+    "source": "odds_freshness",
+    "level": "critical",
+    "message": "6\u5c0f\u65f6\u5185 72 \u573a\u6bd4\u8d5b\u6709 105 \u573a\u8d54\u7387\u8fc7\u671f",
+    "ts": 1779619124.441589,
+    "time": "2026-05-24T10:38:44.441606+00:00"
   }
 ]

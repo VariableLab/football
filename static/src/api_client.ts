@@ -112,6 +112,9 @@ const WCApi = {
       const res = await apiFetch<MatchListResponse>(`/api/matches?${params.toString()}`);
       return unwrapItems(res) as unknown as MatchItem[];
     },
+    async getMatch(matchId: number): Promise<MatchOut> {
+      return apiFetch<MatchOut>(`/api/matches/${matchId}`);
+    },
   },
 
   Strategy: {

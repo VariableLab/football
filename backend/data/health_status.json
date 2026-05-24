@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-24T09:59:35.218601+00:00",
+  "timestamp": "2026-05-24T10:28:43.170173+00:00",
   "overall": "critical",
   "checks": [
     {
@@ -12,7 +12,7 @@
     {
       "name": "odds_freshness",
       "status": "fail",
-      "message": "77/77 场比赛赔率过期",
+      "message": "105/105 场比赛赔率过期",
       "repaired": true,
       "repair_action": "triggered: tier1, zgzcw(28)"
     },
@@ -26,9 +26,9 @@
     {
       "name": "data_completeness",
       "status": "warn",
-      "message": "共 70 场 | 缺预测:28 | 缺球队数据:140",
-      "repaired": true,
-      "repair_action": "triggered_prediction_lock"
+      "message": "共 70 场 | 缺球队数据:140",
+      "repaired": false,
+      "repair_action": ""
     },
     {
       "name": "zgzcw_sync",
@@ -61,7 +61,7 @@
     {
       "name": "backup_freshness",
       "status": "ok",
-      "message": "最新备份 15.1 小时前 (10 个)",
+      "message": "最新备份 15.6 小时前 (10 个)",
       "repaired": false,
       "repair_action": ""
     }
