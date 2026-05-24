@@ -6,7 +6,7 @@
     "watch:css": "npx tailwindcss -i ./static/input.css -o ./static/tailwind.css --watch",
     "build:js": "npx esbuild static/src/api_client.ts --bundle --format=iife --outfile=static/api_client.js --sourcemap",
     "build:js:prod": "npx esbuild static/src/api_client.ts --bundle --format=iife --outfile=static/api_client.js",
-    "build:types": "cd backend && \${PYTHON:-python3} -c \"import os; from main import app; import json; json.dump(app.openapi(), open('../static/openapi.json','w'), indent=2)\" 2>/dev/null || SECRET_KEY=build-32-char-fallback-key \${PYTHON:-python3} -c \"import os; os.environ['SECRET_KEY']='build-32-char-fallback-key-'; from main import app; import json; json.dump(app.openapi(), open('../static/openapi.json','w'), indent=2)\" && npx openapi-typescript ../static/openapi.json -o ../static/api/schema.ts",
+    "build:types": "cd backend && ${PYTHON:-python3} -c \"import os; from main import app; import json; json.dump(app.openapi(), open('../static/openapi.json','w'), indent=2)\" 2>/dev/null || SECRET_KEY=build-32-char-fallback-key ${PYTHON:-python3} -c \"import os; os.environ['SECRET_KEY']='build-32-char-fallback-key-'; from main import app; import json; json.dump(app.openapi(), open('../static/openapi.json','w'), indent=2)\" && npx openapi-typescript ../static/openapi.json -o ../static/api/schema.ts",
     "build": "npm run build:types && npm run build:js && npm run build:css",
     "watch": "npm run build:js"
   },
