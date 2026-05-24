@@ -14,7 +14,7 @@
   <meta property="og:url" content="https://football.nett.to" />
 
   <link rel="icon" type="image/png" href="/static/logo.png" />
-  <link rel="stylesheet" href="/static/tailwind.css?v=20260524-perfection" />
+  <link rel="stylesheet" href="/static/tailwind.css?v=20260524-ultimate" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');
     :root { --cream: #FDFCF8; --charcoal: #1A1A1A; --accent: #D4AF37; }
@@ -491,7 +491,7 @@
             <div class="flex items-center justify-between mb-8">
               <div class="flex-1 flex flex-col items-center gap-2">
                 <span class="text-4xl" x-text="homeTeam.flag"></span>
-                <span class="text-lg font-medium text-charcoal text-center" x-text="homeTeam.name"></span>
+                <span class="text-xl font-bold text-black text-center" x-text="homeTeam.name"></span>
                 <span class="text-xs text-warm-gray uppercase tracking-widest" x-text="'FIFA #' + (homeTeam.fifa_rank || '-')"></span>
               </div>
               <div class="px-6 flex flex-col items-center">
@@ -501,7 +501,7 @@
               </div>
               <div class="flex-1 flex flex-col items-center gap-2">
                 <span class="text-4xl" x-text="awayTeam.flag"></span>
-                <span class="text-lg font-medium text-charcoal text-center" x-text="awayTeam.name"></span>
+                <span class="text-xl font-bold text-black text-center" x-text="awayTeam.name"></span>
                 <span class="text-xs text-warm-gray uppercase tracking-widest" x-text="'FIFA #' + (awayTeam.fifa_rank || '-')"></span>
               </div>
             </div>
@@ -510,11 +510,11 @@
             <div class="grid grid-cols-3 gap-4 py-3 px-4 bg-cream-light/50 rounded-xl">
               <div class="text-center">
                 <div class="text-xs uppercase tracking-tighter text-warm-gray mb-0.5">Elo 实力</div>
-                <div class="text-base font-medium num" x-text="homeTeam.elo + ' / ' + awayTeam.elo"></div>
+                <div class="text-lg font-bold text-black num" x-text="homeTeam.elo + ' / ' + awayTeam.elo"></div>
               </div>
               <div class="text-center border-x border-accent/10">
                 <div class="text-xs uppercase tracking-tighter text-warm-gray mb-0.5">期望进球</div>
-                <div class="text-base font-medium num" x-text="homeTeam.avg_xg + ' - ' + awayTeam.avg_xg"></div>
+                <div class="text-lg font-bold text-black num" x-text="homeTeam.avg_xg + ' - ' + awayTeam.avg_xg"></div>
               </div>
               <div class="text-center">
                 <div class="text-xs uppercase tracking-tighter text-warm-gray mb-0.5">主场优势</div>
@@ -594,38 +594,40 @@
                   </template>
 
                   <template x-if="!locked && strategyData">
-                    <div class="space-y-3">
+                    <div class="space-y-4">
                       <template x-for="pick in strategyData.strategies" :key="pick.selection">
-                        <div class="glass p-5 border-l-4" :class="pick.is_recommended ? 'border-accent' : 'border-accent/10'">
-                          <div class="flex justify-between items-start mb-3">
+                        <div class="bg-white border border-charcoal/10 rounded-2xl p-6 shadow-sm border-l-4" :class="pick.is_recommended ? 'border-l-accent' : 'border-l-gray-300'">
+                          <div class="flex justify-between items-start mb-4">
                             <div>
-                              <span class="text-xs uppercase tracking-widest text-warm-gray" x-text="pick.play_label"></span>
-                              <div class="text-lg font-medium text-charcoal" x-text="pick.selection_label"></div>
+                              <span class="text-xs uppercase tracking-[0.2em] text-gray-500 font-bold" x-text="pick.play_label"></span>
+                              <div class="text-xl font-bold text-black mt-1" x-text="pick.selection_label"></div>
                             </div>
                             <div class="text-right">
-                              <span class="text-xs text-warm-gray" data-i18n="match.odds">赔率</span>
-                              <div class="text-lg font-medium text-accent num" x-text="pick.odds"></div>
+                              <span class="text-xs font-bold text-gray-500 uppercase tracking-widest" data-i18n="match.odds">赔率</span>
+                              <div class="text-2xl font-bold text-accent num" x-text="pick.odds"></div>
                             </div>
                           </div>
-                          <div class="flex items-center gap-6 py-3 border-y border-accent/5">
+                          
+                          <div class="grid grid-cols-4 gap-4 py-4 border-y border-charcoal/5">
                             <div>
-                              <div class="text-[10px] uppercase text-warm-gray mb-0.5">Edge</div>
-                              <div class="text-sm font-medium num" :class="pick.edge > 0.05 ? 'text-accent-green' : 'text-charcoal'" x-text="(pick.edge * 100).toFixed(1) + '%'"></div>
+                              <div class="text-[10px] uppercase font-bold text-gray-400 mb-1">Edge</div>
+                              <div class="text-base font-bold num" :class="pick.edge > 0.05 ? 'text-accent-green' : 'text-black'" x-text="(pick.edge * 100).toFixed(1) + '%'"></div>
                             </div>
                             <div>
-                              <div class="text-[10px] uppercase text-warm-gray mb-0.5">EV</div>
-                              <div class="text-sm font-medium num" :class="pick.ev > 0 ? 'text-accent-green' : 'text-charcoal'" x-text="(pick.ev * 100).toFixed(1) + '%'"></div>
+                              <div class="text-[10px] uppercase font-bold text-gray-400 mb-1">EV</div>
+                              <div class="text-base font-bold num" :class="pick.ev > 0 ? 'text-accent-green' : 'text-black'" x-text="(pick.ev * 100).toFixed(1) + '%'"></div>
                             </div>
                             <div>
-                              <div class="text-[10px] uppercase text-warm-gray mb-0.5">Kelly</div>
-                              <div class="text-sm font-medium num text-accent" x-text="pick.stake_pct.toFixed(1) + '%'"></div>
+                              <div class="text-[10px] uppercase font-bold text-gray-400 mb-1">Kelly</div>
+                              <div class="text-base font-bold num text-accent" x-text="pick.stake_pct.toFixed(1) + '%'"></div>
                             </div>
-                            <div class="ml-auto text-right">
-                              <div class="text-[10px] uppercase text-warm-gray mb-0.5">置信度</div>
-                              <div class="text-xs font-medium uppercase tracking-widest" :class="pick.confidence === 'high' ? 'text-accent-green' : 'text-warm-gray'" x-text="pick.confidence"></div>
+                            <div class="text-right">
+                              <div class="text-[10px] uppercase font-bold text-gray-400 mb-1">置信度</div>
+                              <div class="text-xs font-bold uppercase tracking-widest" :class="pick.confidence === 'high' ? 'text-accent-green' : 'text-gray-600'" x-text="pick.confidence"></div>
                             </div>
                           </div>
-                          <div class="mt-4 text-sm text-warm-gray font-normal leading-relaxed italic" x-text="'💡 ' + pick.rationale"></div>
+                          
+                          <div class="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-700 font-normal leading-relaxed italic border-l-2 border-accent/20" x-text="'💡 ' + pick.rationale"></div>
                         </div>
                       </template>
                     </div>
@@ -634,30 +636,30 @@
 
                 <!-- Odds Movement -->
                 <template x-if="oddsMovement">
-                  <div class="mt-8 pt-8 border-t border-accent/10">
-                    <h4 class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-4" data-i18n="match.oddsMove">赔率走势分析</h4>
-                    <div class="grid grid-cols-2 gap-6">
-                      <div class="glass p-5 bg-warm-gray/5">
-                        <div class="text-xs text-warm-gray mb-3 uppercase tracking-widest">初始 vs 现盘</div>
-                        <div class="space-y-2">
+                  <div class="mt-10 pt-8 border-t border-charcoal/10">
+                    <h4 class="text-xs uppercase tracking-[0.25em] text-gray-900 font-bold mb-5" data-i18n="match.oddsMove">赔率走势分析</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div class="bg-white border border-charcoal/5 rounded-2xl p-6 shadow-sm">
+                        <div class="text-xs text-gray-500 font-bold mb-4 uppercase tracking-widest">初始指数 vs 现盘</div>
+                        <div class="space-y-3">
                           <div class="flex justify-between items-center text-sm">
-                            <span class="font-normal text-charcoal">主胜</span>
-                            <span class="num font-medium" x-text="oddsMovement.opening_odds.home + ' → ' + match.odds_home"></span>
+                            <span class="font-bold text-black">主胜 (H)</span>
+                            <span class="num font-bold text-lg" x-text="oddsMovement.opening_odds.home + ' → ' + match.odds_home"></span>
                           </div>
                           <div class="flex justify-between items-center text-sm">
-                            <span class="font-normal text-charcoal">平局</span>
-                            <span class="num font-medium" x-text="oddsMovement.opening_odds.draw + ' → ' + match.odds_draw"></span>
+                            <span class="font-bold text-black">平局 (D)</span>
+                            <span class="num font-bold text-lg" x-text="oddsMovement.opening_odds.draw + ' → ' + match.odds_draw"></span>
                           </div>
                           <div class="flex justify-between items-center text-sm">
-                            <span class="font-normal text-charcoal">客胜</span>
-                            <span class="num font-medium" x-text="oddsMovement.opening_odds.away + ' → ' + match.odds_away"></span>
+                            <span class="font-bold text-black">客胜 (A)</span>
+                            <span class="num font-bold text-lg" x-text="oddsMovement.opening_odds.away + ' → ' + match.odds_away"></span>
                           </div>
                         </div>
                       </div>
-                      <div>
-                        <div class="text-xs text-warm-gray mb-3 uppercase tracking-widest">资金流向信号</div>
-                        <div class="text-base text-charcoal font-medium mb-2" x-text="oddsMovement.signal || '无显著资金压力'"></div>
-                        <p class="text-xs text-warm-gray font-normal leading-relaxed" x-text="oddsMovement.analysis || '市场情绪相对稳定，未检测到大额异常扫盘资金。'"></p>
+                      <div class="p-2">
+                        <div class="text-xs text-gray-500 font-bold mb-3 uppercase tracking-widest">资金流向信号</div>
+                        <div class="text-lg font-bold text-black mb-2" x-text="oddsMovement.signal || '无显著资金压力'"></div>
+                        <p class="text-sm text-gray-700 font-normal leading-relaxed" x-text="oddsMovement.analysis || '市场情绪相对稳定，未检测到大额异常扫盘资金。'"></p>
                       </div>
                     </div>
                   </div>
@@ -900,17 +902,17 @@
 
 <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-<script src="/static/i18n.js?v=20260524-perfection"></script>
-<script src="/static/api_client.js?v=20260524-perfection"></script>
-<script src="/static/app.js?v=20260524-perfection"></script>
-<script src="/static/src/components/MatchCard.js?v=20260524-perfection"></script>
-<script src="/static/src/components/MonitorDashboard.js?v=20260524-perfection"></script>
-<script src="/static/src/components/ValidationDashboard.js?v=20260524-perfection"></script>
-<script src="/static/src/components/FeedbackBoard.js?v=20260524-perfection"></script>
-<script src="/static/src/components/AdvisorChat.js?v=20260524-perfection"></script>
-<script src="/static/src/components/MatchDetailModal.js?v=20260524-perfection"></script>
-<script src="/static/src/components/AuthModal.js?v=20260524-perfection"></script>
-<script src="/static/src/components/RedeemModal.js?v=20260524-perfection"></script>
-<script src="/static/src/components/SettingsModal.js?v=20260524-perfection"></script>
+<script src="/static/i18n.js?v=20260524-ultimate"></script>
+<script src="/static/api_client.js?v=20260524-ultimate"></script>
+<script src="/static/app.js?v=20260524-ultimate"></script>
+<script src="/static/src/components/MatchCard.js?v=20260524-ultimate"></script>
+<script src="/static/src/components/MonitorDashboard.js?v=20260524-ultimate"></script>
+<script src="/static/src/components/ValidationDashboard.js?v=20260524-ultimate"></script>
+<script src="/static/src/components/FeedbackBoard.js?v=20260524-ultimate"></script>
+<script src="/static/src/components/AdvisorChat.js?v=20260524-ultimate"></script>
+<script src="/static/src/components/MatchDetailModal.js?v=20260524-ultimate"></script>
+<script src="/static/src/components/AuthModal.js?v=20260524-ultimate"></script>
+<script src="/static/src/components/RedeemModal.js?v=20260524-ultimate"></script>
+<script src="/static/src/components/SettingsModal.js?v=20260524-ultimate"></script>
 </body>
 </html>

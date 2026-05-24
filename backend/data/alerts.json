@@ -1,12 +1,5 @@
 [
   {
-    "source": "health_daemon",
-    "level": "warning",
-    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
-    "ts": 1779580009.439181,
-    "time": "2026-05-23T23:46:49.439191+00:00"
-  },
-  {
     "source": "odds_freshness",
     "level": "critical",
     "message": "6\u5c0f\u65f6\u5185 74 \u573a\u6bd4\u8d5b\u6709 94 \u573a\u8d54\u7387\u8fc7\u671f",
@@ -348,5 +341,12 @@
     "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
     "ts": 1779621321.398215,
     "time": "2026-05-24T11:15:21.398262+00:00"
+  },
+  {
+    "source": "odds_freshness",
+    "level": "critical",
+    "message": "6\u5c0f\u65f6\u5185 72 \u573a\u6bd4\u8d5b\u6709 105 \u573a\u8d54\u7387\u8fc7\u671f",
+    "ts": 1779621526.144857,
+    "time": "2026-05-24T11:18:46.144873+00:00"
   }
 ]
