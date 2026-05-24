@@ -1,1 +1,55 @@
+name: CI/CD Pipeline
 
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-python-version: '3.10'
+          
+      - name: Install Dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+          
+      - name: Run Tests
+        env:
+          SECRET_KEY: ${{ secrets.TEST_SECRET_KEY || 'test-secret-key-at-least-32-characters-long' }}
+          ADMIN_API_KEY: ${{ secrets.TEST_ADMIN_API_KEY || 'test-admin-key-long-enough' }}
+          DATABASE_URL: sqlite:///./backend/database.sqlite
+        run: |
+          pytest backend/tests
+
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/${{ secrets.SERVER_USER }}/Github/football
+            git pull origin master
+            # 更新依赖
+            ./backend/venv/bin/pip install -r backend/requirements.txt
+            # 前端构建 (如有 node 环境)
+            npm install && npm run build
+            # 重启服务
+            sudo systemctl restart football.service
+            sudo systemctl status football.service
