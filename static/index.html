@@ -14,7 +14,7 @@
   <meta property="og:url" content="https://football.nett.to" />
 
   <link rel="icon" type="image/png" href="/static/logo.png" />
-  <link rel="stylesheet" href="/static/tailwind.css?v=20260524-ultra" />
+  <link rel="stylesheet" href="/static/tailwind.css?v=20260524-godmode" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');
     :root { --cream: #FDFCF8; --charcoal: #1A1A1A; --accent: #D4AF37; }
@@ -151,7 +151,7 @@
                 <span class="text-xl" x-text="homeTeam.flag"></span>
               </template>
               <div>
-                <div class="text-base font-medium text-charcoal" x-text="homeTeam ? homeTeam.name : ''"></div>
+                <div class="text-lg font-bold text-black" x-text="homeTeam ? homeTeam.name : ''"></div>
                 <div class="text-sm font-normal text-warm-gray num" x-text="'#' + (homeTeam ? homeTeam.fifa_rank : '-')"></div>
               </div>
             </div>
@@ -161,7 +161,7 @@
                 <span class="text-xl" x-text="awayTeam.flag"></span>
               </template>
               <div class="text-right">
-                <div class="text-base font-medium text-charcoal" x-text="awayTeam ? awayTeam.name : ''"></div>
+                <div class="text-lg font-bold text-black" x-text="awayTeam ? awayTeam.name : ''"></div>
                 <div class="text-sm font-normal text-warm-gray num" x-text="'#' + (awayTeam ? awayTeam.fifa_rank : '-')"></div>
               </div>
             </div>
@@ -385,7 +385,7 @@
           <textarea 
             x-model="input"
             rows="2" 
-            class="w-full px-4 py-3 pr-12 rounded-xl text-sm placeholder-warm-gray resize-none border border-accent/10 focus:border-accent/30 focus:outline-none transition-colors bg-cream-light/30" 
+            class="w-full px-4 py-3 pr-12 rounded-xl text-sm placeholder-gray-500 resize-none border border-white/20 focus:border-accent/50 focus:outline-none transition-colors bg-white/5 text-white" 
             placeholder="输入您的量化研判疑问..." 
             @keydown.enter.prevent="sendMessage()"
           ></textarea>
@@ -665,14 +665,100 @@
               </div>
             </template>
 
-            <!-- Other tabs (simplified for brevity) -->
-            <template x-if="tab !== 'spf'">
-              <div class="py-12 text-center text-warm-gray font-normal">
-                <div class="text-3xl mb-4">🚧</div>
-                <div data-i18n="match.tabUnderDev">子玩法深度分析模块开发中</div>
-                <p class="text-xs mt-2 opacity-60">请参考胜平负核心预测</p>
+            <!-- Handicap Tab -->
+            <template x-if="tab === 'rq'">
+              <div class="space-y-6">
+                <div class="flex items-center justify-between text-sm text-warm-gray uppercase tracking-widest mb-2">
+                  <span x-text="'让球预测 (' + (match.handicap > 0 ? '+' : '') + match.handicap + ')'"></span>
+                  <span class="num" x-text="match.predictions?.[0]?.model_version || ''"></span>
+                </div>
+                <template x-if="rqPred">
+                  <div class="space-y-4">
+                    <div class="flex items-center gap-4">
+                      <span class="w-12 text-sm text-charcoal">让胜</span>
+                      <div class="flex-1 h-2 bar-bg rounded-full overflow-hidden">
+                        <div class="h-full bar-fill rounded-full" :style="'width:' + (rqPred.probabilities.home * 100) + '%'"></div>
+                      </div>
+                      <span class="num w-12 text-right text-beige font-medium" x-text="fmtPct(rqPred.probabilities.home)"></span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                      <span class="w-12 text-sm text-charcoal">让平</span>
+                      <div class="flex-1 h-2 bar-bg rounded-full overflow-hidden">
+                        <div class="h-full bar-fill rounded-full opacity-50" :style="'width:' + (rqPred.probabilities.draw * 100) + '%'"></div>
+                      </div>
+                      <span class="num w-12 text-right text-warm-gray font-medium" x-text="fmtPct(rqPred.probabilities.draw)"></span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                      <span class="w-12 text-sm text-charcoal">让负</span>
+                      <div class="flex-1 h-2 bar-bg rounded-full overflow-hidden">
+                        <div class="h-full bar-fill rounded-full opacity-30" :style="'width:' + (rqPred.probabilities.away * 100) + '%'"></div>
+                      </div>
+                      <span class="num w-12 text-right text-warm-gray font-medium" x-text="fmtPct(rqPred.probabilities.away)"></span>
+                    </div>
+                  </div>
+                </template>
               </div>
             </template>
+
+            <!-- Score Tab -->
+            <template x-if="tab === 'score'">
+              <div class="space-y-4">
+                <div class="text-xs uppercase tracking-widest text-warm-gray mb-4">大概率比分预测 (Top 10)</div>
+                <div class="grid grid-cols-2 gap-3">
+                  <template x-if="scorePred">
+                    <template x-for="[s, p] in Object.entries(scorePred.probabilities).sort((a,b) => b[1]-a[1]).slice(0, 10)" :key="s">
+                      <div class="glass p-3 flex justify-between items-center">
+                        <span class="num font-bold text-charcoal" x-text="s"></span>
+                        <span class="num text-accent" x-text="fmtPct(p)"></span>
+                      </div>
+                    </template>
+                  </template>
+                </div>
+              </div>
+            </template>
+
+            <!-- Goals Tab -->
+            <template x-if="tab === 'goals'">
+              <div class="space-y-4">
+                <div class="text-xs uppercase tracking-widest text-warm-gray mb-4">进球总数概率分布</div>
+                <template x-if="goalsPred">
+                  <div class="space-y-3">
+                    <template x-for="[g, p] in Object.entries(goalsPred.probabilities).sort((a,b) => a[0]-b[0])" :key="g">
+                      <div class="flex items-center gap-4">
+                        <span class="w-8 text-sm text-charcoal" x-text="g + '球'"></span>
+                        <div class="flex-1 h-1.5 bar-bg rounded-full overflow-hidden">
+                          <div class="h-full bar-fill rounded-full" :style="'width:' + (p * 100) + '%'"></div>
+                        </div>
+                        <span class="num w-10 text-right text-warm-gray text-xs" x-text="fmtPct(p)"></span>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <!-- Half-time Tab -->
+            <template x-if="tab === 'half'">
+              <div class="space-y-4">
+                <div class="text-xs uppercase tracking-widest text-warm-gray mb-4">半全场格局 (Top 5)</div>
+                <template x-if="halfPred">
+                  <div class="space-y-3">
+                    <template x-for="[h, p] in Object.entries(halfPred.probabilities).sort((a,b) => b[1]-a[1]).slice(0, 5)" :key="h">
+                      <div class="flex items-center justify-between p-3 glass">
+                        <span class="text-sm font-medium text-charcoal" x-text="h"></span>
+                        <div class="flex items-center gap-3">
+                          <div class="w-24 h-1.5 bar-bg rounded-full overflow-hidden">
+                            <div class="h-full bar-fill rounded-full" :style="'width:' + (p * 100) + '%'"></div>
+                          </div>
+                          <span class="num text-accent text-sm" x-text="fmtPct(p)"></span>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </template>
+
           </div>
 
           <!-- Modal Footer: Advisor Action -->
@@ -814,17 +900,17 @@
 
 <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-<script src="/static/i18n.js?v=20260524-ultra"></script>
-<script src="/static/api_client.js?v=20260524-ultra"></script>
-<script src="/static/app.js?v=20260524-ultra"></script>
-<script src="/static/src/components/MatchCard.js?v=20260524-ultra"></script>
-<script src="/static/src/components/MonitorDashboard.js?v=20260524-ultra"></script>
-<script src="/static/src/components/ValidationDashboard.js?v=20260524-ultra"></script>
-<script src="/static/src/components/FeedbackBoard.js?v=20260524-ultra"></script>
-<script src="/static/src/components/AdvisorChat.js?v=20260524-ultra"></script>
-<script src="/static/src/components/MatchDetailModal.js?v=20260524-ultra"></script>
-<script src="/static/src/components/AuthModal.js?v=20260524-ultra"></script>
-<script src="/static/src/components/RedeemModal.js?v=20260524-ultra"></script>
-<script src="/static/src/components/SettingsModal.js?v=20260524-ultra"></script>
+<script src="/static/i18n.js?v=20260524-godmode"></script>
+<script src="/static/api_client.js?v=20260524-godmode"></script>
+<script src="/static/app.js?v=20260524-godmode"></script>
+<script src="/static/src/components/MatchCard.js?v=20260524-godmode"></script>
+<script src="/static/src/components/MonitorDashboard.js?v=20260524-godmode"></script>
+<script src="/static/src/components/ValidationDashboard.js?v=20260524-godmode"></script>
+<script src="/static/src/components/FeedbackBoard.js?v=20260524-godmode"></script>
+<script src="/static/src/components/AdvisorChat.js?v=20260524-godmode"></script>
+<script src="/static/src/components/MatchDetailModal.js?v=20260524-godmode"></script>
+<script src="/static/src/components/AuthModal.js?v=20260524-godmode"></script>
+<script src="/static/src/components/RedeemModal.js?v=20260524-godmode"></script>
+<script src="/static/src/components/SettingsModal.js?v=20260524-godmode"></script>
 </body>
 </html>
