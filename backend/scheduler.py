@@ -391,7 +391,14 @@ def sync_results_job():
 
             for m in data.get("matches", []):
                 score = m.get("score", {})
-                ft = score.get("ft", {})
+                if isinstance(score, list):
+                    # Fallback if score is just [hg, ag]
+                    ft = score
+                elif isinstance(score, dict):
+                    ft = score.get("ft", [])
+                else:
+                    continue
+                
                 if not isinstance(ft, list) or len(ft) != 2:
                     continue
                 try:

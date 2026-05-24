@@ -470,7 +470,11 @@ function renderCards() {
 
   const start = (AppState.page - 1) * AppState.pageSize;
   const pageMatches = matches.slice(start, start + AppState.pageSize);
-  grid.innerHTML = pageMatches.map(m => renderMatchCard(m)).join('') + renderPagination(matches.length);
+  
+  // 发送事件通知 Alpine.js 更新 UI
+  window.dispatchEvent(new CustomEvent('matches-updated', { 
+    detail: { matches: pageMatches } 
+  }));
 }
 
 function renderMatchCard(m) {

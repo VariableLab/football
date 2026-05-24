@@ -23,7 +23,8 @@ import httpx
 from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
 
-from odds_collector import OddsSnapshot, OddsSource, _fetch_with_retry
+from data_source.base import OddsSnapshot, OddsSource
+from odds_collector import _fetch_with_retry
 
 logger = logging.getLogger("500")
 

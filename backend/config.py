@@ -76,6 +76,8 @@ def get_settings() -> Settings:
 
     # Validate SECRET_KEY
     env_secret = os.environ.get("SECRET_KEY", "")
+    import sys
+    is_testing = "PYTEST_CURRENT_TEST" in os.environ or "pytest" in sys.modules
     if not env_secret and not _PRODUCTION:
         try:
             from dotenv import dotenv_values
@@ -83,6 +85,11 @@ def get_settings() -> Settings:
             env_secret = env_vals.get("SECRET_KEY", "")
         except Exception:
             pass
+    
+    # In testing environment, provide a default secret key if not configured
+    if not env_secret and is_testing:
+        env_secret = "test-secret-key-at-least-32-characters-long-for-pytest"
+        
     if not env_secret:
         raise ValueError(
             "SECRET_KEY is not configured. Every restart generates a new random key, "
@@ -113,6 +120,10 @@ def get_settings() -> Settings:
             env_admin = env_vals.get("ADMIN_API_KEY", "")
         except Exception:
             pass
+            
+    if not env_admin and is_testing:
+        env_admin = "test-admin-api-key-at-least-16-chars"
+        
     if not env_admin:
         raise ValueError(
             "ADMIN_API_KEY is not configured. Without a persistent key, "
@@ -120,6 +131,12 @@ def get_settings() -> Settings:
             "Set via environment variable: "
             "python3 -c \"import secrets; print(secrets.token_urlsafe(32))\""
         )
+    
+    # Update settings with valid keys for testing
+    if is_testing:
+        s.SECRET_KEY = env_secret
+        s.ADMIN_API_KEY = env_admin
+
     if _PRODUCTION and not _check_secret_source("ADMIN_API_KEY"):
         raise ValueError(
             "Production requires ADMIN_API_KEY from environment variable, not .env file. "

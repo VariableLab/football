@@ -89,7 +89,13 @@
   </div>
 
   <!-- Section: 赛事分析 -->
-  <div id="sectionMatches">
+  <div id="sectionMatches" x-data="{ matches: [], loading: true }" x-init="
+    // 监听全局事件来更新数据
+    window.addEventListener('matches-updated', (e) => {
+      matches = e.detail.matches;
+      loading = false;
+    })
+  ">
     <div class="flex items-center gap-3 mb-8 flex-wrap" id="matchTabs">
       <button onclick="setFilter('jingcai')" class="tab-filter px-5 py-2 text-sm font-light tracking-wide border text-charcoal hover:text-charcoal transition-all duration-300" data-filter="jingcai" data-i18n="filter.jingcai">在售赛事</button>
       <button onclick="setFilter('all')" class="tab-filter px-5 py-2 text-sm font-light tracking-wide text-warm-gray hover:text-charcoal transition-all duration-300" data-filter="all" data-i18n="filter.all">全部</button>
@@ -98,19 +104,176 @@
       <button onclick="setFilter('world_cup')" class="tab-filter px-5 py-2 text-sm font-light tracking-wide text-warm-gray hover:text-charcoal transition-all duration-300" data-filter="world_cup" data-i18n="filter.world_cup">世界杯</button>
       <button onclick="setFilter('friendly')" class="tab-filter px-5 py-2 text-sm font-light tracking-wide text-warm-gray hover:text-charcoal transition-all duration-300" data-filter="friendly" data-i18n="filter.friendly">热身赛</button>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="matchGrid">
+
+    <!-- Loading State -->
+    <template x-if="loading">
       <div class="col-span-full text-center py-24 text-warm-gray">
         <div class="w-10 h-10 rounded-full border-2 border-accent/20 border-t-accent animate-spin mx-auto mb-4"></div>
         <div class="text-base font-light" data-i18n="loading">加载中...</div>
       </div>
+    </template>
+
+    <!-- Match Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="matchGrid">
+      <template x-for="m in matches" :key="m.id">
+        <div x-data="MatchCard(m)" class="glass p-6 cursor-pointer group" @click="openModal(m.id)">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2 text-base font-light text-warm-gray num">
+              <span x-text="fmtBJ(m.kickoff_at)"></span>
+              <span class="text-charcoal/15">·</span>
+              <span class="text-warm-gray" x-text="m.group || m.stage || ''"></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm px-2 py-0.5 rounded border font-light" :class="typeBadgeClass" x-text="m.match_type === 'friendly' ? '热身赛' : '世界杯'"></span>
+              <span class="text-sm px-2 py-0.5 rounded border font-light" :class="statusBadgeClass" x-text="m.status === 'finished' ? '已结束' : '未开赛'"></span>
+              <template x-if="m.updated_at">
+                <span class="text-sm font-light" x-html="freshnessTag(m.updated_at)"></span>
+              </template>
+            </div>
+          </div>
+          
+          <template x-if="countdown && m.status !== 'finished'">
+            <div class="text-base text-accent-yellow num font-light mb-2" x-text="countdown"></div>
+          </template>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <template x-if="homeTeam && homeTeam.flag">
+                <span class="text-xl" x-text="homeTeam.flag"></span>
+              </template>
+              <div>
+                <div class="text-base font-medium text-charcoal" x-text="homeTeam ? homeTeam.name : ''"></div>
+                <div class="text-sm font-light text-warm-gray num" x-text="'#' + (homeTeam ? homeTeam.fifa_rank : '-')"></div>
+              </div>
+            </div>
+            <div class="text-sm text-warm-gray num font-light">VS</div>
+            <div class="flex items-center gap-3 flex-row-reverse">
+              <template x-if="awayTeam && awayTeam.flag">
+                <span class="text-xl" x-text="awayTeam.flag"></span>
+              </template>
+              <div class="text-right">
+                <div class="text-base font-medium text-charcoal" x-text="awayTeam ? awayTeam.name : ''"></div>
+                <div class="text-sm font-light text-warm-gray num" x-text="'#' + (awayTeam ? awayTeam.fifa_rank : '-')"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3 pt-3 border-t border-accent/10">
+            <div class="flex justify-between text-base font-light text-warm-gray mb-3">
+              <span class="flex items-center gap-1.5">
+                <span class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium" data-i18n="match.oddsSource">指数</span>
+                <template x-if="m.odds_source">
+                  <span class="px-1.5 py-0.5 rounded text-sm font-light border" :class="m.odds_source === 'synthetic' ? 'border-accent/15 text-warm-gray' : 'border-accent/30 text-accent'" x-text="m.odds_source === 'synthetic' ? '合成' : '真实'"></span>
+                </template>
+              </span>
+              <span class="num" x-text="(m.odds_home || '-') + ' / ' + (m.odds_draw || '-') + ' / ' + (m.odds_away || '-')"></span>
+            </div>
+
+            <template x-if="spf.home">
+              <div class="space-y-2">
+                <!-- SPF Bars -->
+                <div class="flex items-center gap-3 text-base font-light">
+                  <span class="w-10 text-warm-gray truncate" x-text="homeTeam ? homeTeam.name : ''"></span>
+                  <div class="flex-1 h-1.5 bar-bg rounded-full overflow-hidden">
+                    <div class="h-full bar-fill rounded-full" :style="'width:' + (spf.home * 100) + '%'"></div>
+                  </div>
+                  <span class="num w-10 text-right text-beige" x-text="fmtPct(spf.home)"></span>
+                </div>
+                <div class="flex items-center gap-3 text-base font-light">
+                  <span class="w-10 text-warm-gray">平局</span>
+                  <div class="flex-1 h-1.5 bar-bg rounded-full overflow-hidden">
+                    <div class="h-full bar-fill rounded-full opacity-50" :style="'width:' + (spf.draw * 100) + '%'"></div>
+                  </div>
+                  <span class="num w-10 text-right text-warm-gray" x-text="fmtPct(spf.draw)"></span>
+                </div>
+                <div class="flex items-center gap-3 text-base font-light">
+                  <span class="w-10 text-warm-gray truncate" x-text="awayTeam ? awayTeam.name : ''"></span>
+                  <div class="flex-1 h-1.5 bar-bg rounded-full overflow-hidden">
+                    <div class="h-full bar-fill rounded-full opacity-30" :style="'width:' + (spf.away * 100) + '%'"></div>
+                  </div>
+                  <span class="num w-10 text-right text-warm-gray" x-text="fmtPct(spf.away)"></span>
+                </div>
+                
+                <!-- Top Scores -->
+                <template x-if="topScores.length">
+                  <div class="mt-3 flex items-center gap-2 flex-wrap">
+                    <span class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium">比分</span>
+                    <template x-for="(s, i) in topScores" :key="i">
+                      <span class="text-sm px-2 py-0.5 rounded border font-light" :class="i === 0 ? 'border-beige/30 text-beige' : 'border-accent/15 text-warm-gray'" x-text="s.score + ' ' + fmtPct(s.prob)"></span>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </template>
+            <template x-if="!spf.home">
+              <div class="mt-4 text-center py-3 text-warm-gray text-sm font-light">预测数据未加载</div>
+            </template>
+          </div>
+          <template x-if="m.status === 'finished'">
+            <div class="mt-3 pt-3 border-t border-accent/10 text-center">
+              <span class="text-sm text-accent-green font-light">赛后验证 · 预测结果已开放</span>
+            </div>
+          </template>
+        </div>
+      </template>
     </div>
   </div>
 
   <!-- Section: 预测报告 -->
-  <div id="sectionReport" class="hidden">
-    <div id="reportDashboard" class="space-y-6">
+  <div id="sectionReport" class="hidden" x-data="MonitorDashboard()">
+    <template x-if="loading">
       <div class="text-center py-16 text-warm-gray text-base font-light" data-i18n="loading">加载中...</div>
-    </div>
+    </template>
+    
+    <template x-if="!loading">
+      <div class="space-y-8">
+        <!-- Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="glass p-6">
+            <div class="text-xs uppercase tracking-[0.25em] text-warm-gray mb-2">整体 Brier Score</div>
+            <div class="text-3xl font-serif font-semibold" :class="getBrierColor(latestBrier)" x-text="latestBrier ? latestBrier.toFixed(4) : '-'"></div>
+            <div class="text-xs text-warm-gray mt-2">越低越好 (0 = 完美预测)</div>
+          </div>
+          <div class="glass p-6">
+            <div class="text-xs uppercase tracking-[0.25em] text-warm-gray mb-2">方向准确率 (SPF)</div>
+            <div class="text-3xl font-serif font-semibold" :class="getAccuracyColor(latestAccuracy)" x-text="latestAccuracy ? (latestAccuracy * 100).toFixed(1) + '%' : '-'"></div>
+            <div class="text-xs text-warm-gray mt-2">基线通常在 51% 左右</div>
+          </div>
+          <div class="glass p-6">
+            <div class="text-xs uppercase tracking-[0.25em] text-warm-gray mb-2">样本数量 (最近30天)</div>
+            <div class="text-3xl font-serif font-semibold text-charcoal" x-text="history.reduce((a, b) => a + b.samples, 0)"></div>
+            <div class="text-xs text-warm-gray mt-2">基于已结束比赛计算</div>
+          </div>
+        </div>
+
+        <!-- Accuracy Chart Placeholder (using simple table for now) -->
+        <div class="glass p-8">
+          <h3 class="font-serif text-xl font-medium mb-6">性能趋势 (最近 14 天)</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="text-xs uppercase tracking-widest text-warm-gray border-b border-accent/10">
+                  <th class="py-4 font-medium">日期</th>
+                  <th class="py-4 font-medium">样本</th>
+                  <th class="py-4 font-medium">方向准确率</th>
+                  <th class="py-4 font-medium">Brier Score</th>
+                </tr>
+              </thead>
+              <tbody class="text-sm font-light">
+                <template x-for="h in history.slice().reverse()" :key="h.date">
+                  <tr class="border-b border-accent/5">
+                    <td class="py-4 num" x-text="h.date"></td>
+                    <td class="py-4 num" x-text="h.samples"></td>
+                    <td class="py-4 num font-medium" :class="getAccuracyColor(h.accuracy)" x-text="(h.accuracy * 100).toFixed(1) + '%'"></td>
+                    <td class="py-4 num" :class="getBrierColor(h.brier)" x-text="h.brier.toFixed(4)"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </template>
   </div>
 
   <!-- Section: 模型验证 -->
@@ -259,8 +422,12 @@
   </div>
 </footer>
 
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="/static/i18n.js?v=20260519"></script>
 <script src="/static/api_client.js?v=20260519"></script>
 <script src="/static/app.js?v=20260519"></script>
+<script src="/static/src/components/MatchCard.js?v=20260519"></script>
+<script src="/static/src/components/MonitorDashboard.js?v=20260519"></script>
 </body>
 </html>

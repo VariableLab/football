@@ -1,0 +1,34 @@
+# 预测引擎模型参数配置
+# 
+# 修改此文件后，预测引擎将自动加载新参数，无需重启服务。
+# 参数基于历史数据回测校准。
+
+# --- 基础配置 ---
+# 泊松截断上限（计算 0-8 个进球）
+MAX_GOALS: 8
+# 泊松截断概率质量
+POISSON_TRUNCATE: 0.999
+# 世界杯默认主场优势 (Elo)，0 表示中立场
+HOME_ADVANTAGE_ELO: 0
+# 状态计算窗口（近 N 场）
+FORM_WINDOW_MATCHES: 10
+
+# --- 模型修正参数 ---
+# Dixon-Coles 低比分相关性修正参数 (rho)
+# 正值表示增加 0-0 和 1-1 的概率
+DIXON_COLES_RHO: 0.0092
+
+# 平局概率修正系数 (Draw Inflation)
+# 用于补偿独立泊松模型对平局率的低估
+DRAW_INFLATION_FACTOR: 1.27
+
+# --- 线性融合默认权重 ---
+# elo: Elo 实力模型权重
+# poisson: 泊松攻防模型权重
+# players: 球员状态修正权重
+# market: 市场赔率隐含概率权重（通常是最强信号）
+DEFAULT_WEIGHTS:
+  elo: 0.05
+  poisson: 0.13
+  players: 0.19
+  market: 0.63

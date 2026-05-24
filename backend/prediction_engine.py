@@ -28,13 +28,15 @@ import numpy as np
 from scipy.stats import poisson
 
 from models import PlayType
+import yaml
+import os
 
 # ─── 子模型已迁移到 features/ 包（向后兼容：本地定义仍可用）───
 from features import (
     EloModel, PoissonModel, PlayerAdjustmentModel,
     FormAdjustmentModel, HomeAwayModel, ScheduleDensityModel,
     WeatherVenueModel, TacticalModel, CoachImpactModel, SquadAvailabilityModel,
-    MarketModel,
+    MarketModel, RefereeModel,
 )
 
 # ─── LR 融合层 (v2 架构) ───
@@ -47,34 +49,48 @@ from features.form_markov_model import FormMarkovModel
 from features.h2h_model import H2HModel
 
 # ────────────────────────────
-# 常量 / 配置
+# 常量 / 配置（支持 YAML 动态加载）
 # ────────────────────────────
-MAX_GOALS = 8          # 泊松截断上限
-POISSON_TRUNCATE = 0.999  # 截断概率质量
-HOME_ADVANTAGE_ELO = 0   # 世界杯是中立场
-FORM_WINDOW_MATCHES = 10   # 近 N 场计算状态
+_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "model_config.yaml")
 
-# Dixon-Coles 低比分相关性修正参数
-# 5330场联赛walk-forward MLE校准：rho=0.0092（接近0，DC修正对方向预测影响小）
-# 正值表示0-0和1-1比分格子概率略微增加
-DIXON_COLES_RHO = 0.0092
+def load_engine_config():
+    # 默认值
+    cfg = {
+        "MAX_GOALS": 8,
+        "POISSON_TRUNCATE": 0.999,
+        "HOME_ADVANTAGE_ELO": 0,
+        "FORM_WINDOW_MATCHES": 10,
+        "DIXON_COLES_RHO": 0.0092,
+        "DRAW_INFLATION_FACTOR": 1.27,
+        "DEFAULT_WEIGHTS": {
+            "elo": 0.05,
+            "poisson": 0.13,
+            "players": 0.19,
+            "market": 0.63,
+        }
+    }
+    if os.path.exists(_CONFIG_PATH):
+        try:
+            with open(_CONFIG_PATH, "r", encoding="utf-8") as f:
+                external_cfg = yaml.safe_load(f)
+                if external_cfg:
+                    cfg.update(external_cfg)
+        except Exception as e:
+            import logging
+            logging.getLogger("prediction_engine").warning(f"[config] Failed to load model_config.yaml: {e}")
+    return cfg
 
-# 平局概率修正系数
-# 独立泊松模型系统低估平局（~22% vs 实际~25.2%），需显式修正
-# 5330场联赛校准：draw_inflation = 1.27 将模型平局率从 22.8% → 25.2%
-DRAW_INFLATION_FACTOR = 1.27
+# 加载当前配置
+_ENGINE_CFG = load_engine_config()
 
-# 线性融合默认权重
-# 基于 30645 场历史比赛回归学习 (2026-05-13):
-# - all/all: market=0.64, poisson=0.13, players=0.19, elo=0.04 (Brier=0.1986)
-# - 200-400 ELO差距: market=0.66, poisson=0.13, players=0.20, elo=0.02 (Brier=0.1976)
-# 市场赔率是最强信号, Elo 贡献极低
-DEFAULT_WEIGHTS = {
-    "elo": 0.05,
-    "poisson": 0.13,
-    "players": 0.19,
-    "market": 0.63,
-}
+MAX_GOALS = _ENGINE_CFG["MAX_GOALS"]
+POISSON_TRUNCATE = _ENGINE_CFG["POISSON_TRUNCATE"]
+HOME_ADVANTAGE_ELO = _ENGINE_CFG["HOME_ADVANTAGE_ELO"]
+FORM_WINDOW_MATCHES = _ENGINE_CFG["FORM_WINDOW_MATCHES"]
+DIXON_COLES_RHO = _ENGINE_CFG["DIXON_COLES_RHO"]
+DRAW_INFLATION_FACTOR = _ENGINE_CFG["DRAW_INFLATION_FACTOR"]
+DEFAULT_WEIGHTS = _ENGINE_CFG["DEFAULT_WEIGHTS"]
+
 
 
 # ────────────────────────────
@@ -131,11 +147,20 @@ class TeamContext:
 
 
 @dataclass
+class RefereeContext:
+    name: str
+    yellow_cards_avg: float = 4.0
+    red_cards_avg: float = 0.2
+    home_win_bias: float = 1.0  # >1 means home teams win more under this ref
+
+
+@dataclass
 class MatchContext:
     """单场比赛的完整上下文"""
     match_id: int
     home_team: TeamContext
     away_team: TeamContext
+    referee: Optional[RefereeContext] = None
 
     # 赛事阶段
     stage: str = "group"   # group / R32 / R16 / QF / SF / F
@@ -337,7 +362,12 @@ class PoissonModel:
         lambda_home *= home_atk_pen * away_def_pen
         lambda_away *= away_atk_pen * home_def_pen
 
-        # ── 12. 淘汰赛修正：进球数下降（分阶段细化） ──
+        # ── 12. 裁判因素修正 ──
+        ref_h, ref_a = RefereeModel.compute_factor(ctx)
+        lambda_home *= ref_h
+        lambda_away *= ref_a
+
+        # ── 13. 淘汰赛修正：进球数下降（分阶段细化） ──
         if ctx.is_knockout:
             stage_factor = {"R16": 0.88, "QF": 0.85, "SF": 0.82, "F": 0.80, "3P": 0.90}
             factor = stage_factor.get(ctx.stage, 0.85)

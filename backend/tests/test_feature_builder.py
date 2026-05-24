@@ -58,12 +58,12 @@ class TestBuild:
         features = builder.build(ELO, POISSON, 1.0, None, make_form(), make_h2h(), make_ctx())
         assert isinstance(features, np.ndarray)
         assert features.dtype == np.float32
-        assert features.shape == (43,)
+        assert features.shape == (45,)
 
     def test_build_no_interactions_shape(self):
         builder = FeatureBuilder(use_interactions=False)
         features = builder.build(ELO, POISSON, 1.0, None, make_form(), make_h2h(), make_ctx())
-        assert features.shape == (38,)
+        assert features.shape == (40,)
 
     def test_build_missing_market_uses_defaults(self):
         builder = FeatureBuilder(use_interactions=False)
@@ -94,7 +94,7 @@ class TestBuild:
         ctx_group = make_ctx(home_elo=1600, away_elo=1400, knockout=False)
         knock = builder.build(ELO, POISSON, 1.0, None, make_form(), make_h2h(), ctx_knock)
         group = builder.build(ELO, POISSON, 1.0, None, make_form(), make_h2h(), ctx_group)
-        assert knock[38] != group[38]  # elo_diff × is_knockout interaction (first interaction feature)
+        assert knock[40] != group[40]  # elo_diff × is_knockout interaction (first interaction feature)
 
     def test_build_elo_diff_clipped(self):
         builder = FeatureBuilder(use_interactions=False)
@@ -127,5 +127,5 @@ class TestScaler:
         assert np.allclose(result, X)
 
     def test_get_input_dim(self):
-        assert FeatureBuilder(use_interactions=True).get_input_dim() == 43
-        assert FeatureBuilder(use_interactions=False).get_input_dim() == 38
+        assert FeatureBuilder(use_interactions=True).get_input_dim() == 45
+        assert FeatureBuilder(use_interactions=False).get_input_dim() == 40

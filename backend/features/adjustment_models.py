@@ -225,3 +225,28 @@ class SquadAvailabilityModel:
         defense_pen *= fatigue_mult
 
         return max(0.80, 1.0 - attack_pen), max(0.85, 1.0 - defense_pen)
+
+
+# ────────────────────────────
+# 裁判因素修正
+# ────────────────────────────
+class RefereeModel:
+    """裁判风格修正：某些裁判出牌多、尺度严，可能影响比赛节奏。"""
+
+    @classmethod
+    def compute_factor(cls, ctx: "MatchContext") -> Tuple[float, float]:
+        """返回 (主队λ修正, 客队λ修正)"""
+        # 简化版实现：主要影响进球数（尺度严 -> 进球变少）
+        ref = getattr(ctx, "referee", None)
+        if not ref:
+            return 1.0, 1.0
+        
+        cards_per_game = getattr(ref, "yellow_cards_avg", 4.0)
+        # 严厉度因子：高于4张为严，低于3张为松
+        severity = max(0.8, min(1.2, cards_per_game / 4.0))
+        
+        # 尺度严通常会导致比赛支离破碎，进球略微减少 (0.95 ~ 1.05)
+        goal_mult = 1.0 + (1.0 - severity) * 0.15
+        
+        return max(0.90, goal_mult), max(0.90, goal_mult)
+

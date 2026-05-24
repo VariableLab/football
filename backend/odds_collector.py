@@ -33,6 +33,7 @@ from config import get_settings
 from models import Match, AuditLog, OddsHistory
 
 from logger import get_logger
+from data_source.base import OddsSnapshot, OddsSource
 
 logger = get_logger("odds")
 settings = get_settings()
@@ -60,25 +61,6 @@ def _fetch_with_retry(client: httpx.Client, url: str, *, params: dict = None,
 # ────────────────────────────
 # 数据结构
 # ────────────────────────────
-@dataclass
-class OddsSnapshot:
-    """某一时刻的赔率快照"""
-    match_id: int
-    source: str                    # bet365 / macau / hkjc / jc / oddsapi
-    odds_home: float
-    odds_draw: float
-    odds_away: float
-    recorded_at: datetime
-    
-    # 让球（如有）
-    handicap: Optional[float] = None
-    odds_home_hcp: Optional[float] = None
-    odds_away_hcp: Optional[float] = None
-
-    # 多玩法赔率（竞彩专用，JSON 格式）
-    multi_pool_odds: Optional[Dict[str, Any]] = None
-
-
 @dataclass
 class OddsAnomaly:
     """赔率异动告警"""
@@ -160,29 +142,6 @@ class OddsApiBudget:
             "remaining": self.remaining(),
             "total": self.FREE_MONTHLY_CREDITS,
         }
-
-
-# ────────────────────────────
-# 抽象基类
-# ────────────────────────────
-class OddsSource(ABC):
-    """赔率数据源抽象接口"""
-
-    name: str = ""
-
-    @abstractmethod
-    def fetch(self, match: Match) -> Optional[OddsSnapshot]:
-        """获取单场比赛的最新赔率"""
-        pass
-
-    @abstractmethod
-    def fetch_batch(self, matches: List[Match]) -> List[OddsSnapshot]:
-        """批量获取（效率更高）"""
-        pass
-
-    def download_all(self, use_cache: bool = True) -> List[Dict]:
-        """下载全部数据（仅部分源支持，如 football-data）"""
-        return []
 
 
 # ────────────────────────────
@@ -1441,10 +1400,18 @@ class OddsCollector:
         """
         now = datetime.now(timezone.utc)
         # 筛选赛前 15~90 分钟的比赛
-        closing_matches = [
-            m for m in matches
-            if m.kickoff_at and 0 < (m.kickoff_at - now).total_seconds() <= 90 * 60
-        ]
+        closing_matches = []
+        for m in matches:
+            if not m.kickoff_at:
+                continue
+            # 确保 kickoff_at 有时区信息
+            k_at = m.kickoff_at
+            if k_at.tzinfo is None:
+                k_at = k_at.replace(tzinfo=timezone.utc)
+            
+            if 0 < (k_at - now).total_seconds() <= 90 * 60:
+                closing_matches.append(m)
+        
         if not closing_matches:
             return {"skipped": True, "reason": "no_closing_window_matches"}
 

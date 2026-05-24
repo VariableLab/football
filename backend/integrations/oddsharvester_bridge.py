@@ -375,7 +375,7 @@ class OddsHarvesterSourceAdapter:
         实现 OddsSource.fetch() 接口。
         从已缓存的 OddsPortal 数据中查找单场比赛赔率。
         """
-        from odds_collector import OddsSnapshot
+        from data_source.base import OddsSnapshot
 
         # 尝试从各联赛缓存中匹配
         home = (match.home_team.name if match.home_team else "").lower()

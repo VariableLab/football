@@ -27,6 +27,7 @@ from features.adjustment_models import (
     TacticalModel,
     CoachImpactModel,
     SquadAvailabilityModel,
+    RefereeModel,
 )
 from features.market_model import MarketModel
 
@@ -41,5 +42,6 @@ __all__ = [
     "TacticalModel",
     "CoachImpactModel",
     "SquadAvailabilityModel",
+    "RefereeModel",
     "MarketModel",
 ]

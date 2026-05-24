@@ -46,6 +46,7 @@ FEATURE_NAMES = [
     "form_win", "form_draw", "momentum", "stability", "streak_norm",
     "h2h_total_norm", "h2h_win", "h2h_draw", "h2h_recent", "h2h_goals_norm", "first_meeting",
     "rest_advantage", "is_knockout", "is_derby",
+    "ref_severity", "ref_home_bias",
     # 交互特征
     "I_elo_knockout", "I_model_disagree", "I_momentum_rest",
     "I_market_source", "I_elo_form",
@@ -60,7 +61,7 @@ class LogisticFusionWeights:
     intercept_home: float = 0.0
     intercept_away: float = 0.0
     l1_penalty: float = 0.001
-    input_dim: int = 43
+    input_dim: int = 45
 
     # 元信息
     league: str = "global"
@@ -82,6 +83,13 @@ class LogisticFusionWeights:
         """
         if features.ndim == 1:
             features = features.reshape(1, -1)
+            
+        # 维度检查
+        if features.shape[1] != self.coef_home.shape[0]:
+            raise ValueError(
+                f"Feature dimension mismatch: expected {self.coef_home.shape[0]}, "
+                f"got {features.shape[1]}. Model may need retraining."
+            )
 
         logodds_home = features @ self.coef_home + self.intercept_home
         logodds_away = features @ self.coef_away + self.intercept_away
@@ -154,7 +162,7 @@ class LogisticFusionWeights:
             intercept_home=data.get("intercept_home", 0.0),
             intercept_away=data.get("intercept_away", 0.0),
             l1_penalty=data.get("l1_penalty", 0.001),
-            input_dim=data.get("input_dim", 43),
+            input_dim=data.get("input_dim", 45),
             league=data.get("league", "global"),
             trained_at=data.get("trained_at", ""),
             sample_count=data.get("sample_count", 0),
