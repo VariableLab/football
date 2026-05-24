@@ -36,27 +36,30 @@ function MatchDetailModal() {
         
         // 2. 预测策略 (需要鉴权/付费逻辑)
         try {
-          this.strategyData = await WCApi.Data.getStrategy(matchId, this.riskTier);
+          this.strategyData = await WCApi.Strategy.getStrategy(matchId, this.riskTier);
           this.locked = false;
         } catch (e) {
-          if (e.status === 403) {
+          console.warn('Strategy load failed:', e);
+          if (e.message.includes('403') || e.message.includes('paid')) {
             this.locked = true;
           } else {
-            this.error = '无法加载预测数据';
+            this.error = '无法加载预测策略';
           }
         }
 
         // 3. 赔率走势
         try {
-          this.oddsMovement = await WCApi.Data.getOddsMovement(matchId);
+          this.oddsMovement = await WCApi.Odds.getMovement(matchId);
         } catch (e) { /* ignore */ }
 
       } catch (e) {
-        this.error = '比赛数据加载失败';
+        console.error('Match detail load error:', e);
+        this.error = '比赛详情加载失败';
       } finally {
         this.loading = false;
       }
     },
+
 
     async changeRiskTier(tier) {
       this.riskTier = tier;

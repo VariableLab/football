@@ -352,7 +352,7 @@
   <!-- Section: 量化研判 -->
   <div id="sectionAI" class="hidden" x-data="AdvisorChat()">
     <div class="max-w-3xl mx-auto">
-      <div id="advisorChatMessages" class="space-y-6 mb-6 max-h-[60vh] overflow-y-auto scrollbar-hide px-3 py-6 bg-white rounded-3xl border border-charcoal/5">
+      <div id="advisorChatMessages" class="space-y-6 mb-6 max-h-[60vh] overflow-y-auto scrollbar-hide px-3 py-6 bg-[#121212] rounded-3xl border border-white/10 shadow-2xl">
         <template x-for="(msg, i) in messages" :key="i">
           <div class="flex items-start gap-3 ai-message" :class="msg.role === 'assistant' ? 'ai-bot' : 'flex-row-reverse'">
             <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1" :class="msg.role === 'assistant' ? 'bg-accent/10' : 'bg-charcoal/10'">
@@ -363,7 +363,7 @@
                 <svg class="w-4 h-4 text-charcoal" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
               </template>
             </div>
-            <div class="rounded-2xl px-5 py-4 text-sm leading-relaxed" :class="msg.role === 'assistant' ? 'bg-[#F4F1EA] border-2 border-accent/30 shadow-sm text-black' : 'bg-charcoal text-white rounded-tr-sm shadow-md'">
+            <div class="rounded-2xl px-5 py-4 text-sm leading-relaxed" :class="msg.role === 'assistant' ? 'bg-[#1E1E1E] border border-white/5 text-white' : 'bg-charcoal text-white rounded-tr-sm shadow-md'">
               <p class="font-bold mb-1.5" :class="msg.role === 'assistant' ? 'text-accent' : 'text-cream-light'" x-text="msg.role === 'assistant' ? '量化研判顾问' : '数据咨询'"></p>
               <div class="whitespace-pre-wrap" x-text="msg.content"></div>
             </div>
