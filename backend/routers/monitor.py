@@ -79,10 +79,18 @@ def get_accuracy_stats(db: Session = Depends(get_db)):
             "samples": r["total"]
         })
         
+    # 获取当前模型维度
+    from prediction_engine import PredictionEngine
+    engine = PredictionEngine()
+    model_dim = engine._lr_weights.coef_home.shape[0] if engine._lr_weights else 0
+        
     return {
         "overall_history": history,
         "latest_brier": history[-1]["brier"] if history else None,
-        "latest_accuracy": history[-1]["accuracy"] if history else None
+        "latest_accuracy": history[-1]["accuracy"] if history else None,
+        "model_dimension": model_dim,
+        "is_lr_enabled": engine._lr_weights is not None
     }
+
 
 from sqlalchemy import case

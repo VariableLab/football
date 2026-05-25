@@ -188,6 +188,7 @@ class MatchContext:
 
     # 特殊标记
     is_third_round_group: bool = False
+    is_late_season: bool = False       # 是否为赛季冲刺阶段 (Top/Bottom 抢分)
     home_team_qualified: Optional[bool] = None
     away_team_qualified: Optional[bool] = None
 
@@ -1206,34 +1207,77 @@ class PredictionEngine:
                  use_lr_fusion: bool = True):
         self.fusion = EnsembleFusion(weights, db_session=db_session)
         self.use_lr_fusion = use_lr_fusion
-        self._lr_weights: Optional[LogisticFusionWeights] = None
+        self._lr_weights_cache: Dict[str, LogisticFusionWeights] = {}
         self._feature_builder = FeatureBuilder(use_interactions=True)
         if use_lr_fusion:
-            self._lr_weights = self._load_lr_weights()
+            # 预加载全局权重作为默认值
+            global_w = self._load_lr_weights("global")
+            if global_w:
+                self._lr_weights_cache["global"] = global_w
 
     @staticmethod
-    def _load_lr_weights() -> Optional["LogisticFusionWeights"]:
-        """加载最新的 LR 融合权重，fallback 为 None"""
+    def _load_lr_weights(league: str = "global") -> Optional["LogisticFusionWeights"]:
+        """加载指定联赛的最新的 LR 融合权重，fallback 为 None"""
         import glob
         import os
         try:
-            # 使用模块所在目录的绝对路径，避免 cwd 变化导致找不到权重
             _lr_weights_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "weights", "lr")
-            lr_files = sorted(glob.glob(os.path.join(_lr_weights_dir, "global_*.json")))
+            # 匹配模式: {league}_v1_*.json
+            pattern = os.path.join(_lr_weights_dir, f"{league}_v1_*.json")
+            lr_files = sorted(glob.glob(pattern))
             if lr_files:
                 w = LogisticFusionWeights.load(lr_files[-1])
                 import logging
                 logging.getLogger("prediction_engine").info(
-                    f"[LR-fusion] Loaded {lr_files[-1]} "
+                    f"[LR-fusion] Loaded {league} weights: {os.path.basename(lr_files[-1])} "
                     f"(acc={w.accuracy:.1%}, n={w.sample_count})"
                 )
                 return w
         except Exception as e:
             import logging
             logging.getLogger("prediction_engine").warning(
-                f"[LR-fusion] Failed to load weights: {e}"
+                f"[LR-fusion] Failed to load {league} weights: {e}"
             )
         return None
+
+    def _get_lr_weights_for_match(self, competition: str) -> Optional["LogisticFusionWeights"]:
+        """动态路由：根据比赛所属联赛选择最优权重"""
+        # 1. 尝试从缓存中获取
+        if competition in self._lr_weights_cache:
+            return self._lr_weights_cache[competition]
+
+        # 2. 尝试从磁盘加载该联赛专属权重
+        w = self._load_lr_weights(competition)
+        if w:
+            self._lr_weights_cache[competition] = w
+            return w
+
+        # 3. Fallback 到全局权重
+        return self._lr_weights_cache.get("global")
+
+    def _apply_live_odds_override(
+
+        self, spf: Dict[str, float], ctx: MatchContext
+    ) -> Dict[str, float]:
+        """临场跳水/异常赔率监控：当市场发生剧烈波动时，强制修正预测概率"""
+        if not ctx.has_closing_odds or not ctx.has_odds:
+            return spf
+
+        # 1. 检测主队赔率波动
+        move_h = (ctx.closing_odds_home - ctx.odds_home) / ctx.odds_home
+        
+        # 如果赔率大幅下降（即市场极其看好该项）
+        if move_h < -0.12:  # 跳水超过 12%
+            import logging
+            logging.getLogger("prediction_engine").warning(
+                f"[Override] Steam Move detected for match {ctx.match_id}: home odds dropped {abs(move_h):.1%}"
+            )
+            # 强化该项概率：50% 遵循原预测，50% 遵循市场最强信号
+            spf["home"] = spf["home"] * 0.7 + 0.3 # 暴力补强
+            total = sum(spf.values())
+            spf = {k: v / total for k, v in spf.items()}
+            
+        return spf
 
     def predict(self, ctx: MatchContext) -> PredictionResult:
         # 1. 跑各子模型
@@ -1242,15 +1286,22 @@ class PredictionEngine:
         players_factor = PlayerAdjustmentModel.predict(ctx)
         market_out = MarketModel.predict(ctx)
 
-        # 2. 融合胜平负 ── 优先使用 LR 逻辑回归融合 (v2)，fallback 旧4参数加权
+        # 2. 融合胜平负 ── 优先使用 LR 逻辑回归融合 (v2)
         lr_spf = None
-        if self._lr_weights is not None:
+        weights = self._get_lr_weights_for_match(ctx.competition)
+        if weights:
             lr_spf = self._predict_with_lr(
-                ctx, elo_out, poisson_out, players_factor, market_out
+                ctx, elo_out, poisson_out, players_factor, market_out, weights
             )
 
         if lr_spf is not None:
             fused_spf = lr_spf
+            # 💡 核心改进：混合市场信号 (50/50) 以提升基准准确率
+            if market_out:
+                fused_spf = {
+                    k: 0.5 * fused_spf[k] + 0.5 * market_out[k]
+                    for k in ["home", "draw", "away"]
+                }
         else:
             # fallback: 旧4参数线性加权 (EnsembleFusion)
             fused_spf = self.fusion.fuse_spf(
@@ -1261,8 +1312,14 @@ class PredictionEngine:
                 ctx=ctx,
             )
 
-        # 2b. 平局检测修正：让模型能预测"平"
+        # 2b. 临场跳水修正 (New!)
+        fused_spf = self._apply_live_odds_override(fused_spf, ctx)
+
+        # 2c. 平局检测修正：精细化校准
         fused_spf = DrawDetectionModel.predict(fused_spf, ctx, market_out)
+
+
+
 
         # 2c. 残差 NN 修正：用 ResidualNet 修正 LR 系统性偏差
         if lr_spf is not None:
@@ -1307,14 +1364,7 @@ class PredictionEngine:
             weights_used={"_fusion": "lr_v2", **(lr_spf or {})} if lr_spf is not None else self.fusion.get_effective_weights(market_out, ctx),
         )
 
-    def _predict_with_lr(
-        self,
-        ctx: MatchContext,
-        elo_out: Dict[str, float],
-        poisson_out: Dict,
-        players_factor: float,
-        market_out: Optional[Dict[str, float]],
-    ) -> Optional[Dict[str, float]]:
+    def _predict_with_lr(self, ctx: MatchContext, elo_out: Dict[str, float], poisson_out: Dict, players_factor: float, market_out: Optional[Dict[str, float]], weights: "LogisticFusionWeights",) -> Optional[Dict[str, float]]:
         """使用 LR 逻辑回归融合预测 SPF。失败时返回 None，fallback 到旧融合。"""
         try:
             # 构建 FormMarkov + H2H 特征（需要 DB session）
@@ -1348,7 +1398,7 @@ class PredictionEngine:
             )
 
             # LR 推理
-            lr_probs = self._lr_weights.predict(features)
+            lr_probs = weights.predict(features)
             return lr_probs
 
         except Exception as e:
@@ -1665,12 +1715,18 @@ def build_context_from_match(match, handicap: int = 0) -> MatchContext:
     """从数据库 Match ORM 对象构建完整的 MatchContext。"""
     home = build_team_context_from_orm(match.home_team)
     away = build_team_context_from_orm(match.away_team)
+    # 判定是否为赛季冲刺阶段 (5月-6月)
+    is_late = False
+    if match.kickoff_at:
+        is_late = match.kickoff_at.month in (5, 6)
+
     return MatchContext(
         match_id=match.id,
         home_team=home,
         away_team=away,
         stage=match.stage or "group",
         is_knockout=match.stage in ("R32", "R16", "QF", "SF", "F"),
+        is_late_season=is_late,
         handicap=handicap,
         odds_home=match.odds_home,
         odds_draw=match.odds_draw,
@@ -1684,6 +1740,7 @@ def build_context_from_match(match, handicap: int = 0) -> MatchContext:
         pitch_condition=match.pitch_condition or "good",
         schedule_density=match.schedule_density or "normal",
     )
+
 
 
 # ────────────────────────────

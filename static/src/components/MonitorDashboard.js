@@ -8,6 +8,8 @@ function MonitorDashboard() {
     loading: true,
     latestAccuracy: 0,
     latestBrier: 0,
+    modelDim: 0,
+    lrEnabled: false,
 
     async init() {
       await this.fetchStats();
@@ -23,6 +25,8 @@ function MonitorDashboard() {
           this.history = data.overall_history;
           this.latestAccuracy = data.latest_accuracy;
           this.latestBrier = data.latest_brier;
+          this.modelDim = data.model_dimension;
+          this.lrEnabled = data.is_lr_enabled;
         }
       } catch (e) {
         console.error('Failed to fetch stats', e);

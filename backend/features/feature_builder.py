@@ -28,7 +28,7 @@ from logger import get_logger
 logger = get_logger("feature_builder")
 
 # ─── 特征维度 ───
-FEATURE_DIM = 40
+FEATURE_DIM = 43
 FEATURE_NAMES = [
     # A. Elo (7)
     "elo_diff", "elo_win", "elo_draw", "elo_away",
@@ -45,8 +45,9 @@ FEATURE_NAMES = [
     "form_win", "form_draw", "momentum", "stability", "streak_norm",
     # F. H2H (6)
     "h2h_total_norm", "h2h_win", "h2h_draw", "h2h_recent", "h2h_goals_norm", "first_meeting",
-    # G. Meta (5)
+    # G. Meta (8)
     "rest_advantage", "is_knockout", "is_derby", "ref_severity", "ref_home_bias",
+    "home_rest", "away_rest", "is_late_season",
 ]
 
 
@@ -152,7 +153,7 @@ class FeatureBuilder:
         else:
             feats.extend([0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
 
-        # ─── G. Meta (5) ───
+        # ─── G. Meta (8) ───
         rest_h = getattr(ctx.home_team, "rest_days", 5)
         rest_a = getattr(ctx.away_team, "rest_days", 5)
         ref = getattr(ctx, "referee", None)
@@ -166,12 +167,16 @@ class FeatureBuilder:
             0.0,  # is_derby (暂未实现)
             ref_severity,
             ref_home_bias,
+            np.clip(rest_h / 7.0, 0, 2.0), # home_rest
+            np.clip(rest_a / 7.0, 0, 2.0), # away_rest
+            1.0 if getattr(ctx, "is_late_season", False) else 0.0,
         ])
+
 
         result = np.array([float(x) for x in feats], dtype=np.float32)
 
         # 交互特征（简单实现：选取关键交互项）
-        if self.use_interactions and len(result) >= 38:
+        if self.use_interactions and len(result) >= 43:
             interactions = self._compute_interactions(result)
             result = np.concatenate([result, interactions])
 

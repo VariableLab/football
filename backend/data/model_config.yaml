@@ -20,7 +20,8 @@ DIXON_COLES_RHO: 0.0092
 
 # 平局概率修正系数 (Draw Inflation)
 # 用于补偿独立泊松模型对平局率的低估
-DRAW_INFLATION_FACTOR: 1.27
+# 最终建议：上调至 1.35 以平衡胜平负分布
+DRAW_INFLATION_FACTOR: 1.35
 
 # --- 线性融合默认权重 ---
 # elo: Elo 实力模型权重
@@ -28,7 +29,7 @@ DRAW_INFLATION_FACTOR: 1.27
 # players: 球员状态修正权重
 # market: 市场赔率隐含概率权重（通常是最强信号）
 DEFAULT_WEIGHTS:
-  elo: 0.05
-  poisson: 0.13
-  players: 0.19
-  market: 0.63
+  elo: 0.02
+  poisson: 0.10
+  players: 0.13
+  market: 0.75

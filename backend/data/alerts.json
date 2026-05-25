@@ -2,132 +2,6 @@
   {
     "source": "odds_freshness",
     "level": "critical",
-    "message": "6\u5c0f\u65f6\u5185 74 \u573a\u6bd4\u8d5b\u6709 94 \u573a\u8d54\u7387\u8fc7\u671f",
-    "ts": 1779580212.355909,
-    "time": "2026-05-23T23:50:12.355922+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "critical",
-    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 39.9%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
-    "ts": 1779580531.912912,
-    "time": "2026-05-23T23:55:31.912922+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "warning",
-    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
-    "ts": 1779580531.928653,
-    "time": "2026-05-23T23:55:31.928665+00:00"
-  },
-  {
-    "source": "odds_freshness",
-    "level": "critical",
-    "message": "6\u5c0f\u65f6\u5185 73 \u573a\u6bd4\u8d5b\u6709 93 \u573a\u8d54\u7387\u8fc7\u671f",
-    "ts": 1779580812.942303,
-    "time": "2026-05-24T00:00:12.942320+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "critical",
-    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 39.7%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
-    "ts": 1779581137.621054,
-    "time": "2026-05-24T00:05:37.621057+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "warning",
-    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
-    "ts": 1779581137.645408,
-    "time": "2026-05-24T00:05:37.645418+00:00"
-  },
-  {
-    "source": "odds_freshness",
-    "level": "critical",
-    "message": "6\u5c0f\u65f6\u5185 73 \u573a\u6bd4\u8d5b\u6709 93 \u573a\u8d54\u7387\u8fc7\u671f",
-    "ts": 1779581411.979799,
-    "time": "2026-05-24T00:10:11.979809+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "critical",
-    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 39.7%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
-    "ts": 1779581599.669049,
-    "time": "2026-05-24T00:13:19.669050+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "warning",
-    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
-    "ts": 1779581599.685197,
-    "time": "2026-05-24T00:13:19.685209+00:00"
-  },
-  {
-    "source": "odds_freshness",
-    "level": "critical",
-    "message": "6\u5c0f\u65f6\u5185 73 \u573a\u6bd4\u8d5b\u6709 93 \u573a\u8d54\u7387\u8fc7\u671f",
-    "ts": 1779582011.400514,
-    "time": "2026-05-24T00:20:11.400522+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "critical",
-    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 39.7%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
-    "ts": 1779582161.7736,
-    "time": "2026-05-24T00:22:41.773601+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "warning",
-    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
-    "ts": 1779582161.777575,
-    "time": "2026-05-24T00:22:41.777578+00:00"
-  },
-  {
-    "source": "odds_freshness",
-    "level": "critical",
-    "message": "6\u5c0f\u65f6\u5185 73 \u573a\u6bd4\u8d5b\u6709 93 \u573a\u8d54\u7387\u8fc7\u671f",
-    "ts": 1779582611.633078,
-    "time": "2026-05-24T00:30:11.633085+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "critical",
-    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 39.7%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
-    "ts": 1779582833.273539,
-    "time": "2026-05-24T00:33:53.273540+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "warning",
-    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
-    "ts": 1779582833.280529,
-    "time": "2026-05-24T00:33:53.280533+00:00"
-  },
-  {
-    "source": "odds_freshness",
-    "level": "critical",
-    "message": "6\u5c0f\u65f6\u5185 73 \u573a\u6bd4\u8d5b\u6709 93 \u573a\u8d54\u7387\u8fc7\u671f",
-    "ts": 1779583211.466917,
-    "time": "2026-05-24T00:40:11.466924+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "critical",
-    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 39.7%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
-    "ts": 1779583415.233416,
-    "time": "2026-05-24T00:43:35.233423+00:00"
-  },
-  {
-    "source": "health_daemon",
-    "level": "warning",
-    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
-    "ts": 1779583415.250229,
-    "time": "2026-05-24T00:43:35.250234+00:00"
-  },
-  {
-    "source": "odds_freshness",
-    "level": "critical",
     "message": "6\u5c0f\u65f6\u5185 73 \u573a\u6bd4\u8d5b\u6709 93 \u573a\u8d54\u7387\u8fc7\u671f",
     "ts": 1779583811.73951,
     "time": "2026-05-24T00:50:11.739528+00:00"
@@ -348,5 +222,131 @@
     "message": "6\u5c0f\u65f6\u5185 72 \u573a\u6bd4\u8d5b\u6709 105 \u573a\u8d54\u7387\u8fc7\u671f",
     "ts": 1779621526.144857,
     "time": "2026-05-24T11:18:46.144873+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 40.1%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
+    "ts": 1779621810.366443,
+    "time": "2026-05-24T11:23:30.366450+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "warning",
+    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
+    "ts": 1779621810.39491,
+    "time": "2026-05-24T11:23:30.394918+00:00"
+  },
+  {
+    "source": "odds_freshness",
+    "level": "critical",
+    "message": "6\u5c0f\u65f6\u5185 72 \u573a\u6bd4\u8d5b\u6709 105 \u573a\u8d54\u7387\u8fc7\u671f",
+    "ts": 1779622124.384302,
+    "time": "2026-05-24T11:28:44.384327+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 40.1%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
+    "ts": 1779622418.930404,
+    "time": "2026-05-24T11:33:38.930407+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "warning",
+    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
+    "ts": 1779622418.943099,
+    "time": "2026-05-24T11:33:38.943107+00:00"
+  },
+  {
+    "source": "odds_freshness",
+    "level": "critical",
+    "message": "6\u5c0f\u65f6\u5185 72 \u573a\u6bd4\u8d5b\u6709 105 \u573a\u8d54\u7387\u8fc7\u671f",
+    "ts": 1779622725.291535,
+    "time": "2026-05-24T11:38:45.291588+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 40.1%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
+    "ts": 1779623018.536628,
+    "time": "2026-05-24T11:43:38.536630+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "warning",
+    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
+    "ts": 1779623018.546512,
+    "time": "2026-05-24T11:43:38.546518+00:00"
+  },
+  {
+    "source": "odds_freshness",
+    "level": "critical",
+    "message": "6\u5c0f\u65f6\u5185 72 \u573a\u6bd4\u8d5b\u6709 105 \u573a\u8d54\u7387\u8fc7\u671f",
+    "ts": 1779623323.992067,
+    "time": "2026-05-24T11:48:43.992079+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 40.1%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
+    "ts": 1779623564.146549,
+    "time": "2026-05-24T11:52:44.146551+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "warning",
+    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
+    "ts": 1779623564.154998,
+    "time": "2026-05-24T11:52:44.155005+00:00"
+  },
+  {
+    "source": "odds_freshness",
+    "level": "critical",
+    "message": "6\u5c0f\u65f6\u5185 73 \u573a\u6bd4\u8d5b\u6709 105 \u573a\u8d54\u7387\u8fc7\u671f",
+    "ts": 1779623925.210346,
+    "time": "2026-05-24T11:58:45.210370+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 40.1%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
+    "ts": 1779624378.31257,
+    "time": "2026-05-24T12:06:18.312571+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "warning",
+    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
+    "ts": 1779624378.316359,
+    "time": "2026-05-24T12:06:18.316361+00:00"
+  },
+  {
+    "source": "odds_freshness",
+    "level": "critical",
+    "message": "6\u5c0f\u65f6\u5185 73 \u573a\u6bd4\u8d5b\u6709 105 \u573a\u8d54\u7387\u8fc7\u671f",
+    "ts": 1779624523.511267,
+    "time": "2026-05-24T12:08:43.511273+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "APScheduler \u672a\u8fd0\u884c",
+    "ts": 1779625377.087609,
+    "time": "2026-05-24T12:22:57.088027+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "\u6a21\u578b\u6f02\u79fb\u544a\u8b66: \u51c6\u786e\u7387 40.1%\uff0c\u9700\u91cd\u65b0\u6821\u51c6",
+    "ts": 1779625393.564274,
+    "time": "2026-05-24T12:23:13.564275+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "warning",
+    "message": "\u81ea\u6108\u95ed\u73af\u672a\u5b8c\u6210: skipped",
+    "ts": 1779625393.567017,
+    "time": "2026-05-24T12:23:13.567019+00:00"
   }
 ]

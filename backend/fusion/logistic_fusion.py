@@ -47,6 +47,7 @@ FEATURE_NAMES = [
     "h2h_total_norm", "h2h_win", "h2h_draw", "h2h_recent", "h2h_goals_norm", "first_meeting",
     "rest_advantage", "is_knockout", "is_derby",
     "ref_severity", "ref_home_bias",
+    "home_rest", "away_rest", "is_late_season",
     # 交互特征
     "I_elo_knockout", "I_model_disagree", "I_momentum_rest",
     "I_market_source", "I_elo_form",
@@ -61,7 +62,7 @@ class LogisticFusionWeights:
     intercept_home: float = 0.0
     intercept_away: float = 0.0
     l1_penalty: float = 0.001
-    input_dim: int = 45
+    input_dim: int = 48
 
     # 元信息
     league: str = "global"

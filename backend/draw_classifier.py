@@ -420,10 +420,11 @@ class DrawClassifierPredictor:
         self.model = DrawClassifierNet()
         self.feature_mean: Optional[np.ndarray] = None
         self.feature_std: Optional[np.ndarray] = None
-        self.threshold = 0.55
-        self.max_boost = 0.10
-        self.boost_scale = 0.35
+        self.threshold = 0.65
+        self.max_boost = 0.05
+        self.boost_scale = 0.25
         self._load_model()
+
 
     def _load_model(self) -> None:
         if os.path.exists(MODEL_PATH):

@@ -72,7 +72,9 @@ class FusionTrainer:
             sk = 0
             fm = FormMarkovModel(s)
             hm = H2HModel(s)
-            for m in matches:
+            for i, m in enumerate(matches):
+                if i % 1000 == 0:
+                    logger.info(f"[fusion_trainer] Progress: {i}/{len(matches)}")
                 try:
                     yv = o2i.get(m.actual_outcome)
                     if yv is None: sk+=1; continue
