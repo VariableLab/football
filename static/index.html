@@ -151,7 +151,7 @@
                 <span class="text-xl" x-text="homeTeam.flag"></span>
               </template>
               <div>
-                <div class="text-lg font-bold text-black" x-text="homeTeam ? homeTeam.name : ''"></div>
+                <div class="text-lg font-bold text-white" x-text="homeTeam ? homeTeam.name : ''"></div>
                 <div class="text-sm font-normal text-warm-gray num" x-text="'#' + (homeTeam ? homeTeam.fifa_rank : '-')"></div>
               </div>
             </div>
@@ -161,7 +161,7 @@
                 <span class="text-xl" x-text="awayTeam.flag"></span>
               </template>
               <div class="text-right">
-                <div class="text-lg font-bold text-black" x-text="awayTeam ? awayTeam.name : ''"></div>
+                <div class="text-lg font-bold text-white" x-text="awayTeam ? awayTeam.name : ''"></div>
                 <div class="text-sm font-normal text-warm-gray num" x-text="'#' + (awayTeam ? awayTeam.fifa_rank : '-')"></div>
               </div>
             </div>
@@ -514,7 +514,7 @@
             <div class="flex items-center justify-between mb-8">
               <div class="flex-1 flex flex-col items-center gap-2">
                 <span class="text-4xl" x-text="homeTeam.flag"></span>
-                <span class="text-xl font-bold text-black text-center" x-text="homeTeam.name"></span>
+                <span class="text-xl font-bold text-white text-center" x-text="homeTeam.name"></span>
                 <span class="text-xs text-warm-gray uppercase tracking-widest" x-text="'FIFA #' + (homeTeam.fifa_rank || '-')"></span>
               </div>
               <div class="px-6 flex flex-col items-center">
@@ -524,7 +524,7 @@
               </div>
               <div class="flex-1 flex flex-col items-center gap-2">
                 <span class="text-4xl" x-text="awayTeam.flag"></span>
-                <span class="text-xl font-bold text-black text-center" x-text="awayTeam.name"></span>
+                <span class="text-xl font-bold text-white text-center" x-text="awayTeam.name"></span>
                 <span class="text-xs text-warm-gray uppercase tracking-widest" x-text="'FIFA #' + (awayTeam.fifa_rank || '-')"></span>
               </div>
             </div>
@@ -533,11 +533,11 @@
             <div class="grid grid-cols-3 gap-4 py-3 px-4 bg-cream-light/50 rounded-xl">
               <div class="text-center">
                 <div class="text-xs uppercase tracking-tighter text-warm-gray mb-0.5">Elo 实力</div>
-                <div class="text-lg font-bold text-black num" x-text="homeTeam.elo + ' / ' + awayTeam.elo"></div>
+                <div class="text-lg font-bold text-white num" x-text="homeTeam.elo + ' / ' + awayTeam.elo"></div>
               </div>
               <div class="text-center border-x border-accent/10">
                 <div class="text-xs uppercase tracking-tighter text-warm-gray mb-0.5">期望进球</div>
-                <div class="text-lg font-bold text-black num" x-text="homeTeam.avg_xg + ' - ' + awayTeam.avg_xg"></div>
+                <div class="text-lg font-bold text-white num" x-text="homeTeam.avg_xg + ' - ' + awayTeam.avg_xg"></div>
               </div>
               <div class="text-center">
                 <div class="text-xs uppercase tracking-tighter text-warm-gray mb-0.5">主场优势</div>
@@ -623,7 +623,7 @@
                           <div class="flex justify-between items-start mb-4">
                             <div>
                               <span class="text-xs uppercase tracking-[0.2em] text-gray-500 font-bold" x-text="pick.play_label"></span>
-                              <div class="text-xl font-bold text-black mt-1" x-text="pick.selection_label"></div>
+                              <div class="text-xl font-bold text-white mt-1" x-text="pick.selection_label"></div>
                             </div>
                             <div class="text-right">
                               <span class="text-xs font-bold text-gray-500 uppercase tracking-widest" data-i18n="match.odds">赔率</span>
@@ -634,11 +634,11 @@
                           <div class="grid grid-cols-4 gap-4 py-4 border-y border-charcoal/5">
                             <div>
                               <div class="text-[10px] uppercase font-bold text-gray-400 mb-1">Edge</div>
-                              <div class="text-base font-bold num" :class="pick.edge > 0.05 ? 'text-accent-green' : 'text-black'" x-text="(pick.edge * 100).toFixed(1) + '%'"></div>
+                              <div class="text-base font-bold num" :class="pick.edge > 0.05 ? 'text-accent-green' : 'text-white'" x-text="(pick.edge * 100).toFixed(1) + '%'"></div>
                             </div>
                             <div>
                               <div class="text-[10px] uppercase font-bold text-gray-400 mb-1">EV</div>
-                              <div class="text-base font-bold num" :class="pick.ev > 0 ? 'text-accent-green' : 'text-black'" x-text="(pick.ev * 100).toFixed(1) + '%'"></div>
+                              <div class="text-base font-bold num" :class="pick.ev > 0 ? 'text-accent-green' : 'text-white'" x-text="(pick.ev * 100).toFixed(1) + '%'"></div>
                             </div>
                             <div>
                               <div class="text-[10px] uppercase font-bold text-gray-400 mb-1">Kelly</div>
@@ -666,22 +666,22 @@
                         <div class="text-xs text-gray-500 font-bold mb-4 uppercase tracking-widest">初始指数 vs 现盘</div>
                         <div class="space-y-3">
                           <div class="flex justify-between items-center text-sm">
-                            <span class="font-bold text-black">主胜 (H)</span>
+                            <span class="font-bold text-white">主胜 (H)</span>
                             <span class="num font-bold text-lg" x-text="oddsMovement.opening_odds.home + ' → ' + match.odds_home"></span>
                           </div>
                           <div class="flex justify-between items-center text-sm">
-                            <span class="font-bold text-black">平局 (D)</span>
+                            <span class="font-bold text-white">平局 (D)</span>
                             <span class="num font-bold text-lg" x-text="oddsMovement.opening_odds.draw + ' → ' + match.odds_draw"></span>
                           </div>
                           <div class="flex justify-between items-center text-sm">
-                            <span class="font-bold text-black">客胜 (A)</span>
+                            <span class="font-bold text-white">客胜 (A)</span>
                             <span class="num font-bold text-lg" x-text="oddsMovement.opening_odds.away + ' → ' + match.odds_away"></span>
                           </div>
                         </div>
                       </div>
                       <div class="p-2">
                         <div class="text-xs text-gray-500 font-bold mb-3 uppercase tracking-widest">资金流向信号</div>
-                        <div class="text-lg font-bold text-black mb-2" x-text="oddsMovement.signal || '无显著资金压力'"></div>
+                        <div class="text-lg font-bold text-white mb-2" x-text="oddsMovement.signal || '无显著资金压力'"></div>
                         <p class="text-sm text-gray-700 font-normal leading-relaxed" x-text="oddsMovement.analysis || '市场情绪相对稳定，未检测到大额异常扫盘资金。'"></p>
                       </div>
                     </div>

@@ -6,6 +6,16 @@ from unittest.mock import patch, MagicMock, PropertyMock
 
 import pytest
 
+@pytest.fixture(autouse=True)
+def clean_audit_dir():
+    from monitor.model_audit import AUDIT_DIR
+    if os.path.exists(AUDIT_DIR):
+        for f in os.listdir(AUDIT_DIR):
+            if f.startswith("audit_") and f.endswith(".json"):
+                os.remove(os.path.join(AUDIT_DIR, f))
+    yield
+
+
 from model_audit import AuditEntry, AuditReport, ModelAuditor, run_self_heal_cycle
 from model_audit import _load_self_heal_state, _save_self_heal_state
 from model_audit import SELF_HEAL_STATE_PATH

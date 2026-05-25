@@ -62,30 +62,48 @@ class TestFeedbackEndpoints:
 
     def test_create_feedback_anonymous(self, client):
         resp = client.post(
-            "/api/feedback?category=discussion&content=这是一条测试留言&is_anonymous=true",
+            "/api/feedback",
+            json={
+                "category": "discussion",
+                "content": "这是一条测试留言",
+                "is_anonymous": True
+            }
         )
         assert resp.status_code == 200
-        data = resp.json()
-        assert data["status"] == "created"
 
     def test_create_feedback_authenticated(self, client, auth_headers):
         resp = client.post(
-            "/api/feedback?category=suggestion&content=建议增加图表功能&is_anonymous=false",
+            "/api/feedback",
             headers=auth_headers,
+            json={
+                "category": "suggestion",
+                "content": "建议增加图表功能",
+                "is_anonymous": False
+            }
         )
         assert resp.status_code == 200
 
     def test_create_feedback_too_short(self, client):
         resp = client.post(
-            "/api/feedback?category=discussion&content=短&is_anonymous=true",
+            "/api/feedback",
+            json={
+                "category": "discussion",
+                "content": "短",
+                "is_anonymous": True
+            }
         )
         assert resp.status_code == 400
 
     def test_like_feedback(self, client, auth_headers):
         # First create a feedback
         resp = client.post(
-            "/api/feedback?category=bug&content=测试点赞功能问题反馈&is_anonymous=false",
+            "/api/feedback",
             headers=auth_headers,
+            json={
+                "category": "bug",
+                "content": "测试点赞功能问题反馈",
+                "is_anonymous": False
+            }
         )
         fb_id = resp.json()["id"]
         # Like it

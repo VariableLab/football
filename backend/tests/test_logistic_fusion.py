@@ -13,10 +13,10 @@ class TestPredict:
 
     def test_predict_1d_returns_dict(self):
         w = LogisticFusionWeights(
-            coef_home=np.zeros(43, dtype=np.float64),
-            coef_away=np.zeros(43, dtype=np.float64),
+            coef_home=np.zeros(48, dtype=np.float64),
+            coef_away=np.zeros(48, dtype=np.float64),
         )
-        features = np.zeros(43, dtype=np.float32)
+        features = np.zeros(48, dtype=np.float32)
         result = w.predict(features)
         assert isinstance(result, dict)
         assert set(result.keys()) == {"home", "draw", "away"}
@@ -26,20 +26,20 @@ class TestPredict:
 
     def test_predict_sum_to_one(self):
         w = LogisticFusionWeights(
-            coef_home=np.random.randn(43).astype(np.float64),
-            coef_away=np.random.randn(43).astype(np.float64),
+            coef_home=np.random.randn(48).astype(np.float64),
+            coef_away=np.random.randn(48).astype(np.float64),
         )
         for _ in range(10):
-            features = np.random.randn(43).astype(np.float32)
+            features = np.random.randn(48).astype(np.float32)
             result = w.predict(features)
             assert abs(sum(result.values()) - 1.0) < 1e-6
 
     def test_predict_2d_returns_array(self):
         w = LogisticFusionWeights(
-            coef_home=np.zeros(43, dtype=np.float64),
-            coef_away=np.zeros(43, dtype=np.float64),
+            coef_home=np.zeros(48, dtype=np.float64),
+            coef_away=np.zeros(48, dtype=np.float64),
         )
-        features = np.zeros((5, 43), dtype=np.float32)
+        features = np.zeros((5, 48), dtype=np.float32)
         result = w.predict(features)
         assert isinstance(result, np.ndarray)
         assert result.shape == (5, 3)
@@ -47,40 +47,40 @@ class TestPredict:
 
     def test_predict_positive_coef_increases_home_prob(self):
         w = LogisticFusionWeights(
-            coef_home=np.array([10.0] + [0.0] * 42, dtype=np.float64),
-            coef_away=np.zeros(43, dtype=np.float64),
+            coef_home=np.array([10.0] + [0.0] * 47, dtype=np.float64),
+            coef_away=np.zeros(48, dtype=np.float64),
         )
-        features = np.zeros(43, dtype=np.float32)
+        features = np.zeros(48, dtype=np.float32)
         features[0] = 1.0
         result = w.predict(features)
         assert result["home"] > 0.5
 
     def test_predict_symmetric_flip(self):
         w = LogisticFusionWeights(
-            coef_home=np.array([1.0] + [0.0] * 42, dtype=np.float64),
-            coef_away=np.array([-1.0] + [0.0] * 42, dtype=np.float64),
+            coef_home=np.array([1.0] + [0.0] * 47, dtype=np.float64),
+            coef_away=np.array([-1.0] + [0.0] * 47, dtype=np.float64),
         )
-        pos = w.predict(np.array([1.0] + [0.0] * 42, dtype=np.float32))
-        neg = w.predict(np.array([-1.0] + [0.0] * 42, dtype=np.float32))
+        pos = w.predict(np.array([1.0] + [0.0] * 47, dtype=np.float32))
+        neg = w.predict(np.array([-1.0] + [0.0] * 47, dtype=np.float32))
         assert abs(pos["home"] - neg["away"]) < 1e-6
         assert abs(pos["away"] - neg["home"]) < 1e-6
 
     def test_predict_draw_high_when_all_logodds_zero(self):
         w = LogisticFusionWeights(
-            coef_home=np.zeros(43, dtype=np.float64),
-            coef_away=np.zeros(43, dtype=np.float64),
+            coef_home=np.zeros(48, dtype=np.float64),
+            coef_away=np.zeros(48, dtype=np.float64),
         )
-        result = w.predict(np.zeros(43, dtype=np.float32))
+        result = w.predict(np.zeros(48, dtype=np.float32))
         assert abs(result["draw"] - 1 / 3) < 1e-6
 
     def test_predict_uses_intercept(self):
         w = LogisticFusionWeights(
-            coef_home=np.zeros(43, dtype=np.float64),
-            coef_away=np.zeros(43, dtype=np.float64),
+            coef_home=np.zeros(48, dtype=np.float64),
+            coef_away=np.zeros(48, dtype=np.float64),
             intercept_home=2.0,
             intercept_away=-2.0,
         )
-        result = w.predict(np.zeros(43, dtype=np.float32))
+        result = w.predict(np.zeros(48, dtype=np.float32))
         assert result["home"] > result["draw"]
         assert result["away"] < result["draw"]
 
@@ -95,7 +95,7 @@ class TestSaveLoad:
             intercept_home=0.1,
             intercept_away=-0.1,
             l1_penalty=0.01,
-            input_dim=43,
+            input_dim=48,
             league="test",
             trained_at="2026-05-16T00:00:00",
             sample_count=100,
@@ -119,8 +119,8 @@ class TestSaveLoad:
 
     def test_load_with_minimal_params(self, tmp_path):
         data = {
-            "coef_home": [0.1] * 43,
-            "coef_away": [-0.1] * 43,
+            "coef_home": [0.1] * 48,
+            "coef_away": [-0.1] * 48,
         }
         path = os.path.join(str(tmp_path), "minimal.json")
         with open(path, "w") as f:
@@ -130,13 +130,13 @@ class TestSaveLoad:
         assert loaded.intercept_away == 0.0
         assert loaded.sample_count == 0
         assert loaded.accuracy == 0.0
-        assert loaded.input_dim == 43
+        assert loaded.input_dim == 48
         assert loaded.league == "global"
 
     def test_save_auto_filename(self):
         w = LogisticFusionWeights(
-            coef_home=np.zeros(43, dtype=np.float64),
-            coef_away=np.zeros(43, dtype=np.float64),
+            coef_home=np.zeros(48, dtype=np.float64),
+            coef_away=np.zeros(48, dtype=np.float64),
             league="global",
             trained_at="2026-05-16T12:00:00",
         )
@@ -153,12 +153,12 @@ class TestExplain:
 
     def test_explain_structure(self):
         w = LogisticFusionWeights(
-            coef_home=np.full(43, 0.1, dtype=np.float64),
-            coef_away=np.full(43, -0.1, dtype=np.float64),
+            coef_home=np.full(48, 0.1, dtype=np.float64),
+            coef_away=np.full(48, -0.1, dtype=np.float64),
         )
-        features = np.arange(43, dtype=np.float32) / 43.0
+        features = np.arange(48, dtype=np.float32) / 48.0
         explanations = w.explain(features)
-        assert len(explanations) == 43
+        assert len(explanations) == 48
         for item in explanations:
             assert set(item.keys()) == {
                 "feature", "value", "coef_home", "coef_away",
@@ -170,10 +170,10 @@ class TestExplain:
 
     def test_explain_matches_predict_direction(self):
         w = LogisticFusionWeights(
-            coef_home=np.array([5.0] + [0.0] * 42, dtype=np.float64),
-            coef_away=np.zeros(43, dtype=np.float64),
+            coef_home=np.array([5.0] + [0.0] * 47, dtype=np.float64),
+            coef_away=np.zeros(48, dtype=np.float64),
         )
-        features = np.array([1.0] + [0.0] * 42, dtype=np.float32)
+        features = np.array([1.0] + [0.0] * 47, dtype=np.float32)
         explanations = w.explain(features)
         home_contribs = [e["contrib_home"] for e in explanations]
         assert max(home_contribs) > 0

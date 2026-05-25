@@ -1,0 +1,30 @@
+[
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "DB\u635f\u574f\u4e14\u65e0\u53ef\u7528\u5907\u4efd",
+    "ts": 1779724723.197958,
+    "time": "2026-05-25T15:58:43.197971+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "DB\u635f\u574f\u4e14\u65e0\u53ef\u7528\u5907\u4efd",
+    "ts": 1779725023.607412,
+    "time": "2026-05-25T16:03:43.607425+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "DB\u635f\u574f\u4e14\u65e0\u53ef\u7528\u5907\u4efd",
+    "ts": 1779725514.201783,
+    "time": "2026-05-25T16:11:54.201796+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "DB\u635f\u574f\u4e14\u65e0\u53ef\u7528\u5907\u4efd",
+    "ts": 1779726101.153273,
+    "time": "2026-05-25T16:21:41.153403+00:00"
+  }
+]

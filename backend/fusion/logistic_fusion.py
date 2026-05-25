@@ -163,7 +163,7 @@ class LogisticFusionWeights:
             intercept_home=data.get("intercept_home", 0.0),
             intercept_away=data.get("intercept_away", 0.0),
             l1_penalty=data.get("l1_penalty", 0.001),
-            input_dim=data.get("input_dim", 45),
+            input_dim=data.get("input_dim", 48),
             league=data.get("league", "global"),
             trained_at=data.get("trained_at", ""),
             sample_count=data.get("sample_count", 0),

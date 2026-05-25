@@ -26,16 +26,10 @@ from enum import Enum
 
 from calibrator import Calibrator, CalibrationCurve
 from edge_calculator import EdgeCalculator, MatchEdgeResult, EdgeResult
-from position_sizer import PositionSizer, StakeResult
+from position_sizer import PositionSizer, StakeResult, RiskTier
 from risk_manager import RiskManager, RiskAssessment
 
 
-class RiskTier(str, Enum):
-    CONSERVATIVE = "conservative"
-    BALANCED = "balanced"
-    AGGRESSIVE = "aggressive"
-    SPECULATIVE = "speculative"
-    ADVISOR = "advisor"
 
 # ─── 风险档位过滤参数 ───
 TIER_FILTERS: Dict[RiskTier, Dict] = {
