@@ -29,9 +29,9 @@ from scipy.optimize import minimize
 from scipy.optimize import OptimizeResult
 from sqlalchemy.orm import Session
 
-from database.models import Match, Prediction, FusionWeight, PlayType, MatchStatus, Team
+from models import Match, Prediction, FusionWeight, PlayType, MatchStatus, Team
 from sqlalchemy.orm import joinedload
-from core.prediction_engine import (
+from prediction_engine import (
     PredictionEngine,
     MatchContext,
     TeamContext,
@@ -44,7 +44,7 @@ from core.prediction_engine import (
     brier_score,
     direction_correct,
 )
-from utils.logger import get_logger
+from logger import get_logger
 
 logger = get_logger("weight_learner")
 
@@ -504,7 +504,7 @@ class WeightLearner:
 # CLI
 # ────────────────────────────
 if __name__ == "__main__":
-    from database.models import SessionLocal
+    from models import SessionLocal
 
     db = SessionLocal()
     try:

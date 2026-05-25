@@ -24,7 +24,7 @@ from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
 
 from data_source.base import OddsSnapshot, OddsSource
-from ingestion.odds_collector import _fetch_with_retry
+from odds_collector import _fetch_with_retry
 
 logger = logging.getLogger("500")
 
@@ -471,7 +471,7 @@ def collect_500_odds(db: Session) -> Dict:
     从 500.com 采集百家欧赔并更新数据库。
     供 scheduler 定时调用。
     """
-    from database.models import Match as MatchModel, OddsHistory
+    from models import Match as MatchModel, OddsHistory
 
     now = datetime.now(timezone.utc)
     window_end = now + timedelta(hours=72)

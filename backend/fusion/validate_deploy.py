@@ -19,7 +19,7 @@ from sklearn.metrics import log_loss
 
 from fusion.fusion_trainer import FusionTrainer
 from fusion.logistic_fusion import LogisticFusionTrainer, LogisticFusionWeights
-from utils.logger import get_logger
+from logger import get_logger
 
 logger = get_logger("validate_deploy")
 

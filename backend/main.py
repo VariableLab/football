@@ -17,10 +17,10 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import text
 from contextlib import asynccontextmanager
 
-from utils.logger import get_logger
-from database.config import get_settings
-from database.models import init_db, get_db, User, Team, Match, MatchStatus, Prediction, JingcaiIssue, JingcaiIssueMatch, OddsHistory
-from api.schemas import (
+from logger import get_logger
+from config import get_settings
+from models import init_db, get_db, User, Team, Match, MatchStatus, Prediction, JingcaiIssue, JingcaiIssueMatch, OddsHistory
+from schemas import (
     UserRegister, UserLogin, UserOut, Token,
     LicenseRedeem, LicenseRedeemOut,
     MatchOut, PredictionOut, StrategyPickOut,
@@ -40,12 +40,12 @@ from api.schemas import (
     HedgeAlertsResponse, HedgePositionResponse, HedgeComputeResult,
     OptimalComboResponse, StatusResponse,
 )
-from strategy.strategy_pipeline import StrategyPipeline
-from ingestion.odds_tracker import OddsTracker
+from strategy_pipeline import StrategyPipeline
+from odds_tracker import OddsTracker
 from hedge_engine import HedgeEngine
 from live_odds_feed import LiveOddsFeed, OddsBus, get_odds_bus, live_odds_update_to_dict
 from live_hedge_engine import LiveHedgeEngine
-from api.auth import get_password_hash, verify_password, create_access_token, get_current_active_user, get_optional_user
+from auth import get_password_hash, verify_password, create_access_token, get_current_active_user, get_optional_user
 from license_manager import redeem_license_key
 from api.admin import router as admin_router
 from api.routers.matches import router as matches_router
@@ -53,7 +53,7 @@ from api.routers.feedback import router as feedback_router
 from api.routers.monitor import router as monitor_router
 from api.routers.advisor import router as advisor_router
 from validation_engine import ValidationEngine
-from ingestion.odds_collector import OddsCollector, collect_odds_tier1_primary
+from odds_collector import OddsCollector, collect_odds_tier1_primary
 
 settings = get_settings()
 logger = get_logger("main")
@@ -390,7 +390,7 @@ def start_live_feed(_: bool = Depends(_verify_admin_key)):
     if os.getenv("WC_ENV", "").lower() in ("production", "prod") and os.getenv("WORKERS", "1") != "1":
         logger.warning("LiveOdds global state is not safe with multiple workers. Set WORKERS=1 or migrate to Redis.")
 
-    from database.config import get_settings
+    from config import get_settings
     settings = get_settings()
 
     _live_feed = LiveOddsFeed(
@@ -680,7 +680,7 @@ def _issue_to_dict(issue: JingcaiIssue) -> dict:
 def _auto_close_expired_issues(db: Session) -> int:
     """关闭已过sale_end或所有比赛已完结的期号。由scheduler调用。"""
     from datetime import datetime, timedelta
-    from database.models import Match, MatchStatus
+    from models import Match, MatchStatus
     from sqlalchemy import func
     # SQLite 存储的是 naive datetime，使用 now 进行比较
     now = datetime.utcnow()
@@ -1026,7 +1026,7 @@ def admin_refresh_all_odds(
     手动触发全部 upcoming 比赛的赔率刷新。
     优先级: BetExplorer 爬虫 > football-data > 合成赔率兜底。
     """
-    from ingestion.odds_collector import _get_upcoming_matches
+    from odds_collector import _get_upcoming_matches
     matches = _get_upcoming_matches(db, hours=72)
     if not matches:
         return {"status": "ok", "message": "No upcoming matches", "updated": 0}
@@ -1125,7 +1125,7 @@ def health(db: Session = Depends(get_db)):
 
     #赔率新鲜度
     try:
-        from database.models import MatchBookmakerOdds
+        from models import MatchBookmakerOdds
         from datetime import datetime, timezone as _tz2
         latest = db.query(MatchBookmakerOdds).order_by(MatchBookmakerOdds.id.desc()).first()
         if latest:
@@ -1177,7 +1177,7 @@ def get_user_settings(
     user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    from database.models import UserSettings
+    from models import UserSettings
     s = db.query(UserSettings).filter(UserSettings.user_id == user.id).first()
     if not s:
         s = UserSettings(user_id=user.id)
@@ -1205,7 +1205,7 @@ def update_user_settings(
     user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    from database.models import UserSettings
+    from models import UserSettings
     valid_tiers = {"conservative", "balanced", "aggressive", "speculative"}
     valid_plays = {"spf", "rq", "score", "goals", "half"}
 
@@ -1503,7 +1503,7 @@ async def sse_events():
 @app.get("/api/jingcai/issues/{issue_id}/optimal-combo", response_model=OptimalComboResponse)
 def get_optimal_combo(issue_id: int, top_n: int = 8, db: Session = Depends(get_db)):
     """获取当期最优串关推荐"""
-    from strategy.optimal_combo import compute_optimal_combo
+    from optimal_combo import compute_optimal_combo
     picks = compute_optimal_combo(db, issue_id, top_n)
     return {"issue_id": issue_id, "picks": picks, "total": len(picks)}
 

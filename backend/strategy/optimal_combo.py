@@ -3,7 +3,7 @@
 """
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session, joinedload
-from database.models import JingcaiIssue, JingcaiIssueMatch, Match, Prediction
+from models import JingcaiIssue, JingcaiIssueMatch, Match, Prediction
 import time
 
 # 全局缓存：{issue_id: {"data": result, "expires": timestamp}}

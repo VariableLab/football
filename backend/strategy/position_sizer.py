@@ -12,7 +12,7 @@ Kelly 公式给出理论最优仓位, 但有两个问题:
 - speculative (激进): 1/2 Kelly, 上限 10%, 无 DD 控制
 
 用法:
-    from strategy.position_sizer import PositionSizer, RiskTier
+    from position_sizer import PositionSizer, RiskTier
     sizer = PositionSizer(RiskTier.BALANCED)
     stake_pct = sizer.compute(calibrated_prob=0.55, odds=1.80,
                                bankroll=1000, peak=1050)

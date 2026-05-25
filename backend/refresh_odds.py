@@ -15,8 +15,8 @@ from datetime import datetime
 
 from sqlalchemy import inspect, text
 
-from database.models import init_db, get_db, Match, engine
-from ingestion.odds_collector import OddsCollector
+from models import init_db, get_db, Match, engine
+from odds_collector import OddsCollector
 
 
 def migrate_odds_source_column():

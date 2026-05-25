@@ -7,8 +7,8 @@ from datetime import datetime, timedelta, timezone
 # Ensure we can import from backend
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from database.models import SessionLocal, Match, MatchStatus
-from core.prediction_engine import PredictionEngine, build_context_from_match
+from models import SessionLocal, Match, MatchStatus
+from prediction_engine import PredictionEngine, build_context_from_match
 from quant_backtest import QuantBacktestEngine
 
 def run():

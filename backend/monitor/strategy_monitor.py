@@ -19,7 +19,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Tuple
 
 from strategy_config import StrategyParams, load_params, save_params, update_params
-from utils.logger import get_logger
+from logger import get_logger
 from alert_manager import fire_alert
 
 logger = get_logger("strategy_monitor")
@@ -353,7 +353,7 @@ class DriftSnapshot:
 
 def _compute_window_metrics(days: int) -> Optional[DriftSnapshot]:
     """计算最近 N 天的策略表现指标"""
-    from database.models import SessionLocal, Match, MatchStatus, Prediction
+    from models import SessionLocal, Match, MatchStatus, Prediction
 
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(days=days)

@@ -20,7 +20,7 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from database.models import Match, MatchStatus, Prediction, PlayType, AccuracySnapshot
+from models import Match, MatchStatus, Prediction, PlayType, AccuracySnapshot
 
 
 # ────────────────────────────
@@ -520,7 +520,7 @@ class ValidationEngine:
 # CLI 入口
 # ────────────────────────────
 if __name__ == "__main__":
-    from database.models import init_db, get_db
+    from models import init_db, get_db
     
     init_db()
     db = next(get_db())

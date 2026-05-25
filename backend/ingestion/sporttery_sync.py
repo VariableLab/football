@@ -15,12 +15,12 @@ import hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple, Any
 
-from database.models import (
+from models import (
     SessionLocal, Team, Match, MatchStatus, MatchType,
     JingcaiIssue, JingcaiIssueMatch, OddsHistory,
 )
-from ingestion.odds_collector import JingcaiSource
-from utils.logger import get_logger
+from odds_collector import JingcaiSource
+from logger import get_logger
 
 logger = get_logger("sporttery_sync")
 
@@ -361,12 +361,12 @@ def _record_odds_history(
 
 def _generate_prediction(db, match: Match) -> None:
     """为比赛生成预测"""
-    from core.prediction_engine import PredictionEngine, build_context_from_match
+    from prediction_engine import PredictionEngine, build_context_from_match
     ctx = build_context_from_match(match)
     engine = PredictionEngine(db_session=db)
     pred_result = engine.predict(ctx)
 
-    from database.models import Prediction, PlayType
+    from models import Prediction, PlayType
     for payload in pred_result.to_db_payload():
         existing = db.query(Prediction).filter(
             Prediction.match_id == match.id,

@@ -31,7 +31,7 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from utils.logger import get_logger
+from logger import get_logger
 
 logger = get_logger("hedge_engine")
 
@@ -149,7 +149,7 @@ class HedgeEngine:
         从 MatchBookmakerOdds 找出每场比赛各庄家的最优赔率，
         检测是否存在 sum(1/best_odds) < 1 的套利窗口。
         """
-        from database.models import Match, MatchBookmakerOdds
+        from models import Match, MatchBookmakerOdds
         from sqlalchemy import func
         from collections import defaultdict
 
@@ -242,7 +242,7 @@ class HedgeEngine:
         min_profit_pct: float,
     ) -> Optional[ArbitrageOpportunity]:
         """检查单场比赛是否有套利机会。"""
-        from database.models import MatchBookmakerOdds
+        from models import MatchBookmakerOdds
 
         book_odds = (
             self._session.query(MatchBookmakerOdds)

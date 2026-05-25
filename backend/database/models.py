@@ -6,7 +6,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from sqlalchemy.sql import func
 import enum
 
-from database.config import get_settings
+from config import get_settings
 
 settings = get_settings()
 engine = create_engine(

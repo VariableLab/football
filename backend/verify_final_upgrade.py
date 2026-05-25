@@ -4,12 +4,12 @@
 升级后：market=0.15, tactical_style 从 possession 推断, xG 优先使用
 """
 
-from core.prediction_engine import (
+from prediction_engine import (
     PredictionEngine, EloModel, PoissonModel, MarketModel,
     PlayerAdjustmentModel, TacticalModel, EnsembleFusion,
     build_context_from_match, DEFAULT_WEIGHTS, MatchContext, TeamContext,
 )
-from database.models import SessionLocal, Match
+from models import SessionLocal, Match
 
 
 def make_ctx_old_logic(match):

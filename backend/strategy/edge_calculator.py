@@ -8,7 +8,7 @@
 加安全垫才是真正有价值的投注机会。
 
 用法:
-    from strategy.edge_calculator import EdgeCalculator
+    from edge_calculator import EdgeCalculator
     ec = EdgeCalculator()
     result = ec.compute(odds_home=1.80, odds_draw=3.50, odds_away=4.20,
                         calibrated_probs={"home": 0.58, "draw": 0.24, "away": 0.18})

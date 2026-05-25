@@ -27,7 +27,7 @@ from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
 
 from data_source.base import OddsSnapshot, OddsSource
-from ingestion.odds_collector import _fetch_with_retry
+from odds_collector import _fetch_with_retry
 from data_cleaner import resolve_team_name
 
 logger = logging.getLogger("zgzcw")
@@ -283,7 +283,7 @@ def collect_zgzcw_odds(db: Session) -> Dict:
     从 zgzcw.com 采集赔率并更新数据库。
     供 scheduler 定时调用。
     """
-    from database.models import Match as MatchModel, OddsHistory
+    from models import Match as MatchModel, OddsHistory
 
     now = datetime.now(timezone.utc)
     window_end = now + timedelta(hours=72)

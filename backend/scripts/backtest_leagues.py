@@ -22,7 +22,7 @@ from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
 
 import httpx
-from core.prediction_engine import (
+from prediction_engine import (
     PredictionEngine,
     MatchContext,
     TeamContext,

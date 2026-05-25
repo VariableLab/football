@@ -26,7 +26,7 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.special import softmax
 
-from utils.logger import get_logger
+from logger import get_logger
 
 logger = get_logger("logistic_fusion")
 

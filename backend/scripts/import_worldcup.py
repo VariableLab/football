@@ -19,8 +19,8 @@ from typing import Dict, Optional
 import httpx
 from sqlalchemy.orm import Session
 
-from database.models import SessionLocal, Team, Match, MatchStatus, MatchType
-from utils.logger import get_logger
+from models import SessionLocal, Team, Match, MatchStatus, MatchType
+from logger import get_logger
 
 logger = get_logger("import_worldcup")
 

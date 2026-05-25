@@ -221,10 +221,10 @@ class Calibrator:
         从数据库的历史比赛+预测数据拟合校准曲线。
         """
         if db_session is None:
-            from database.models import SessionLocal
+            from models import SessionLocal
             db_session = SessionLocal()
 
-        from database.models import Match, MatchStatus, Prediction
+        from models import Match, MatchStatus, Prediction
 
         matches = db_session.query(Match).filter(
             Match.status == MatchStatus.FINISHED,

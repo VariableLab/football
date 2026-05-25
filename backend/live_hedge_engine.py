@@ -29,7 +29,7 @@ from sqlalchemy.orm import Session
 
 from hedge_engine import HedgeEngine, HedgeResult, compute_implied_total
 from live_odds_feed import OddsBus, LiveOddsUpdate, get_odds_bus
-from utils.logger import get_logger
+from logger import get_logger
 
 logger = get_logger("live_hedge_engine")
 
@@ -173,7 +173,7 @@ class LiveHedgeEngine:
             return alerts
 
         # 获取赛前赔率
-        from database.models import Match, SessionLocal
+        from models import Match, SessionLocal
         session = SessionLocal()
         try:
             match = session.query(Match).filter(Match.id == match_id).first()

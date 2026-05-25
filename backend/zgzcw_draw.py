@@ -20,8 +20,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import httpx
 from bs4 import BeautifulSoup
 
-from database.models import Match, MatchStatus, Team
-from utils.logger import get_logger
+from models import Match, MatchStatus, Team
+from logger import get_logger
 from zgzcw_source import TEAM_NAME_ALIAS, _normalise_team_name
 
 logger = get_logger("zgzcw_draw")
@@ -373,7 +373,7 @@ def sync_recent_draw(days_back: int = 14) -> Dict:
 
     被 scheduler 定时调用。
     """
-    from database.models import SessionLocal
+    from models import SessionLocal
 
     db = SessionLocal()
     try:
@@ -464,7 +464,7 @@ def _auto_draw_ready_issues(db) -> int:
     扫描 status='on_sale' 的期号，若所有关联比赛都有 actual_outcome，
     则自动设置 status='drawn' 以便 _fill_issue_draw_results 填充开奖结果。
     """
-    from database.models import JingcaiIssue, Match, MatchStatus
+    from models import JingcaiIssue, Match, MatchStatus
     from sqlalchemy import text
 
     autodrawn = 0
@@ -520,7 +520,7 @@ def _auto_draw_ready_issues(db) -> int:
 
 def _fill_issue_draw_results(db) -> int:
     """填充已完成比赛的期号 draw_result（替代 scheduler.fill_drawn_issues_job 避免循环导入）"""
-    from database.models import JingcaiIssue
+    from models import JingcaiIssue
     from sqlalchemy import text
 
     filled = 0

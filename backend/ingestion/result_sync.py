@@ -14,8 +14,8 @@ from typing import Dict, List, Optional, Tuple
 import httpx
 from sqlalchemy.orm import Session
 
-from database.models import Match, MatchStatus, Team
-from utils.logger import get_logger
+from models import Match, MatchStatus, Team
+from logger import get_logger
 
 logger = get_logger("result_sync")
 
@@ -405,7 +405,7 @@ def _fetch_fd_matches(fd_comp: str, date_from: str, date_to: str, api_key: str) 
 
 def sync_results_from_football_data(db: Session, days_back: int = 7) -> int:
     """从 football-data.org 同步五大联赛比赛结果（补充数据源）"""
-    from database.config import get_settings
+    from config import get_settings
     api_key = os.getenv("FOOTBALL_DATA_API_KEY") or get_settings().FOOTBALL_DATA_API_KEY
     if not api_key:
         return 0

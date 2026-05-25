@@ -4,14 +4,14 @@ from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timezone, timedelta
 import os
 
-from database.models import get_db, Match, MatchStatus, Prediction
-from api.schemas import (
+from models import get_db, Match, MatchStatus, Prediction
+from schemas import (
     MatchListResponse, MatchOut, StrategyResponse, 
     OddsMovementResponse, StrategyPickOut
 )
-from api.auth import get_optional_user
-from strategy.strategy_pipeline import StrategyPipeline
-from ingestion.odds_tracker import OddsTracker
+from auth import get_optional_user
+from strategy_pipeline import StrategyPipeline
+from odds_tracker import OddsTracker
 from utils.cache import cached_api
 
 
@@ -92,7 +92,7 @@ def list_matches(
     )
 
     if status == "jingcai":
-        from database.models import JingcaiIssueMatch
+        from models import JingcaiIssueMatch
         q = q.join(JingcaiIssueMatch, Match.id == JingcaiIssueMatch.match_id)
     elif status:
         q = q.filter(Match.status == status)

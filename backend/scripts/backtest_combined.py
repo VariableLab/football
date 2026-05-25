@@ -21,8 +21,8 @@ from typing import List, Tuple, Dict, Any
 
 from sqlalchemy.orm import Session
 
-from database.models import Team, SessionLocal, AccuracySnapshot
-from core.prediction_engine import (
+from models import Team, SessionLocal, AccuracySnapshot
+from prediction_engine import (
     PredictionEngine,
     Backtester,
     MatchContext,
@@ -234,7 +234,7 @@ def regression_learn(
 ) -> Dict[str, float]:
     """用 scipy.optimize 在训练集上学习权重，可选在测试集上验证"""
     from weight_learner import _weights_to_dict
-    from core.prediction_engine import DEFAULT_WEIGHTS as DW
+    from prediction_engine import DEFAULT_WEIGHTS as DW
     import numpy as np
     from scipy.optimize import minimize
 

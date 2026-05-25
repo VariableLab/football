@@ -8,8 +8,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database.models import Match, Prediction, MatchStatus
-from database.config import get_settings
+from models import Match, Prediction, MatchStatus
+from config import get_settings
 
 def run_diagnostic():
     settings = get_settings()
@@ -43,7 +43,7 @@ def run_diagnostic():
         pred_counts = {"home": 0, "draw": 0, "away": 0}
         conf_sums = {"home": 0.0, "draw": 0.0, "away": 0.0}
 
-        from core.prediction_engine import PredictionEngine, build_context_from_match
+        from prediction_engine import PredictionEngine, build_context_from_match
         engine = PredictionEngine()
         high_edge_mistakes = []
 

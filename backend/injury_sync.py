@@ -26,9 +26,9 @@ from typing import Dict, List, Optional, Any
 import requests
 from sqlalchemy.orm import Session
 
-from database.models import SessionLocal, Match, MatchStatus, Team
-from database.config import get_settings
-from utils.logger import get_logger
+from models import SessionLocal, Match, MatchStatus, Team
+from config import get_settings
+from logger import get_logger
 
 logger = get_logger("injury_sync")
 

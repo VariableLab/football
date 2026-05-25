@@ -22,10 +22,10 @@ from typing import Dict, Optional
 
 from sqlalchemy.orm import Session
 
-from database.models import Match, PredictionSnapshot
-from core.prediction_engine import PredictionEngine, build_context_from_match
+from models import Match, PredictionSnapshot
+from prediction_engine import PredictionEngine, build_context_from_match
 from prediction_snapshot import PredictionSnapshotManager
-from utils.logger import get_logger
+from logger import get_logger
 
 logger = get_logger("prediction_recalc")
 

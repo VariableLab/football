@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 
-from database.models import get_db
+from models import get_db
 from model_audit import ModelAuditor, run_self_heal_cycle
-from api.auth import get_current_active_user, User
+from auth import get_current_active_user, User
 
 router = APIRouter(prefix="/api/monitor", tags=["monitor"])
 
@@ -50,7 +50,7 @@ def trigger_self_heal(reason: str = "manual_api", user: User = Depends(get_curre
 def get_accuracy_stats(db: Session = Depends(get_db)):
     """获取整体准确率统计（用于看板）"""
     from sqlalchemy import func
-    from database.models import Match, Prediction, MatchStatus
+    from models import Match, Prediction, MatchStatus
     
     # 统计 SPF 准确率
     stats = db.query(
@@ -80,7 +80,7 @@ def get_accuracy_stats(db: Session = Depends(get_db)):
         })
         
     # 获取当前模型维度
-    from core.prediction_engine import PredictionEngine
+    from prediction_engine import PredictionEngine
     engine = PredictionEngine()
     model_dim = engine._lr_weights.coef_home.shape[0] if engine._lr_weights else 0
         

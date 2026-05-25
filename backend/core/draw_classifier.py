@@ -21,7 +21,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
-from utils.logger import get_logger
+from logger import get_logger
 from alert_manager import fire_alert
 
 logger = get_logger("draw_classifier")
@@ -164,7 +164,7 @@ class DrawClassifierTrainer:
         self.feature_std: Optional[np.ndarray] = None
 
     def build_training_data(self) -> Optional[Tuple[np.ndarray, np.ndarray]]:
-        from database.models import SessionLocal, Match, MatchStatus, Prediction
+        from models import SessionLocal, Match, MatchStatus, Prediction
 
         session = SessionLocal()
         try:
@@ -542,7 +542,7 @@ class DrawClassifierPredictor:
 
 def walk_forward_validate(n_folds: int = 10) -> Dict:
     """Walk-forward time-series validation"""
-    from database.models import SessionLocal, Match, MatchStatus, Prediction
+    from models import SessionLocal, Match, MatchStatus, Prediction
 
     session = SessionLocal()
     try:

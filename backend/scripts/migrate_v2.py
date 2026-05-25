@@ -4,7 +4,7 @@
 用法: python migrate_v2.py
 """
 from sqlalchemy import inspect, text
-from database.models import engine
+from models import engine
 
 
 def column_exists(table: str, column: str) -> bool:

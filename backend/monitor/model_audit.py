@@ -21,7 +21,7 @@ from datetime import datetime, timezone, timedelta
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from utils.logger import get_logger
+from logger import get_logger
 from alert_manager import fire_alert
 
 logger = get_logger("model_audit")
@@ -104,7 +104,7 @@ class ModelAuditor:
 
     def run_daily_audit(self, days_back: int = 1) -> Optional[AuditReport]:
         """对最近 days_back 天的已结束比赛做复盘"""
-        from database.models import SessionLocal, Match, MatchStatus, Prediction
+        from models import SessionLocal, Match, MatchStatus, Prediction
 
         session = SessionLocal()
         try:
@@ -431,7 +431,7 @@ def run_self_heal_cycle(reason: str = "manual") -> dict:
 
 def _step_weight_learn() -> Optional[Dict]:
     """第1步：从全量历史数据回归学习最优融合权重"""
-    from database.models import SessionLocal
+    from models import SessionLocal
     from weight_learner import WeightLearner
 
     db = SessionLocal()
@@ -464,7 +464,7 @@ def _step_weight_learn() -> Optional[Dict]:
 
 def _step_regenerate() -> Optional[int]:
     """第2步：用新权重重新生成所有已完成比赛预测"""
-    from database.models import SessionLocal, Match, MatchStatus
+    from models import SessionLocal, Match, MatchStatus
     from regenerate_predictions import regenerate_matches
 
     db = SessionLocal()

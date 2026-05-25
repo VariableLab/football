@@ -19,12 +19,12 @@ v2 优化:
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any
 
-from strategy.edge_calculator import EdgeCalculator
+from edge_calculator import EdgeCalculator
 from strategy_config import (
     StrategyParams, load_params, DEFAULT_PARAMS,
     compute_position_ratio,
 )
-from utils.logger import get_logger
+from logger import get_logger
 
 logger = get_logger("tiered_strategy")
 
@@ -600,7 +600,7 @@ def analyze_match(
 def analyze_match_from_db(match_id: int, params: Optional[StrategyParams] = None) -> Optional[MatchTierResult]:
     """从数据库加载比赛数据，运行完整分层分析"""
     import json
-    from database.models import SessionLocal, Match, Prediction
+    from models import SessionLocal, Match, Prediction
     from bet_nn import BetNetPredictor, extract_features
 
     predictor = BetNetPredictor()

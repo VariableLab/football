@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 import numpy as np
 import pytest
 
-from core.prediction_engine import PredictionEngine
+from prediction_engine import PredictionEngine
 
 
 def make_mock_team(name="TeamA", elo=1500):

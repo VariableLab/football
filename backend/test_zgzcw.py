@@ -5,7 +5,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 
 from zgzcw_source import ZgzcwOddsSource, collect_zgzcw_odds
-from database.models import SessionLocal, Match, Team
+from models import SessionLocal, Match, Team
 
 print("=" * 60)
 print("TEST 1: 获取比赛索引 + 赔率解析")

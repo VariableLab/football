@@ -18,7 +18,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
-from utils.logger import get_logger
+from logger import get_logger
 
 logger = get_logger("sub_model_score")
 
@@ -168,7 +168,7 @@ class ScoreTrainer:
         self.feature_std: Optional[np.ndarray] = None
 
     def build_training_data(self) -> Optional[Tuple[np.ndarray, np.ndarray]]:
-        from database.models import SessionLocal, Match, MatchStatus, Team
+        from models import SessionLocal, Match, MatchStatus, Team
         from sqlalchemy import func
 
         session = SessionLocal()
@@ -240,7 +240,7 @@ class ScoreTrainer:
             session.close()
 
     def _team_goal_stats(self, session, team_id: int) -> Dict[str, float]:
-        from database.models import Match, MatchStatus
+        from models import Match, MatchStatus
 
         if not team_id:
             return {"goals_avg": 1.3, "concede_avg": 1.2}
@@ -264,7 +264,7 @@ class ScoreTrainer:
 
     def _batch_team_goal_stats(self, session) -> Dict[int, Dict[str, float]]:
         """批量查询所有球队的进球/失球统计"""
-        from database.models import Match, MatchStatus
+        from models import Match, MatchStatus
         from sqlalchemy import func
 
         rows = session.query(
@@ -428,7 +428,7 @@ class ScorePredictor:
         return self.model.predict_top3(feats)
 
     def predict_from_db(self, match_id: int) -> Optional[Dict]:
-        from database.models import SessionLocal, Match
+        from models import SessionLocal, Match
 
         session = SessionLocal()
         try:

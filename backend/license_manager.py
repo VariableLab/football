@@ -6,7 +6,7 @@ from typing import List, Optional
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
-from database.models import LicenseKey, LicenseRedemption, User, LicenseType
+from models import LicenseKey, LicenseRedemption, User, LicenseType
 
 
 ALPHABET = string.ascii_uppercase + string.digits

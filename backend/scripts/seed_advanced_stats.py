@@ -14,8 +14,8 @@ import math
 import random
 from sqlalchemy.orm import Session
 
-from database.models import SessionLocal, Team
-from utils.logger import get_logger
+from models import SessionLocal, Team
+from logger import get_logger
 
 logger = get_logger("seed_advanced_stats")
 random.seed(42)

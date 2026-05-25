@@ -36,8 +36,8 @@ def auth_token(client):
     if resp.status_code == 200:
         return resp.json().get("access_token")
     # Last resort: create via direct DB
-    from database.models import SessionLocal, User
-    from api.auth import get_password_hash, create_access_token
+    from models import SessionLocal, User
+    from auth import get_password_hash, create_access_token
     session = SessionLocal()
     try:
         u = session.query(User).filter(User.email == "test_fixed@example.com").first()

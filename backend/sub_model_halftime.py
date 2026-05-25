@@ -17,7 +17,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
-from utils.logger import get_logger
+from logger import get_logger
 
 logger = get_logger("sub_model_halftime")
 
@@ -140,7 +140,7 @@ class HalftimeTrainer:
         self.feature_std: Optional[np.ndarray] = None
 
     def build_training_data(self) -> Optional[Tuple[np.ndarray, np.ndarray]]:
-        from database.models import SessionLocal, Match, MatchStatus, Team
+        from models import SessionLocal, Match, MatchStatus, Team
         from sqlalchemy import func, case
 
         session = SessionLocal()
@@ -222,7 +222,7 @@ class HalftimeTrainer:
         if not team_id:
             return {"home": 0.40, "draw": 0.30, "away": 0.30}
 
-        from database.models import Match, MatchStatus
+        from models import Match, MatchStatus
         matches = session.query(Match).filter(
             Match.status == MatchStatus.FINISHED,
             Match.ht_home_goals.isnot(None),
@@ -246,7 +246,7 @@ class HalftimeTrainer:
 
     def _batch_team_ht_rates(self, session) -> Dict[int, Dict[str, float]]:
         """批量查询所有球队的半场胜平负比例(1条SQL搞定)"""
-        from database.models import Match, MatchStatus
+        from models import Match, MatchStatus
         from sqlalchemy import func, case
 
         rows = session.query(
@@ -413,7 +413,7 @@ class HalftimePredictor:
         return self.model.predict_probs(feats)
 
     def predict_from_db(self, match_id: int) -> Optional[Dict]:
-        from database.models import SessionLocal, Match
+        from models import SessionLocal, Match
 
         session = SessionLocal()
         try:

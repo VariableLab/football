@@ -11,9 +11,9 @@ import json
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Any
 
-from database.models import SessionLocal, Match, OddsHistory, JingcaiIssueMatch
-from ingestion.odds_collector import JingcaiSource
-from utils.logger import get_logger
+from models import SessionLocal, Match, OddsHistory, JingcaiIssueMatch
+from odds_collector import JingcaiSource
+from logger import get_logger
 
 logger = get_logger("jingcai_quant")
 

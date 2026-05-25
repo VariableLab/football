@@ -10,11 +10,11 @@ from datetime import datetime, timedelta, timezone
 import logging
 import os
 
-from database.config import get_settings
+from config import get_settings
 settings = get_settings()
-from database.models import SessionLocal, get_db, Match, MatchStatus, Prediction, Team
+from models import SessionLocal, get_db, Match, MatchStatus, Prediction, Team
 
-from utils.logger import get_logger
+from logger import get_logger
 
 logger = get_logger("scheduler")
 scheduler = BackgroundScheduler()
@@ -87,7 +87,7 @@ def collect_odds_tier1_job():
     - football-data 历史数据缓存更新（内部1小时缓存）
     - 检查本地赔率数据是否超过2小时未更新
     """
-    from ingestion.odds_collector import collect_odds_tier1_primary
+    from odds_collector import collect_odds_tier1_primary
     
     with DBSession() as db:
         result = collect_odds_tier1_primary(db)
@@ -107,7 +107,7 @@ def collect_odds_tier2_job():
     - 每天早晚各一次，用 Odds API 获取全部 upcoming 比赛赔率
     - 1 request = 1 credit
     """
-    from ingestion.odds_collector import collect_odds_tier2_premium
+    from odds_collector import collect_odds_tier2_premium
     
     with DBSession() as db:
         result = collect_odds_tier2_premium(db)
@@ -140,7 +140,7 @@ def collect_odds_tier3_job():
     - 每天中午对当天比赛额外采集
     - 赛前4小时内的比赛自动加采
     """
-    from ingestion.odds_collector import collect_odds_tier3_focus
+    from odds_collector import collect_odds_tier3_focus
     
     with DBSession() as db:
         result = collect_odds_tier3_focus(db)
@@ -172,7 +172,7 @@ def collect_closing_odds_job():
     赛前 90 分钟内采集真实收盘赔率。
     这是消除市场模型循环引用的关键：只存真实源， synthetic 不参与。
     """
-    from ingestion.odds_collector import collect_closing_odds_for_upcoming
+    from odds_collector import collect_closing_odds_for_upcoming
 
     with DBSession() as db:
         result = collect_closing_odds_for_upcoming(db, hours=4)
@@ -190,7 +190,7 @@ def update_opening_odds_job():
     批量更新开盘赔率：从 OddsHistory 找出最早真实快照，
     写入 Match.opening_odds_* 字段。
     """
-    from ingestion.odds_tracker import OddsTracker
+    from odds_tracker import OddsTracker
 
     with DBSession() as db:
         tracker = OddsTracker(db)
@@ -244,7 +244,7 @@ def lock_predictions_job():
 
             # 调用预测引擎（使用 closing_odds 作为市场输入，消除循环引用）
             try:
-                from core.prediction_engine import PredictionEngine, build_context_from_match
+                from prediction_engine import PredictionEngine, build_context_from_match
                 ctx = build_context_from_match(match)
                 engine = PredictionEngine(db_session=db)
                 result = engine.predict(ctx)
@@ -665,7 +665,7 @@ def calculate_accuracy_job():
 # 足彩期号自动验证 — 检查已开奖但未验证的期号并执行verify
 # ────────────────────────────
 def jingcai_auto_verify_wrapper():
-    from database.models import get_db, JingcaiIssue
+    from models import get_db, JingcaiIssue
     from jingcai_predictor import verify_issue
     db = next(get_db())
     try:
@@ -1112,7 +1112,7 @@ def start_scheduler():
         
         注意：已存在 lock 记录的预测不会覆写，保留赛前原始值。
         """
-        from core.prediction_engine import PredictionEngine, build_context_from_match
+        from prediction_engine import PredictionEngine, build_context_from_match
         with DBSession() as db:
             matches = db.query(Match).filter(
                 Match.status == MatchStatus.FINISHED,
@@ -1253,7 +1253,7 @@ def start_scheduler():
 
                 # 3. 检查刚关期的，立即验证
                 from jingcai_predictor import verify_issue
-                from database.models import JingcaiIssue
+                from models import JingcaiIssue
                 drawn = db.query(JingcaiIssue).filter(
                     JingcaiIssue.status == "drawn",
                     JingcaiIssue.verification == None,
@@ -1323,7 +1323,7 @@ def start_scheduler():
 
     # ── Fusion 逻辑回归训练：每周一 06:05（含 A/B 验证部署）──
     def data_quality_wrapper():
-        from database.models import get_db
+        from models import get_db
         from data_cleaner import DataCleaner
         db = next(get_db())
         try:
@@ -1381,7 +1381,7 @@ def start_scheduler():
 
     # ── 残差 NN 训练：每天 06:30 ──
     def residual_train_wrapper():
-        from core.residual_nn import residual_nn_train_job
+        from residual_nn import residual_nn_train_job
         residual_nn_train_job()
 
     scheduler.add_job(
@@ -1394,7 +1394,7 @@ def start_scheduler():
 
     # ── 预测快照生成：每 30 分钟检查一次未来 2 小时比赛 ──
     def prediction_snapshot_wrapper():
-        from database.models import SessionLocal
+        from models import SessionLocal
         from prediction_snapshot import PredictionSnapshotManager
         with DBSession() as db:
             mgr = PredictionSnapshotManager(db)

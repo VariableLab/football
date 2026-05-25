@@ -6,8 +6,8 @@
 import random
 from sqlalchemy.orm import Session
 
-from database.models import SessionLocal, Team, PlayerStats
-from utils.logger import get_logger
+from models import SessionLocal, Team, PlayerStats
+from logger import get_logger
 
 logger = get_logger("seed_player_stats")
 random.seed(42)

@@ -34,7 +34,7 @@ from typing import Dict, List, Optional, Tuple, Any
 import pandas as pd
 from sqlalchemy.orm import Session
 
-from utils.logger import get_logger
+from logger import get_logger
 
 logger = get_logger("soccerdata")
 
@@ -434,7 +434,7 @@ class SoccerDataSync:
         同步 Club Elo 等级分到 teams 表。
         注意：Club Elo 主要是俱乐部；国家队需额外处理。
         """
-        from database.models import Team
+        from models import Team
 
         ratings = self.client.fetch_elo_ratings(date_str)
         updated = 0
@@ -463,7 +463,7 @@ class SoccerDataSync:
         season: str = "2022",
     ) -> int:
         """同步 FBref 球队统计到 teams 表（xG / possession 等）。"""
-        from database.models import Team
+        from models import Team
 
         stats = self.client.fetch_fbref_team_stats(league, season, "standard")
         updated = 0
@@ -502,7 +502,7 @@ class SoccerDataSync:
         season: str = "2022",
     ) -> int:
         """同步 FBref 球员统计到 player_stats 表。"""
-        from database.models import PlayerStats, Team
+        from models import PlayerStats, Team
 
         stats = self.client.fetch_fbref_player_stats(league, season, "standard")
         inserted = 0
@@ -571,7 +571,7 @@ class SoccerDataSync:
         同步 Football-Data.co.uk 历史比赛+赔率到 match_bookmaker_odds 表。
         同时保留 JSON 缓存供回测框架读取。
         """
-        from database.models import Match, MatchBookmakerOdds
+        from models import Match, MatchBookmakerOdds
 
         matches = self.client.fetch_football_data_matches(league_code, season)
         inserted = 0

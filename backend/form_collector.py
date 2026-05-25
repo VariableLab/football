@@ -27,9 +27,9 @@ from typing import Dict, List, Optional, Tuple
 import httpx
 from sqlalchemy.orm import Session
 
-from database.config import get_settings
-from database.models import SessionLocal, Team, Match, MatchStatus
-from utils.logger import get_logger
+from config import get_settings
+from models import SessionLocal, Team, Match, MatchStatus
+from logger import get_logger
 
 logger = get_logger("form")
 settings = get_settings()

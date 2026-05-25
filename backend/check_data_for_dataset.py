@@ -1,7 +1,7 @@
 """探查数据库结构，确认可用于生成训练数据的字段"""
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
-from database.models import engine
+from models import engine
 from sqlalchemy import text
 
 with engine.connect() as conn:

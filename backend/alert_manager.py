@@ -7,7 +7,7 @@ import os
 from datetime import datetime, timezone
 from typing import Optional
 
-from utils.logger import get_logger
+from logger import get_logger
 
 logger = get_logger("alert")
 
@@ -95,7 +95,7 @@ def get_active_alerts() -> list:
 
 def odds_freshness_check(db) -> dict:
     """检查赔率数据新鲜度"""
-    from database.models import Match, MatchBookmakerOdds, MatchStatus
+    from models import Match, MatchBookmakerOdds, MatchStatus
     now = datetime.now(timezone.utc)
 
     upcoming = db.query(Match).filter(

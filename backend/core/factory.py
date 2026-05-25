@@ -9,10 +9,10 @@ ProQuant 量化工厂 - 全自动生产流水线 (MLOps)
 import logging
 import asyncio
 from datetime import datetime
-from ingestion.sporttery_sync import sporttery_daily_sync_job
-from ingestion.jingcai_quant_collector import run_quant_collector_job
+from sporttery_sync import sporttery_daily_sync_job
+from jingcai_quant_collector import run_quant_collector_job
 from monitor.model_audit import daily_audit_job
-from core.residual_nn import residual_nn_train_job
+from residual_nn import residual_nn_train_job
 
 logger = logging.getLogger("quant_factory")
 

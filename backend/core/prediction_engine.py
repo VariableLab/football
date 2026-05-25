@@ -27,7 +27,7 @@ from itertools import product
 import numpy as np
 from scipy.stats import poisson
 
-from database.models import PlayType
+from models import PlayType
 import yaml
 import os
 
@@ -1010,7 +1010,7 @@ class EnsembleFusion:
         if self._db is None:
             return None
         try:
-            from database.models import FusionWeight
+            from models import FusionWeight
 
             elo_tier = self._elo_diff_tier(elo_home, elo_away)
             stage_cat = self._stage_category(stage)
@@ -1418,7 +1418,7 @@ class PredictionEngine:
     ) -> Dict[str, float]:
         """使用残差 NN 修正 LR 融合的系统性偏差。NN 不可用时返回原值。"""
         try:
-            from core.residual_nn import ResidualPredictor
+            from residual_nn import ResidualPredictor
             predictor = ResidualPredictor()
             if not predictor.is_ready():
                 return spf

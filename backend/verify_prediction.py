@@ -8,10 +8,10 @@
 如果 PoissonModel 确实优先读取 xG，两组结果应有可观测差异。
 """
 
-from core.prediction_engine import (
+from prediction_engine import (
     PredictionEngine, MatchContext, TeamContext, build_context_from_match,
 )
-from database.models import SessionLocal, Match
+from models import SessionLocal, Match
 
 
 def make_ctx_with_zero_xg(match):
