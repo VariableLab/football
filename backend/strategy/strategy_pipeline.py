@@ -26,7 +26,7 @@ from enum import Enum
 
 from calibrator import Calibrator, CalibrationCurve
 from edge_calculator import EdgeCalculator, MatchEdgeResult, EdgeResult
-from position_sizer import PositionSizer, RiskTier, StakeResult
+from position_sizer import PositionSizer, StakeResult
 from risk_manager import RiskManager, RiskAssessment
 
 

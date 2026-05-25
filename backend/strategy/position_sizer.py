@@ -86,6 +86,8 @@ TIER_CONFIG: Dict[RiskTier, Dict] = {
         "dd_factor_3": 0.10,
     },
 
+}
+
 
 
 @dataclass(frozen=True)
