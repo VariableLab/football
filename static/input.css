@@ -12,13 +12,13 @@
   /* Dark theme palette */
   --color-cream: #1a1a2e;
   --color-cream-dark: #16162a;
-  --color-cream-light: #0f0f1a;
-  --color-charcoal: #eaeaf2;
+  --color-cream-light: #0d0d17;
+  --color-charcoal: #ffffff;
   --color-charcoal-light: #c8c8d8;
   --color-beige: #7c6cf0;
   --color-beige-light: #9d8cf7;
   --color-beige-dark: #5a4cd4;
-  --color-warm-gray: #9999b8;
+  --color-warm-gray: #d1d1e6;
   --color-warm-gray-light: #b0b0c8;
 
   --color-accent: #7c6cf0;
@@ -75,7 +75,7 @@ body::before {
 
 /* Cards */
 .glass {
-  background: rgba(26, 26, 46, 0.6);
+  background: rgba(22, 22, 42, 0.95);
   border: 1px solid rgba(124, 108, 240, 0.1);
   border-radius: 16px;
   backdrop-filter: blur(12px);
@@ -101,13 +101,13 @@ body::before {
 }
 
 .glass-strong {
-  background: rgba(26, 26, 46, 0.8);
+  background: rgba(15, 15, 26, 0.98);
   backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(124, 108, 240, 0.1);
 }
 
 .glass-card {
-  background: rgba(26, 26, 46, 0.5);
+  background: rgba(26, 26, 46, 0.95);
   border: 1px solid rgba(124, 108, 240, 0.08);
   border-radius: 16px;
   backdrop-filter: blur(12px);
