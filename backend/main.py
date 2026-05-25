@@ -1,3 +1,8 @@
+import sys, os
+_root = os.path.dirname(os.path.abspath(__file__))
+for d in ["api", "core", "features", "ingestion", "database", "strategy", "monitor", "utils", "api/routers"]:
+    sys.path.append(os.path.join(_root, d))
+
 # -*- coding: utf-8 -*-
 import hmac
 import json
