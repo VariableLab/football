@@ -12,6 +12,8 @@ from schemas import (
 from auth import get_optional_user
 from strategy_pipeline import StrategyPipeline
 from odds_tracker import OddsTracker
+from utils.cache import cached_api
+
 
 router = APIRouter(prefix="/api/matches", tags=["matches"])
 
@@ -62,6 +64,7 @@ def _enrich_rationale(pick, match) -> str:
     return "。".join(parts)
 
 @router.get("", response_model=MatchListResponse)
+@cached_api(ttl_seconds=60)
 def list_matches(
     status: str = None,
     group: str = None,

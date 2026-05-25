@@ -1,3 +1,8 @@
+import sys, os
+_root = os.path.dirname(os.path.abspath(__file__))
+for d in ["api", "core", "features", "ingestion", "database", "strategy", "monitor", "utils", "api/routers"]:
+    sys.path.append(os.path.join(_root, d))
+
 # -*- coding: utf-8 -*-
 import hmac
 import json
@@ -47,11 +52,11 @@ from live_odds_feed import LiveOddsFeed, OddsBus, get_odds_bus, live_odds_update
 from live_hedge_engine import LiveHedgeEngine
 from auth import get_password_hash, verify_password, create_access_token, get_current_active_user, get_optional_user
 from license_manager import redeem_license_key
-from admin import router as admin_router
-from routers.matches import router as matches_router
-from routers.feedback import router as feedback_router
-from routers.monitor import router as monitor_router
-from routers.advisor import router as advisor_router
+from api.admin import router as admin_router
+from api.routers.matches import router as matches_router
+from api.routers.feedback import router as feedback_router
+from api.routers.monitor import router as monitor_router
+from api.routers.advisor import router as advisor_router
 from validation_engine import ValidationEngine
 from odds_collector import OddsCollector, collect_odds_tier1_primary
 
