@@ -198,6 +198,7 @@ class MatchContext:
     temperature: float = 20.0
     pitch_condition: str = "good"      # good / average / poor / artificial
     schedule_density: str = "normal"   # light / normal / dense / extreme
+    competition: str = ""              # 赛事名称 (e.g. EPL, LaLiga)
 
     @property
     def has_odds(self) -> bool:
@@ -1739,7 +1740,9 @@ def build_context_from_match(match, handicap: int = 0) -> MatchContext:
         temperature=match.temperature or 20.0,
         pitch_condition=match.pitch_condition or "good",
         schedule_density=match.schedule_density or "normal",
+        competition=match.competition or "",
     )
+
 
 
 
