@@ -12,7 +12,7 @@ function AdvisorChat() {
       // 初始欢迎语
       this.messages.push({
         role: 'assistant',
-        content: '你好，我是你的博弈决策顾问。我可以基于模型深度分析比赛价值。'
+        content: '你好，我是 ProQuant 首席量化顾问。我仅被授权基于本项目 48 维模型及 ROI 神经网络数据为您提供博弈分析。请问您需要了解哪场赛事的量化 Edge？'
       });
 
       // 监听全局事件，用于从比赛详情页发起分析

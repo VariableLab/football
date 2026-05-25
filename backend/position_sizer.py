@@ -30,6 +30,7 @@ class RiskTier(Enum):
     BALANCED = "balanced"
     AGGRESSIVE = "aggressive"
     SPECULATIVE = "speculative"
+    ADVISOR = "advisor"
 
 
 # ─── 风险档位配置 ───
@@ -67,14 +68,24 @@ TIER_CONFIG: Dict[RiskTier, Dict] = {
     RiskTier.SPECULATIVE: {
         "kelly_fraction": 0.50,
         "max_stake_pct": 0.10,
-        "dd_threshold_1": 1.0,       # 不触发
+        "dd_threshold_1": 1.0,
         "dd_threshold_2": 1.0,
         "dd_threshold_3": 1.0,
         "dd_factor_1": 1.0,
         "dd_factor_2": 1.0,
         "dd_factor_3": 1.0,
     },
-}
+    RiskTier.ADVISOR: {
+        "kelly_fraction": 0.25,
+        "max_stake_pct": 0.10,
+        "dd_threshold_1": 0.10,
+        "dd_threshold_2": 0.15,
+        "dd_threshold_3": 0.25,
+        "dd_factor_1": 0.50,
+        "dd_factor_2": 0.25,
+        "dd_factor_3": 0.10,
+    },
+
 
 
 @dataclass(frozen=True)

@@ -22,12 +22,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
+from enum import Enum
 
 from calibrator import Calibrator, CalibrationCurve
 from edge_calculator import EdgeCalculator, MatchEdgeResult, EdgeResult
 from position_sizer import PositionSizer, RiskTier, StakeResult
 from risk_manager import RiskManager, RiskAssessment
 
+
+class RiskTier(str, Enum):
+    CONSERVATIVE = "conservative"
+    BALANCED = "balanced"
+    AGGRESSIVE = "aggressive"
+    SPECULATIVE = "speculative"
+    ADVISOR = "advisor"
 
 # ─── 风险档位过滤参数 ───
 TIER_FILTERS: Dict[RiskTier, Dict] = {
@@ -54,6 +62,12 @@ TIER_FILTERS: Dict[RiskTier, Dict] = {
         "min_odds": 1.01,
         "max_odds": 99.0,
         "min_edge": 0.05,
+    },
+    RiskTier.ADVISOR: {
+        "min_calibrated_prob": 0.01, # 只要有概率
+        "min_odds": 1.01,
+        "max_odds": 99.0,
+        "min_edge": -0.99, # 只要 EV > 0 (在 _passes_filter 中有 EV > 0 检查)
     },
 }
 
@@ -153,6 +167,12 @@ class StrategyPipeline:
             "total_max": 0.60,
         },
         RiskTier.SPECULATIVE: {
+            "single_match_max": 0.10,
+            "single_round_max": 0.20,
+            "single_league_max": 0.40,
+            "total_max": 0.80,
+        },
+        RiskTier.ADVISOR: {
             "single_match_max": 0.10,
             "single_round_max": 0.20,
             "single_league_max": 0.40,

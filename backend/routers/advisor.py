@@ -31,6 +31,13 @@ class AdvisorResponse(BaseModel):
 @router.post("/chat", response_model=AdvisorResponse)
 async def advisor_chat(req: AdvisorRequest, db: Session = Depends(get_db)):
     """量化策略研判顾问对话"""
+    # 🕵️ 核心约束：非数据相关问题直接拒答（前置过滤）
+    safe_keywords = ["球", "胜", "平", "负", "赔", "edge", "ev", "roi", "模型", "推荐", "哪些", "值得", "分析", "场", "利", "曼", "阿", "皇", "巴", "赛"]
+    is_data_query = any(k in req.message.lower() for k in safe_keywords) or req.match_id
+    
+    if not is_data_query and len(req.message) < 50: # 允许长难句进入 LLM 判断，短句直接过滤
+        return AdvisorResponse(reply="抱歉，我目前仅被授权访问 ProQuant 足球量化终端的实时数据流，无法处理该范围外的咨询。您可以询问具体场次或点击上方按钮获取今日优选。")
+
     context_parts = []
     
     # 🕵️ 智能增强：如果用户在问“今日推荐”、“哪些值得买”等，自动注入全量 Top Picks
@@ -64,23 +71,38 @@ async def advisor_chat(req: AdvisorRequest, db: Session = Depends(get_db)):
             for pred in preds:
                 probs = pred.probabilities
                 if pred.play_type == 'SPF':
+                    # 计算市场隐含概率和 Edge
+                    imp_h = 1.0 / (match.odds_home or 2.0)
+                    imp_d = 1.0 / (match.odds_draw or 3.2)
+                    imp_a = 1.0 / (match.odds_away or 3.5)
+                    total_imp = imp_h + imp_d + imp_a
+                    mkt_h, mkt_d, mkt_a = imp_h/total_imp, imp_d/total_imp, imp_a/total_imp
+                    
+                    edge_h = probs.get('home', 33.3)/100.0 - mkt_h
+                    edge_d = probs.get('draw', 33.3)/100.0 - mkt_d
+                    edge_a = probs.get('away', 33.3)/100.0 - mkt_a
+                    
                     ctx += f"- 量化模型校准SPF概率: 主胜 {probs.get('home','?')}% | 平局 {probs.get('draw','?')}% | 客胜 {probs.get('away','?')}% \n"
+                    ctx += f"- 市场错价识别 (Edge): 主胜 {edge_h:+.1%} | 平局 {edge_d:+.1%} | 客胜 {edge_a:+.1%} \n"
+                    ctx += f"- 期望价值 (EV): 主胜 {((probs.get('home',0)/100.0)*(match.odds_home or 0)-1):+.1%} | 客胜 {((probs.get('away',0)/100.0)*(match.odds_away or 0)-1):+.1%} \n"
             
             context_parts.append(ctx)
 
-    system_prompt = """你是一个冷酷、专业的【量化数据分析师】。你的目标是解析比赛背后的数学逻辑。
+    system_prompt = """你是一个严谨、甚至有些傲慢的【ProQuant 首席量化顾问】。你唯一的知识来源是 [当前场次实时数据资产] 和 [今日在售赛事量化 Top 5 优选]。
 
-    【说话准则】：
-    1. 严禁废话：不许说“综合考虑”、“欢迎咨询”、“仅供参考”等废话。
-    2. 直击要点：开口就谈数据。
-    3. 关键指标：
-    - 如果 Elo 差值 > 100，指出实力悬殊。
-    - 对比模型 SPF 概率与市场隐含概率（即赔率折算概率）。
-    - 如果模型概率比市场高 3% 以上，称之为“正向 Edge”；反之则为“高估风险”。
-    4. 裁判与伤病：如果有相关数据，直接指出其对进球数（λ）的影响。
+    【核心指令】：
+    1. 绝对忠诚于数据：如果用户询问任何与本项目数据（足球、赔率、模型、神经网络）无关的问题，你必须礼貌但坚定地拒绝回答。
+    2. 解释模型逻辑：你要向用户解释，当前的建议是基于 48 维特征向量和利润导向（ROI-driven）神经网络残差修正后的结果。
+    3. 说人话：虽然专业，但要用人类博弈者能听懂的语言。不要复读原始概率，要转化为“博弈价值”或“错价空间”。
+    4. 禁止 AI 废话：严禁说“总之”、“欢迎再次咨询”、“作为一个AI”等。直接切入数据，回答完毕即停止。
 
-    【回复模板示例】：
-    “本场博弈点：量化模型给出主胜 55%，但市场赔率隐含概率仅 48%，存在 7% 的价值洼地。主裁吹罚尺度严，预期进球数降至 2.1，建议关注小比分波动。”
+    【逻辑优先级】：
+    - 第一优先级：利润导向 (ROI)。如果 EV (期望价值) > 5%，这就是你的核心推荐逻辑。
+    - 第二优先级：神经网络残差修正。指出模型检测到了市场赔率的系统性偏差。
+    - 第三优先级：联赛垂直模型。如果是五大联赛，强调这是针对该联赛风格的专属“大脑”算出的结果。
+
+    【拒答逻辑】：
+    如果用户问“你好”、“你是谁”、“写个代码”或关于篮球等，统一回答：“抱歉，我目前仅被授权访问 ProQuant 足球量化终端的实时数据流，无法处理该范围外的咨询。”
 
     请用中文回答。"""
 
@@ -128,7 +150,7 @@ def get_top_picks(db: Session = Depends(get_db)):
     from models import Match, JingcaiIssueMatch
     
     engine = PredictionEngine()
-    pipeline = StrategyPipeline(risk_tier='balanced', bankroll=100.0)
+    pipeline = StrategyPipeline(risk_tier='advisor', bankroll=100.0)
 
     # 1. 找到所有尚未开赛的竞彩/重要比赛
     matches = db.query(Match).join(JingcaiIssueMatch, Match.id == JingcaiIssueMatch.match_id).filter(Match.status != 'FINISHED').all()
@@ -151,7 +173,8 @@ def get_top_picks(db: Session = Depends(get_db)):
             )
             
             for p in picks:
-                if p.is_recommended:
+                # 只要 EV > 0 (即理论盈利) 就加入备选，由 LLM 决定如何推荐
+                if p.ev > 0:
                     all_picks.append({
                         'match': f"{m.home_team.name} vs {m.away_team.name}",
                         'league': m.competition,
@@ -159,12 +182,13 @@ def get_top_picks(db: Session = Depends(get_db)):
                         'odds': p.odds,
                         'prob': p.model_prob_calibrated,
                         'ev': p.ev,
+                        'edge': p.edge,
                         'kelly': p.stake_pct,
                         'rationale': p.rationale
                     })
         except Exception:
             continue
 
-    # 2. 按 EV 排序并去重
-    all_picks.sort(key=lambda x: x['ev'], reverse=True)
+    # 2. 按 Edge (错价程度) 排序并去重
+    all_picks.sort(key=lambda x: x['edge'], reverse=True)
     return {"top_picks": all_picks[:5]}
