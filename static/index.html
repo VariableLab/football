@@ -14,7 +14,7 @@
   <meta property="og:url" content="https://football.nett.to" />
 
   <link rel="icon" type="image/png" href="/static/logo.png" />
-  <link rel="stylesheet" href="/static/tailwind.css?v=20260524-ultimate" />
+  <link rel="stylesheet" href="/static/tailwind.css?v=20260526-extreme-quant" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');
     :root { --cream: #FDFCF8; --charcoal: #1A1A1A; --accent: #D4AF37; }
@@ -35,7 +35,7 @@
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="selection:bg-accent/20">
+<body class="bg-cream-light text-charcoal selection:bg-accent/20">
 
 <!-- Nav -->
 <nav class="fixed top-0 left-0 right-0 z-50 bg-cream/80 backdrop-blur-md border-b border-charcoal/5 px-6 lg:px-12 py-4 flex items-center justify-between">
@@ -510,22 +510,22 @@
           <button @click="closeModal()" class="absolute top-6 right-6 z-10 w-8 h-8 rounded-full bg-charcoal/5 hover:bg-charcoal/10 flex items-center justify-center transition-colors text-charcoal/40 hover:text-charcoal">&times;</button>
           
           <!-- Header: Teams -->
-          <div class="p-8 pb-6 border-b border-accent/10">
+          <div class="p-8 pb-6 border-b border-accent/10 bg-glow-purple/5">
             <div class="flex items-center justify-between mb-8">
               <div class="flex-1 flex flex-col items-center gap-2">
-                <span class="text-4xl" x-text="homeTeam.flag"></span>
-                <span class="text-xl font-bold text-white text-center" x-text="homeTeam.name"></span>
-                <span class="text-xs text-warm-gray uppercase tracking-widest" x-text="'FIFA #' + (homeTeam.fifa_rank || '-')"></span>
+                <span class="text-4xl drop-shadow-lg" x-text="homeTeam.flag"></span>
+                <span class="text-xl font-black text-white text-center tracking-tight" x-text="homeTeam.name"></span>
+                <span class="text-[10px] text-warm-gray font-bold uppercase tracking-[0.2em]" x-text="'FIFA #' + (homeTeam.fifa_rank || '-')"></span>
               </div>
               <div class="px-6 flex flex-col items-center">
-                <div class="text-xs text-warm-gray font-normal mb-1 num" x-text="fmtBJ(match.kickoff_at)"></div>
-                <div class="text-2xl font-serif text-charcoal/20">VS</div>
-                <div class="text-xs text-warm-gray font-normal mt-1" x-text="match.competition"></div>
+                <div class="text-[10px] text-accent font-black mb-1 tracking-widest uppercase" x-text="fmtBJ(match.kickoff_at)"></div>
+                <div class="text-2xl font-serif text-white/10 italic">VS</div>
+                <div class="text-[10px] text-warm-gray font-bold mt-1 uppercase tracking-widest" x-text="match.competition"></div>
               </div>
               <div class="flex-1 flex flex-col items-center gap-2">
-                <span class="text-4xl" x-text="awayTeam.flag"></span>
-                <span class="text-xl font-bold text-white text-center" x-text="awayTeam.name"></span>
-                <span class="text-xs text-warm-gray uppercase tracking-widest" x-text="'FIFA #' + (awayTeam.fifa_rank || '-')"></span>
+                <span class="text-4xl drop-shadow-lg" x-text="awayTeam.flag"></span>
+                <span class="text-xl font-black text-white text-center tracking-tight" x-text="awayTeam.name"></span>
+                <span class="text-[10px] text-warm-gray font-bold uppercase tracking-[0.2em]" x-text="'FIFA #' + (awayTeam.fifa_rank || '-')"></span>
               </div>
             </div>
 
@@ -533,11 +533,11 @@
             <div class="grid grid-cols-3 gap-4 py-3 px-4 bg-cream-light/50 rounded-xl">
               <div class="text-center">
                 <div class="text-xs uppercase tracking-tighter text-warm-gray mb-0.5">Elo 实力</div>
-                <div class="text-lg font-bold text-white num" x-text="homeTeam.elo + ' / ' + awayTeam.elo"></div>
+                <div class="text-lg font-bold text-white num" x-text="(homeTeam.elo || '-') + ' / ' + (awayTeam.elo || '-')"></div>
               </div>
               <div class="text-center border-x border-accent/10">
                 <div class="text-xs uppercase tracking-tighter text-warm-gray mb-0.5">期望进球</div>
-                <div class="text-lg font-bold text-white num" x-text="homeTeam.avg_xg + ' - ' + awayTeam.avg_xg"></div>
+                <div class="text-lg font-bold text-white num" x-text="(homeTeam.avg_goals_scored || '-') + ' - ' + (awayTeam.avg_goals_scored || '-')"></div>
               </div>
               <div class="text-center">
                 <div class="text-xs uppercase tracking-tighter text-warm-gray mb-0.5">主场优势</div>
@@ -650,7 +650,7 @@
                             </div>
                           </div>
                           
-                          <div class="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-700 font-normal leading-relaxed italic border-l-2 border-accent/20" x-text="'💡 ' + pick.rationale"></div>
+                          <div class="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-warm-gray font-normal leading-relaxed italic border-l-2 border-accent/20" x-text="'💡 ' + pick.rationale"></div>
                         </div>
                       </template>
                     </div>
@@ -660,29 +660,29 @@
                 <!-- Odds Movement -->
                 <template x-if="oddsMovement">
                   <div class="mt-10 pt-8 border-t border-charcoal/10">
-                    <h4 class="text-xs uppercase tracking-[0.25em] text-gray-900 font-bold mb-5" data-i18n="match.oddsMove">赔率走势分析</h4>
+                    <h4 class="text-xs uppercase tracking-[0.25em] text-white font-bold mb-5" data-i18n="match.oddsMove">赔率走势分析</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div class="bg-white border border-charcoal/5 rounded-2xl p-6 shadow-sm">
-                        <div class="text-xs text-gray-500 font-bold mb-4 uppercase tracking-widest">初始指数 vs 现盘</div>
+                      <div class="bg-cream-light/50 border border-white/10 rounded-2xl p-6 shadow-sm">
+                        <div class="text-xs text-warm-gray font-bold mb-4 uppercase tracking-widest">初始指数 vs 现盘</div>
                         <div class="space-y-3">
                           <div class="flex justify-between items-center text-sm">
-                            <span class="font-bold text-white">主胜 (H)</span>
-                            <span class="num font-bold text-lg" x-text="oddsMovement.opening_odds.home + ' → ' + match.odds_home"></span>
+                            <span class="font-bold text-warm-gray">主胜 (H)</span>
+                            <span class="num font-bold text-lg text-white" x-text="oddsMovement.opening_odds.home + ' → ' + match.odds_home"></span>
                           </div>
                           <div class="flex justify-between items-center text-sm">
-                            <span class="font-bold text-white">平局 (D)</span>
-                            <span class="num font-bold text-lg" x-text="oddsMovement.opening_odds.draw + ' → ' + match.odds_draw"></span>
+                            <span class="font-bold text-warm-gray">平局 (D)</span>
+                            <span class="num font-bold text-lg text-white" x-text="oddsMovement.opening_odds.draw + ' → ' + match.odds_draw"></span>
                           </div>
                           <div class="flex justify-between items-center text-sm">
-                            <span class="font-bold text-white">客胜 (A)</span>
-                            <span class="num font-bold text-lg" x-text="oddsMovement.opening_odds.away + ' → ' + match.odds_away"></span>
+                            <span class="font-bold text-warm-gray">客胜 (A)</span>
+                            <span class="num font-bold text-lg text-white" x-text="oddsMovement.opening_odds.away + ' → ' + match.odds_away"></span>
                           </div>
                         </div>
                       </div>
                       <div class="p-2">
-                        <div class="text-xs text-gray-500 font-bold mb-3 uppercase tracking-widest">资金流向信号</div>
+                        <div class="text-xs text-warm-gray font-bold mb-3 uppercase tracking-widest">资金流向信号</div>
                         <div class="text-lg font-bold text-white mb-2" x-text="oddsMovement.signal || '无显著资金压力'"></div>
-                        <p class="text-sm text-gray-700 font-normal leading-relaxed" x-text="oddsMovement.analysis || '市场情绪相对稳定，未检测到大额异常扫盘资金。'"></p>
+                        <p class="text-sm text-warm-gray font-normal leading-relaxed" x-text="oddsMovement.analysis || '市场情绪相对稳定，未检测到大额异常扫盘资金。'"></p>
                       </div>
                     </div>
                   </div>
