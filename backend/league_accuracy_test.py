@@ -7,7 +7,7 @@ import numpy as np
 # Ensure we can import from backend
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from prediction_engine import PredictionEngine, TeamContext, MatchContext
+from core.prediction_engine import PredictionEngine, TeamContext, MatchContext
 
 def test_raw_sqlite():
     db_path = "database.sqlite"
@@ -15,7 +15,7 @@ def test_raw_sqlite():
     cursor = conn.cursor()
     
     # 模拟简单的 PredictionEngine 调用环境
-    from config import get_settings
+    from database.config import get_settings
     settings = get_settings()
     
     engine = PredictionEngine()

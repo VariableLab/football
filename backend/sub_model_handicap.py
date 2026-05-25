@@ -19,7 +19,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("sub_model_handicap")
 
@@ -180,7 +180,7 @@ class HandicapTrainer:
         self.feature_std: Optional[np.ndarray] = None
 
     def build_training_data(self) -> Optional[Tuple[np.ndarray, np.ndarray]]:
-        from models import SessionLocal, Match, MatchStatus, JingcaiIssueMatch
+        from database.models import SessionLocal, Match, MatchStatus, JingcaiIssueMatch
 
         session = SessionLocal()
         try:
@@ -284,7 +284,7 @@ class HandicapTrainer:
         if not team_id:
             return 0.5
 
-        from models import Match, MatchStatus
+        from database.models import Match, MatchStatus
         matches = session.query(Match).filter(
             Match.status == MatchStatus.FINISHED,
             Match.actual_home_goals.isnot(None),
@@ -312,7 +312,7 @@ class HandicapTrainer:
         if not team_id:
             return 0.0
 
-        from models import Match, MatchStatus
+        from database.models import Match, MatchStatus
         matches = session.query(Match).filter(
             Match.status == MatchStatus.FINISHED,
             Match.actual_home_goals.isnot(None),
@@ -327,7 +327,7 @@ class HandicapTrainer:
 
     def _batch_team_cover_rates(self, session) -> Dict[int, float]:
         """批量查询所有球队覆盖率(1条SQL)"""
-        from models import Match, MatchStatus
+        from database.models import Match, MatchStatus
         from sqlalchemy import func, case
 
         # 按home_team_id分组，计算home胜的场次
@@ -345,7 +345,7 @@ class HandicapTrainer:
 
     def _batch_team_goal_diffs(self, session) -> Dict[int, float]:
         """批量查询所有球队场均净胜球(1条SQL)"""
-        from models import Match, MatchStatus
+        from database.models import Match, MatchStatus
         from sqlalchemy import func
 
         rows = session.query(
@@ -509,7 +509,7 @@ class HandicapPredictor:
         return self.model.predict_probs(feats)
 
     def predict_from_db(self, match_id: int, handicap: Optional[int] = None) -> Optional[Dict]:
-        from models import SessionLocal, Match, JingcaiIssueMatch
+        from database.models import SessionLocal, Match, JingcaiIssueMatch
 
         session = SessionLocal()
         try:

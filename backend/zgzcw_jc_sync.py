@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
 from bs4 import BeautifulSoup
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("zgzcw_jc_sync")
 

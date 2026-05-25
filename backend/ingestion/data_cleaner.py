@@ -29,7 +29,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Any
 
 from sqlalchemy import func, text
-from models import (
+from database.models import (
     Match, MatchStatus, MatchType,
     Team, OddsHistory, Prediction, PlayType,
     JingcaiIssue,

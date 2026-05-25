@@ -8,8 +8,8 @@ from datetime import datetime, timedelta, timezone
 # Ensure we can import from backend
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from prediction_engine import PredictionEngine, build_context_from_match
-from models import SessionLocal, Match, MatchStatus
+from core.prediction_engine import PredictionEngine, build_context_from_match
+from database.models import SessionLocal, Match, MatchStatus
 
 def run_final_stats():
     # Use Session to get full ORM objects including team info

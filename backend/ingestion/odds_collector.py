@@ -29,10 +29,10 @@ from urllib.parse import urlencode
 import httpx
 from sqlalchemy.orm import Session
 
-from config import get_settings
-from models import Match, AuditLog, OddsHistory
+from database.config import get_settings
+from database.models import Match, AuditLog, OddsHistory
 
-from logger import get_logger
+from utils.logger import get_logger
 from data_source.base import OddsSnapshot, OddsSource
 
 logger = get_logger("odds")

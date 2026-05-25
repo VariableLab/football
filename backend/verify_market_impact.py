@@ -3,11 +3,11 @@
 验证 MarketModel 是否真正生效。
 """
 
-from prediction_engine import (
+from core.prediction_engine import (
     PredictionEngine, EloModel, PoissonModel, MarketModel, PlayerAdjustmentModel,
     build_context_from_match, EnsembleFusion, DEFAULT_WEIGHTS,
 )
-from models import SessionLocal, Match
+from database.models import SessionLocal, Match
 
 
 def main():

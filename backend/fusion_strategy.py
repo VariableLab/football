@@ -12,9 +12,9 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from edge_calculator import EdgeCalculator
+from strategy.edge_calculator import EdgeCalculator
 from bet_nn import BetNetPredictor, extract_features
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("fusion_strategy")
 
@@ -204,7 +204,7 @@ def compute_fusion(
 def compute_fusion_from_db(match_id: int) -> Optional[FusionResult]:
     """从数据库加载比赛数据，运行融合策略"""
     import json
-    from models import SessionLocal, Match, MatchStatus, Prediction
+    from database.models import SessionLocal, Match, MatchStatus, Prediction
 
     predictor = BetNetPredictor()
     if not predictor.is_ready():

@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 from dataclasses import dataclass, field
 from typing import Optional
 
-from logger import get_logger
+from utils.logger import get_logger
 from alert_manager import fire_alert, get_active_alerts, check_consecutive_failures, odds_freshness_check
 
 logger = get_logger("health_daemon")
@@ -160,7 +160,7 @@ class HealthDaemon:
     def _check_odds_freshness(self) -> None:
         result = CheckResult(name="odds_freshness")
 
-        from models import SessionLocal
+        from database.models import SessionLocal
         session = SessionLocal()
         try:
             freshness = odds_freshness_check(session)
@@ -189,8 +189,8 @@ class HealthDaemon:
         """触发紧急赔率采集 + zgzcw 竞彩同步"""
         actions = []
         try:
-            from odds_collector import collect_odds_tier1_primary
-            from models import SessionLocal
+            from ingestion.odds_collector import collect_odds_tier1_primary
+            from database.models import SessionLocal
             session = SessionLocal()
             try:
                 collect_odds_tier1_primary(session)
@@ -258,7 +258,7 @@ class HealthDaemon:
     def _check_data_completeness(self) -> None:
         result = CheckResult(name="data_completeness")
 
-        from models import SessionLocal, Match, MatchStatus, Prediction, Team
+        from database.models import SessionLocal, Match, MatchStatus, Prediction, Team
         session = SessionLocal()
         try:
             now = datetime.now(timezone.utc)
@@ -389,7 +389,7 @@ class HealthDaemon:
     def _check_model_drift(self) -> None:
         result = CheckResult(name="model_drift")
 
-        from models import SessionLocal, Match, MatchStatus, Prediction
+        from database.models import SessionLocal, Match, MatchStatus, Prediction
         session = SessionLocal()
         try:
             # 取最近30天的已结束比赛

@@ -15,13 +15,13 @@
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 
-from config import get_settings
-from models import (
+from database.config import get_settings
+from database.models import (
     init_db, get_db, Team, Match, MatchStatus, MatchType,
     Prediction, PlayType
 )
-from prediction_engine import PredictionEngine, MatchContext, TeamContext
-from logger import get_logger
+from core.prediction_engine import PredictionEngine, MatchContext, TeamContext
+from utils.logger import get_logger
 
 settings = get_settings()
 logger = get_logger("sync")

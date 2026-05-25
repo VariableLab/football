@@ -13,7 +13,7 @@ import argparse
 import json
 from collections import defaultdict
 from sqlalchemy.orm import Session
-from models import SessionLocal, Match, MatchStatus, Prediction, Team
+from database.models import SessionLocal, Match, MatchStatus, Prediction, Team
 from draw_calibrator import DrawFeatures, apply_draw_calibration, load_draw_params, market_probabilities
 
 

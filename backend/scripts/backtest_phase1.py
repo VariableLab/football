@@ -5,8 +5,8 @@ from sqlalchemy.orm import joinedload
 print("=" * 60)
 print("Step 1: 导入验证")
 t0 = time.time()
-from models import SessionLocal, Match, MatchStatus
-from prediction_engine import build_context_from_match
+from database.models import SessionLocal, Match, MatchStatus
+from core.prediction_engine import build_context_from_match
 from features import EloModel, PoissonModel, MarketModel
 from features.adjustment_models import PlayerAdjustmentModel
 from features.form_markov_model import FormMarkovModel

@@ -5,8 +5,8 @@ from pydantic import BaseModel
 import httpx
 import logging
 
-from models import get_db, Match, Team, Prediction
-from logger import get_logger
+from database.models import get_db, Match, Team, Prediction
+from utils.logger import get_logger
 
 router = APIRouter(prefix="/api/advisor", tags=["advisor"])
 logger = get_logger("advisor")
@@ -145,9 +145,9 @@ async def advisor_chat(req: AdvisorRequest, db: Session = Depends(get_db)):
 @router.get("/top-picks")
 def get_top_picks(db: Session = Depends(get_db)):
     """获取全量在售赛事的 Top 5 高价值研判"""
-    from prediction_engine import PredictionEngine, build_context_from_match
-    from strategy_pipeline import StrategyPipeline
-    from models import Match, JingcaiIssueMatch
+    from core.prediction_engine import PredictionEngine, build_context_from_match
+    from strategy.strategy_pipeline import StrategyPipeline
+    from database.models import Match, JingcaiIssueMatch
     
     engine = PredictionEngine()
     pipeline = StrategyPipeline(risk_tier='advisor', bankroll=100.0)

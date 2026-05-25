@@ -33,20 +33,20 @@ from typing import List, Dict, Tuple, Optional, Any
 
 from sqlalchemy.orm import Session
 
-from models import (
+from database.models import (
     SessionLocal, Team, Match, Prediction, MatchStatus, MatchType,
     PlayType, OddsHistory, AuditLog,
     JingcaiIssue, JingcaiIssueMatch,
 )
-from prediction_engine import (
+from core.prediction_engine import (
     PredictionEngine, MatchContext, TeamContext,
     build_team_context_from_orm, build_context_from_match,
     StrategyPick,
     DEFAULT_WEIGHTS,
 )
-from strategy_pipeline import StrategyPipeline
-from odds_collector import SyntheticOddsSource
-from logger import get_logger
+from strategy.strategy_pipeline import StrategyPipeline
+from ingestion.odds_collector import SyntheticOddsSource
+from utils.logger import get_logger
 
 logger = get_logger("jingcai")
 
@@ -591,7 +591,7 @@ def audit_predictions(db: Session) -> Dict[str, Any]:
             stats["confidence_distribution"][match.confidence] = stats["confidence_distribution"].get(match.confidence, 0) + 1
 
     # 检查权重
-    from models import FusionWeight
+    from database.models import FusionWeight
     fw_count = db.query(FusionWeight).filter(FusionWeight.is_active == True).count()
 
     print("\n" + "=" * 60)
@@ -1050,7 +1050,7 @@ def cmd_issue_list():
 
 def cmd_issue_sync(days: int = 3):
     """从竞彩官网同步当前在售比赛，自动创建/更新期号并生成预测"""
-    from odds_collector import JingcaiSource
+    from ingestion.odds_collector import JingcaiSource
     from datetime import datetime, timedelta
 
     src = JingcaiSource()

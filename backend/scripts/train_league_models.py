@@ -7,7 +7,7 @@ import logging
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from fusion.fusion_trainer import FusionTrainer
-from config import get_settings
+from database.config import get_settings
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("league_trainer")

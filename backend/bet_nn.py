@@ -20,7 +20,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
-from logger import get_logger
+from utils.logger import get_logger
 from alert_manager import fire_alert
 
 logger = get_logger("bet_nn")
@@ -167,7 +167,7 @@ class BetNetTrainer:
 
     def build_training_data(self) -> Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]]:
         """从数据库构建训练数据（批量查询，避免N+1）"""
-        from models import SessionLocal, Match, MatchStatus, Prediction
+        from database.models import SessionLocal, Match, MatchStatus, Prediction
 
         session = SessionLocal()
         try:
@@ -443,7 +443,7 @@ class BetNetPredictor:
 
     def predict_from_db(self, match_id: int) -> Optional[Dict]:
         """从数据库加载比赛数据并推理"""
-        from models import SessionLocal, Match, Prediction
+        from database.models import SessionLocal, Match, Prediction
 
         session = SessionLocal()
         try:

@@ -1,8 +1,8 @@
 """Auto-Learner: 结果同步→验证→NN增量训练→自愈闭环"""
 import os, glob
 from datetime import datetime, timezone, timedelta
-from models import SessionLocal, Match, MatchStatus
-from logger import get_logger
+from database.models import SessionLocal, Match, MatchStatus
+from utils.logger import get_logger
 logger = get_logger("auto_learner")
 MIN_NEW = 5
 
@@ -20,12 +20,12 @@ def auto_learn_trigger():
         except Exception as e: logger.warning(f"[auto-learn] {mod}: {e}")
     try:
         lrfs = glob.glob("./data/weights/lr/global_*.json")
-        if lrfs: from residual_nn import residual_nn_train_job; residual_nn_train_job(); result["trained"].append("residual_nn")
+        if lrfs: from core.residual_nn import residual_nn_train_job; residual_nn_train_job(); result["trained"].append("residual_nn")
     except Exception as e: logger.warning(f"[auto-learn] residual_nn: {e}")
     return result
 
 def auto_verify_jingcai():
-    from models import SessionLocal, JingcaiIssue, JingcaiIssueMatch
+    from database.models import SessionLocal, JingcaiIssue, JingcaiIssueMatch
     from jingcai_predictor import record_draw_result, verify_issue
     s = SessionLocal()
     try:

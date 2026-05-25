@@ -8,8 +8,8 @@
 """
 
 from sqlalchemy.orm import Session
-from models import SessionLocal, FusionWeight
-from prediction_engine import DEFAULT_WEIGHTS
+from database.models import SessionLocal, FusionWeight
+from core.prediction_engine import DEFAULT_WEIGHTS
 
 
 def save_weights(db: Session, weights: dict, stage: str = "all",

@@ -31,7 +31,7 @@ import numpy as np
 from scipy.optimize import minimize_scalar, minimize
 from scipy.stats import poisson
 
-from prediction_engine import (
+from core.prediction_engine import (
     PredictionEngine,
     MatchContext,
     TeamContext,
@@ -81,7 +81,7 @@ def _is_league_competition(competition: str) -> bool:
 
 def fetch_finished_league_matches(db) -> List:
     """从数据库获取所有已结束的5大联赛比赛，按时间排序"""
-    from models import Match
+    from database.models import Match
     matches = (
         db.query(Match)
         .filter(Match.status == "finished")
@@ -636,7 +636,7 @@ def _precompute_submodels(
     之后权重优化只需要做线性组合，不需要重跑完整预测引擎。
     速度提升 ~50x。
     """
-    from prediction_engine import EloModel, PoissonModel, PlayerAdjustmentModel, MarketModel
+    from core.prediction_engine import EloModel, PoissonModel, PlayerAdjustmentModel, MarketModel
 
     state = WalkForwardState()
     precomputed = []
@@ -843,7 +843,7 @@ def learn_weights_with_wf_data(db, matches: List) -> Dict[str, Any]:
 
 def save_backtest_snapshot(db, results: Dict, weights: Dict, label: str):
     """保存回测快照到 accuracy_snapshots 表"""
-    from models import AccuracySnapshot
+    from database.models import AccuracySnapshot
     snapshot = AccuracySnapshot(
         snapshot_type="backtest",
         metric="combined",
@@ -863,7 +863,7 @@ def save_backtest_snapshot(db, results: Dict, weights: Dict, label: str):
 def save_fusion_weights(db, weights: Dict, stage: str = "all", elo_range: str = "all",
                          metric_value: float = 0, sample_size: int = 0):
     """保存融合权重到 fusion_weights 表"""
-    from models import FusionWeight
+    from database.models import FusionWeight
     # 标记旧权重为 inactive
     db.query(FusionWeight).filter(
         FusionWeight.stage == stage,
@@ -903,7 +903,7 @@ def main():
                         help="完整流程: 回测 + DC校准 + 权重学习 + 半场校准")
     args = parser.parse_args()
 
-    from models import SessionLocal
+    from database.models import SessionLocal
     db = SessionLocal()
 
     try:

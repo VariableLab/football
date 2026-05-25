@@ -9,8 +9,8 @@ from datetime import datetime, timezone
 # Ensure we can import from backend
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from residual_nn import ResidualNet, ResidualDataset, extract_residual_features, MODEL_DIR, RESIDUAL_MODEL_PATH
-from logger import get_logger
+from core.residual_nn import ResidualNet, ResidualDataset, extract_residual_features, MODEL_DIR, RESIDUAL_MODEL_PATH
+from utils.logger import get_logger
 
 logger = get_logger("profit_nn")
 
@@ -39,7 +39,7 @@ class ProfitTrainer:
         
     def train(self):
         print("Starting build_training_data...")
-        from residual_nn import ResidualTrainer
+        from core.residual_nn import ResidualTrainer
         base_trainer = ResidualTrainer()
         data = base_trainer.build_training_data()
         if data is None: 

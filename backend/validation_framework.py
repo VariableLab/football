@@ -22,7 +22,7 @@ from tiered_strategy import (
     TIER_HIGH, TIER_MEDIUM, TIER_SKIP,
     classify_tier, select_spf_recommendation,
 )
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("validation_framework")
 
@@ -147,7 +147,7 @@ def _breakeven_rate(avg_odds: float) -> float:
 
 def _load_validation_data(limit: int = 0) -> List[Dict]:
     """加载回测数据（同 param_optimizer，独立加载以保证隔离）"""
-    from models import SessionLocal, Match, MatchStatus, Prediction
+    from database.models import SessionLocal, Match, MatchStatus, Prediction
     from bet_nn import BetNetPredictor, extract_features
 
     predictor = BetNetPredictor()

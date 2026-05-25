@@ -12,7 +12,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("residual_nn")
 
@@ -87,7 +87,7 @@ class ResidualTrainer:
         self.feature_std = None
 
     def build_training_data(self, lr_weights=None):
-        from models import SessionLocal, Match, MatchStatus, Prediction, PlayType
+        from database.models import SessionLocal, Match, MatchStatus, Prediction, PlayType
         s = SessionLocal()
         try:
             if lr_weights is None:
@@ -131,7 +131,7 @@ class ResidualTrainer:
                 elo_diff = 0.0
                 if lr_weights is not None:
                     try:
-                        from prediction_engine import build_context_from_match
+                        from core.prediction_engine import build_context_from_match
                         from features import EloModel, PoissonModel, MarketModel
                         from features.adjustment_models import PlayerAdjustmentModel
                         from features.form_markov_model import FormMarkovModel

@@ -16,12 +16,12 @@
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
-from config import get_settings
-from models import init_db, get_db, Team, Match, MatchStatus, MatchType, Prediction, User, LicenseKey, LicenseType
-from auth import get_password_hash
-from prediction_engine import PredictionEngine, MatchContext, TeamContext
+from database.config import get_settings
+from database.models import init_db, get_db, Team, Match, MatchStatus, MatchType, Prediction, User, LicenseKey, LicenseType
+from api.auth import get_password_hash
+from core.prediction_engine import PredictionEngine, MatchContext, TeamContext
 from license_manager import create_license_keys
-from logger import get_logger
+from utils.logger import get_logger
 
 settings = get_settings()
 logger = get_logger("seed")
@@ -391,7 +391,7 @@ def main():
     print("=" * 50)
 
     init_db()
-    from models import SessionLocal
+    from database.models import SessionLocal
     db = SessionLocal()
     try:
         # 检查是否已有数据

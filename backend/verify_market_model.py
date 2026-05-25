@@ -3,8 +3,8 @@
 对比：同一比赛，使用 closing_odds vs 使用普通 odds 的预测差异。
 """
 
-from prediction_engine import PredictionEngine, MatchContext, build_context_from_match
-from models import SessionLocal, Match
+from core.prediction_engine import PredictionEngine, MatchContext, build_context_from_match
+from database.models import SessionLocal, Match
 
 
 def make_ctx_without_closing_odds(match):

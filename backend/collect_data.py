@@ -14,12 +14,12 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from models import SessionLocal, Match, Team, OddsHistory, MatchStatus
-from odds_collector import (
+from database.models import SessionLocal, Match, Team, OddsHistory, MatchStatus
+from ingestion.odds_collector import (
     FootballDataSource, BetExplorerSource, OddsCollector, SyntheticOddsSource,
     OddsSnapshot
 )
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("collect_data")
 

@@ -13,7 +13,7 @@
 - speculative (激进): 校准概率≥25%, 任意赔率, 边际≥0, 1/2 Kelly
 
 用法:
-    from strategy_pipeline import StrategyPipeline
+    from strategy.strategy_pipeline import StrategyPipeline
     pipeline = StrategyPipeline(risk_tier="balanced")
     picks = pipeline.generate(predictions, odds_home=1.80, odds_draw=3.50, odds_away=4.20)
 """
@@ -25,9 +25,9 @@ from typing import Dict, List, Optional, Any
 from enum import Enum
 
 from calibrator import Calibrator, CalibrationCurve
-from edge_calculator import EdgeCalculator, MatchEdgeResult, EdgeResult
-from position_sizer import PositionSizer, StakeResult
-from risk_manager import RiskManager, RiskAssessment
+from strategy.edge_calculator import EdgeCalculator, MatchEdgeResult, EdgeResult
+from strategy.position_sizer import PositionSizer, StakeResult
+from strategy.risk_manager import RiskManager, RiskAssessment
 
 
 class RiskTier(str, Enum):

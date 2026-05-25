@@ -2,15 +2,15 @@
 from typing import Dict, Optional, Tuple
 import numpy as np
 from sqlalchemy.orm import joinedload
-from models import SessionLocal, Match, MatchStatus
-from prediction_engine import build_context_from_match
+from database.models import SessionLocal, Match, MatchStatus
+from core.prediction_engine import build_context_from_match
 from features import EloModel, PoissonModel, MarketModel
 from features.adjustment_models import PlayerAdjustmentModel
 from features.form_markov_model import FormMarkovModel
 from features.h2h_model import H2HModel
 from features.feature_builder import FeatureBuilder
 from fusion.logistic_fusion import LogisticFusionTrainer, LogisticFusionWeights, cross_validate_lambda
-from logger import get_logger
+from utils.logger import get_logger
 logger = get_logger("fusion_trainer")
 LEAGUE_GROUPS = {"EPL":"epl","LaLiga":"laliga","Bundesliga":"bundesliga","SerieA":"seriea","Ligue1":"ligue1","JLeague":"jleague","KLeague":"kleague","UCL":"ucl"}
 

@@ -12,7 +12,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("prediction_report")
 
@@ -77,7 +77,7 @@ def generate_report(match_id: int) -> Optional[ComprehensiveReport]:
     2. NN分层 → high / medium
     3. 5种玩法各自出参考方向
     """
-    from models import SessionLocal, Match, Prediction
+    from database.models import SessionLocal, Match, Prediction
 
     session = SessionLocal()
     try:

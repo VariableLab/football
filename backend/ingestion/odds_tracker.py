@@ -5,7 +5,7 @@
 检测蒸汽盘（短时大幅变动）和尾盘资金（赛前最后变动）。
 
 用法:
-from odds_tracker import OddsTracker
+from ingestion.odds_tracker import OddsTracker
 tracker = OddsTracker(db_session)
 report = tracker.analyze_match(match_id=42)
 print(report.opening_odds, report.drift_home, report.steam_moves)
@@ -21,7 +21,7 @@ from enum import Enum
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("odds_tracker")
 
@@ -137,7 +137,7 @@ class OddsTracker:
         从 OddsHistory 读取时序数据，识别开盘赔率、计算漂移、
         检测蒸汽盘和尾盘信号。
         """
-        from models import OddsHistory
+        from database.models import OddsHistory
 
         snapshots = (
             self._session.query(OddsHistory)
@@ -202,7 +202,7 @@ class OddsTracker:
         Returns:
             True if opening odds were found and updated
         """
-        from models import Match, OddsHistory
+        from database.models import Match, OddsHistory
 
         earliest = (
             self._session.query(OddsHistory)
@@ -237,7 +237,7 @@ class OddsTracker:
 
     def batch_update_opening_odds(self) -> int:
         """批量更新所有缺少开盘赔率的比赛。返回更新数量。"""
-        from models import Match
+        from database.models import Match
 
         matches = (
             self._session.query(Match)
@@ -260,7 +260,7 @@ class OddsTracker:
         Returns:
             List of (match_id, steam_move) tuples
         """
-        from models import Match, OddsHistory
+        from database.models import Match, OddsHistory
 
         cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
         query = self._session.query(Match).filter(Match.kickoff_at >= cutoff)
@@ -413,7 +413,7 @@ class OddsTracker:
         self, points: List[OddsPoint], match_id: int,
     ) -> List[SteamMove]:
         """检测尾盘资金：赛前 2h 内的显著变动。"""
-        from models import Match
+        from database.models import Match
 
         match = self._session.query(Match).filter(Match.id == match_id).first()
         if match is None or match.kickoff_at is None:
