@@ -22,16 +22,17 @@ function AdvisorChat() {
       });
     },
 
-    async sendMessage(matchId = null) {
-      const text = matchId ? '请深度分析本场比赛的博弈价值。' : this.input.trim();
+    async sendMessage(matchId = null, command = null) {
+      const text = command ? command : (matchId ? '请深度分析本场比赛的量化价值。' : this.input.trim());
       if (!text && !matchId) return;
       if (this.loading) return;
 
       // 1. 添加用户消息到界面
       this.messages.push({ role: 'user', content: text });
-      if (!matchId) this.input = '';
+      if (!matchId && !command) this.input = '';
       
       this.loading = true;
+
       
       try {
         const resp = await fetch('/api/advisor/chat', {

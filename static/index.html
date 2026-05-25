@@ -397,7 +397,13 @@
         </template>
       </div>
 
+      <div class="flex flex-wrap gap-2 mb-4">
+        <button @click="sendMessage(null, '今日在售赛事中，哪些场次具有最高的量化 Edge？')" class="px-4 py-2 rounded-full border border-accent/30 bg-accent/5 text-xs text-accent hover:bg-accent/10 transition-all">📊 今日优选汇总</button>
+        <button @click="sendMessage(null, '目前逻辑回归模型的整体表现如何？')" class="px-4 py-2 rounded-full border border-white/10 bg-white/5 text-xs text-gray-400 hover:bg-white/10 transition-all">📈 模型效能评估</button>
+      </div>
+
       <div class="flex gap-3 items-end">
+
         <div class="flex-1 relative">
           <textarea 
             x-model="input"

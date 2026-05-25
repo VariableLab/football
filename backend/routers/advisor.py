@@ -32,8 +32,22 @@ class AdvisorResponse(BaseModel):
 async def advisor_chat(req: AdvisorRequest, db: Session = Depends(get_db)):
     """量化策略研判顾问对话"""
     context_parts = []
+    
+    # 🕵️ 智能增强：如果用户在问“今日推荐”、“哪些值得买”等，自动注入全量 Top Picks
+    keywords = ["推荐", "哪些", "值得", "今天", "买", "策略", "picks", "best", "today"]
+    if any(k in req.message.lower() for k in keywords) and not req.match_id:
+        try:
+            top_data = get_top_picks(db)
+            if top_data["top_picks"]:
+                ctx_top = "[今日在售赛事量化 Top 5 优选]\n"
+                for i, p in enumerate(top_data["top_picks"]):
+                    ctx_top += f"{i+1}. {p['match']} | {p['selection']} (赔率{p['odds']}) | EV: {p['ev']:+.1%}\n"
+                context_parts.append(ctx_top)
+        except Exception as e:
+            logger.warning(f"[advisor] Auto-fetch top picks failed: {e}")
 
     if req.match_id:
+
         match = db.query(Match).filter(Match.id == req.match_id).first()
         if match:
             home = db.query(Team).filter(Team.id == match.home_team_id).first()
@@ -105,3 +119,52 @@ async def advisor_chat(req: AdvisorRequest, db: Session = Depends(get_db)):
         except Exception as e:
             logger.error(f"[advisor] Deepstock API call failed: {e}")
             raise HTTPException(status_code=502, detail=f"顾问服务暂时忙碌: {str(e)}")
+
+@router.get("/top-picks")
+def get_top_picks(db: Session = Depends(get_db)):
+    """获取全量在售赛事的 Top 5 高价值研判"""
+    from prediction_engine import PredictionEngine, build_context_from_match
+    from strategy_pipeline import StrategyPipeline
+    from models import Match, JingcaiIssueMatch
+    
+    engine = PredictionEngine()
+    pipeline = StrategyPipeline(risk_tier='balanced', bankroll=100.0)
+
+    # 1. 找到所有尚未开赛的竞彩/重要比赛
+    matches = db.query(Match).join(JingcaiIssueMatch, Match.id == JingcaiIssueMatch.match_id).filter(Match.status != 'FINISHED').all()
+
+    all_picks = []
+    for m in matches:
+        try:
+            ctx = build_context_from_match(m)
+            pred_res = engine.predict(ctx)
+            
+            # 构造生成策略所需的格式
+            preds = [{'play_type': 'SPF', 'probabilities': pred_res.spf}]
+            picks = pipeline.generate(
+                predictions=preds,
+                odds_home=m.odds_home or 2.0,
+                odds_draw=m.odds_draw or 3.2,
+                odds_away=m.odds_away or 3.5,
+                competition=m.competition or '',
+                match_id=m.id
+            )
+            
+            for p in picks:
+                if p.is_recommended:
+                    all_picks.append({
+                        'match': f"{m.home_team.name} vs {m.away_team.name}",
+                        'league': m.competition,
+                        'selection': p.selection_label,
+                        'odds': p.odds,
+                        'prob': p.model_prob_calibrated,
+                        'ev': p.ev,
+                        'kelly': p.stake_pct,
+                        'rationale': p.rationale
+                    })
+        except Exception:
+            continue
+
+    # 2. 按 EV 排序并去重
+    all_picks.sort(key=lambda x: x['ev'], reverse=True)
+    return {"top_picks": all_picks[:5]}
