@@ -236,7 +236,9 @@ class PredictionResult:
     model_version: str = "v1.0"
     confidence: str = "medium"   # high / medium / low
     odds_degraded: bool = False  # True when prediction lacks market odds
-    weights_used: Dict[str, float] = field(default_factory=dict)
+    weights_used: Dict[str, Any] = field(default_factory=dict)
+    trace: Optional[Any] = None  # LogicChain object
+
     generated_at: datetime = field(default_factory=datetime.utcnow)
 
     def to_db_payload(self) -> List[Dict[str, Any]]:
@@ -1281,6 +1283,9 @@ class PredictionEngine:
         return spf
 
     def predict(self, ctx: MatchContext) -> PredictionResult:
+        from core.logic_tracer import LogicChain
+        trace = LogicChain(match_id=ctx.match_id)
+
         # 1. 跑各子模型
         elo_out = EloModel.predict(ctx)
         poisson_out = PoissonModel.predict(ctx)
@@ -1297,12 +1302,14 @@ class PredictionEngine:
 
         if lr_spf is not None:
             fused_spf = lr_spf
+            trace.add_step("逻辑回归基准", f"使用 {ctx.competition or '全球'} 48维特征模型计算出的初始概率分布", fused_spf)
             # 💡 核心改进：混合市场信号 (50/50) 以提升基准准确率
             if market_out:
                 fused_spf = {
                     k: 0.5 * fused_spf[k] + 0.5 * market_out[k]
                     for k in ["home", "draw", "away"]
                 }
+                trace.add_step("市场共识校准", "将模型预测与机构赔率隐含概率按 50:50 融合，平滑非理性波动", fused_spf)
         else:
             # fallback: 旧4参数线性加权 (EnsembleFusion)
             fused_spf = self.fusion.fuse_spf(
@@ -1312,19 +1319,22 @@ class PredictionEngine:
                 market=market_out,
                 ctx=ctx,
             )
+            trace.add_step("线性加权基准", "由于缺少专属权重，使用基础 Elo+泊松 4 参数融合", fused_spf)
 
         # 2b. 临场跳水修正 (New!)
+        old_spf = fused_spf.copy()
         fused_spf = self._apply_live_odds_override(fused_spf, ctx)
+        if fused_spf != old_spf:
+            trace.add_step("临场异动修正", "检测到赔率剧烈跳水（Steam Move），强制对齐机构大额资金流向", fused_spf)
 
         # 2c. 平局检测修正：精细化校准
         fused_spf = DrawDetectionModel.predict(fused_spf, ctx, market_out)
+        trace.add_step("平局概率微调", "利用 Draw-MLP 分类器针对高相关性特征进行平局偏置修正", fused_spf)
 
-
-
-
-        # 2c. 残差 NN 修正：用 ResidualNet 修正 LR 系统性偏差
+        # 2d. 残差 NN 修正：用 ResidualNet 修正 LR 系统性偏差
         if lr_spf is not None:
             fused_spf = self._apply_residual_correction(fused_spf, ctx, poisson_out, market_out)
+            trace.add_step("利润导向 NN 修正", "神经网络通过残差学习捕捉市场错价空间，优化最终 ROI 期望", fused_spf)
 
         # 3. 让球：基于泊松输出，但用融合后的 spf 做最终归一化参考
         rq_raw = poisson_out["rq"].copy()
@@ -1363,6 +1373,7 @@ class PredictionEngine:
             confidence=confidence,
             odds_degraded=market_out is None,
             weights_used={"_fusion": "lr_v2", **(lr_spf or {})} if lr_spf is not None else self.fusion.get_effective_weights(market_out, ctx),
+            trace=trace,
         )
 
     def _predict_with_lr(self, ctx: MatchContext, elo_out: Dict[str, float], poisson_out: Dict, players_factor: float, market_out: Optional[Dict[str, float]], weights: "LogisticFusionWeights",) -> Optional[Dict[str, float]]:

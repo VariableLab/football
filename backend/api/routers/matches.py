@@ -219,6 +219,18 @@ def get_strategy(
         for p in picks
     ]
 
+    # 💡 关键进化：生成逻辑溯源 Trace
+    trace_data = None
+    try:
+        from core.prediction_engine import PredictionEngine, build_context_from_match
+        engine = PredictionEngine(db_session=db)
+        ctx = build_context_from_match(match)
+        res = engine.predict(ctx)
+        if res.trace:
+            trace_data = res.trace.model_dump() if hasattr(res.trace, 'model_dump') else res.trace
+    except Exception as e:
+        logger.warning(f"Failed to generate trace for match {match_id}: {e}")
+
     return {
         "match_id": match_id,
         "status": match.status.value if hasattr(match.status, 'value') else match.status,
@@ -227,6 +239,7 @@ def get_strategy(
         "risk_tier": risk_tier,
         "strategies": [s.model_dump() for s in strategies],
         "predictions": predictions,
+        "trace": trace_data
     }
 
 @router.get("/{match_id}/odds-movement", response_model=OddsMovementResponse)

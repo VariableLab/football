@@ -296,6 +296,16 @@ class JingcaiIssueListResponse(BaseModel):
 
 
 # ─── Strategy Response ───
+class TraceStep(BaseModel):
+    name: str
+    description: str
+    impact_home: float
+    impact_draw: float
+    impact_away: float
+
+class LogicChain(BaseModel):
+    steps: List[TraceStep]
+
 class StrategyResponse(BaseModel):
     match_id: int
     status: str
@@ -304,6 +314,7 @@ class StrategyResponse(BaseModel):
     risk_tier: str = "balanced"
     strategies: List[StrategyPickOut]
     predictions: List[PredictionOut]
+    trace: Optional[LogicChain] = None
 
 
 # ─── Feedback ───

@@ -562,10 +562,66 @@
             <button @click="tab = 'score'" class="px-6 py-4 text-sm font-normal tracking-wide border-b-2 transition-all duration-300 whitespace-nowrap" :class="tab === 'score' ? 'border-charcoal text-charcoal font-medium' : 'border-transparent text-warm-gray hover:text-charcoal'" data-i18n="match.tabScore">比分</button>
             <button @click="tab = 'goals'" class="px-6 py-4 text-sm font-normal tracking-wide border-b-2 transition-all duration-300 whitespace-nowrap" :class="tab === 'goals' ? 'border-charcoal text-charcoal font-medium' : 'border-transparent text-warm-gray hover:text-charcoal'" data-i18n="match.tabGoals">进球数</button>
             <button @click="tab = 'half'" class="px-6 py-4 text-sm font-normal tracking-wide border-b-2 transition-all duration-300 whitespace-nowrap" :class="tab === 'half' ? 'border-charcoal text-charcoal font-medium' : 'border-transparent text-warm-gray hover:text-charcoal'" data-i18n="match.tabHalf">半全场</button>
+            <button @click="tab = 'trace'" class="px-6 py-4 text-sm font-normal tracking-wide border-b-2 transition-all duration-300 whitespace-nowrap flex items-center gap-2" :class="tab === 'trace' ? 'border-accent text-accent font-medium' : 'border-transparent text-warm-gray hover:text-accent'">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              <span>研判溯源</span>
+            </button>
           </div>
 
           <!-- Tab Content -->
           <div class="p-8">
+            <!-- Logic Trace Tab -->
+            <template x-if="tab === 'trace'">
+              <div class="space-y-8 py-4">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="text-lg font-black text-white">ProQuant 量化积木链</h3>
+                  <span class="text-[10px] bg-accent/20 text-accent px-2 py-0.5 rounded-full uppercase tracking-widest">v4.5 Trace</span>
+                </div>
+                
+                <div class="relative space-y-6">
+                  <!-- Vertical Line -->
+                  <div class="absolute left-4 top-2 bottom-2 w-0.5 bg-accent/10"></div>
+                  
+                  <template x-for="(step, i) in (strategyData?.trace?.steps || [])" :key="i">
+                    <div class="relative pl-10 animate-fade-in-up" :style="'animation-delay: ' + (i * 300) + 'ms'">
+                      <!-- Dot -->
+                      <div class="absolute left-2.5 top-1.5 w-3.5 h-3.5 rounded-full bg-accent border-4 border-[#0d0d17] z-10"></div>
+                      
+                      <!-- Step Box -->
+                      <div class="glass-card p-5 border border-white/5 hover:border-accent/30 transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                          <h4 class="font-bold text-white text-sm" x-text="step.name"></h4>
+                          <span class="num text-[10px] text-accent font-black">STEP 0<span x-text="i+1"></span></span>
+                        </div>
+                        <p class="text-xs text-warm-gray leading-relaxed mb-4" x-text="step.description"></p>
+                        
+                        <!-- Prob Mini Bars -->
+                        <div class="grid grid-cols-3 gap-3">
+                          <div class="space-y-1">
+                            <div class="flex justify-between text-[10px] text-warm-gray/60 num"><span>H</span><span x-text="fmtPct(step.impact_home)"></span></div>
+                            <div class="h-1 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-accent" :style="'width: ' + (step.impact_home * 100) + '%'"></div></div>
+                          </div>
+                          <div class="space-y-1">
+                            <div class="flex justify-between text-[10px] text-warm-gray/60 num"><span>D</span><span x-text="fmtPct(step.impact_draw)"></span></div>
+                            <div class="h-1 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-warm-gray" :style="'width: ' + (step.impact_draw * 100) + '%'"></div></div>
+                          </div>
+                          <div class="space-y-1">
+                            <div class="flex justify-between text-[10px] text-warm-gray/60 num"><span>A</span><span x-text="fmtPct(step.impact_away)"></span></div>
+                            <div class="h-1 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-warm-gray/40" :style="'width: ' + (step.impact_away * 100) + '%'"></div></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                  
+                  <template x-if="!(strategyData?.trace?.steps)">
+                    <div class="text-center py-12 text-warm-gray italic">
+                      该场次逻辑溯源数据正在计算中或暂不可用。
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
             <template x-if="tab === 'spf'">
               <div class="space-y-6">
                 <!-- Probabilities -->
