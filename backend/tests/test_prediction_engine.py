@@ -85,8 +85,8 @@ class TestPredictionEngine:
     def test_predict_lr_path_structure(self, mock_submodels):
         from fusion.logistic_fusion import LogisticFusionWeights
         mock_weights = LogisticFusionWeights(
-            coef_home=np.zeros(48, dtype=np.float64),
-            coef_away=np.zeros(48, dtype=np.float64),
+            coef_home=np.zeros(53, dtype=np.float64),
+            coef_away=np.zeros(53, dtype=np.float64),
             league="global", trained_at="2026-05-16",
             accuracy=0.55, sample_count=100,
         )

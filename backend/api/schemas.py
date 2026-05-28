@@ -545,7 +545,7 @@ class SettingsUpdateResponse(BaseModel):
 
 # ─── Bet NN ───
 class BetNNStatusResponse(BaseModel):
-    trained: bool
+    trained: Optional[bool] = None
     ready: bool
     trained_at: Optional[str] = None
     final_val_accuracy: Optional[float] = None

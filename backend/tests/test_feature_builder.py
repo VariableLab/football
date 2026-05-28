@@ -58,35 +58,38 @@ class TestBuild:
         features = builder.build(ELO, POISSON, 1.0, None, make_form(), make_h2h(), make_ctx())
         assert isinstance(features, np.ndarray)
         assert features.dtype == np.float32
-        assert features.shape == (48,)
+        assert features.shape == (53,)
 
     def test_build_no_interactions_shape(self):
         builder = FeatureBuilder(use_interactions=False)
         features = builder.build(ELO, POISSON, 1.0, None, make_form(), make_h2h(), make_ctx())
-        assert features.shape == (43,)
+        assert features.shape == (48,)
 
     def test_build_missing_market_uses_defaults(self):
         builder = FeatureBuilder(use_interactions=False)
         features = builder.build(ELO, POISSON, 1.0, None, make_form(), make_h2h(), make_ctx())
-        assert np.allclose(features[18:21], [0.33, 0.33, 0.33], atol=1e-6)
-        assert features[22] == 0.0  # max_odds_move
-        assert features[23] == 0.0  # source_count
+        # Market win/draw/away starts at 20
+        assert np.allclose(features[20:23], [0.33, 0.33, 0.33], atol=1e-6)
+        assert features[24] == 0.0  # max_odds_move
+        assert features[25] == 0.0  # source_count
 
     def test_build_market_provided(self):
         builder = FeatureBuilder(use_interactions=False)
         market = {"home": 0.45, "draw": 0.30, "away": 0.25}
         features = builder.build(ELO, POISSON, 1.0, market, make_form(), make_h2h(), make_ctx())
-        assert np.allclose(features[18:21], [0.45, 0.30, 0.25], atol=1e-6)
+        assert np.allclose(features[20:23], [0.45, 0.30, 0.25], atol=1e-6)
 
     def test_build_missing_form_uses_defaults(self):
         builder = FeatureBuilder(use_interactions=False)
         features = builder.build(ELO, POISSON, 1.0, None, None, make_h2h(), make_ctx())
-        assert np.allclose(features[24:29], [0.33, 0.33, 0.0, 0.5, 0.0], atol=1e-6)
+        # Form starts at 27
+        assert np.allclose(features[27:32], [0.33, 0.33, 0.0, 0.5, 0.0], atol=1e-6)
 
     def test_build_missing_h2h_uses_defaults(self):
         builder = FeatureBuilder(use_interactions=False)
         features = builder.build(ELO, POISSON, 1.0, None, make_form(), None, make_ctx())
-        assert np.allclose(features[29:35], [0.0, 0.0, 0.0, 0.0, 0.0, 1.0], atol=1e-6)
+        # H2H starts at 32
+        assert np.allclose(features[32:38], [0.0, 0.0, 0.0, 0.0, 0.0, 1.0], atol=1e-6)
 
     def test_build_knockout_affects_interaction(self):
         builder = FeatureBuilder(use_interactions=True)
@@ -94,7 +97,8 @@ class TestBuild:
         ctx_group = make_ctx(home_elo=1600, away_elo=1400, knockout=False)
         knock = builder.build(ELO, POISSON, 1.0, None, make_form(), make_h2h(), ctx_knock)
         group = builder.build(ELO, POISSON, 1.0, None, make_form(), make_h2h(), ctx_group)
-        assert knock[43] != group[43]  # elo_diff × is_knockout interaction (first interaction feature)
+        # First interaction is at index 48 (elo_diff * is_knockout)
+        assert knock[48] != group[48]
 
     def test_build_elo_diff_clipped(self):
         builder = FeatureBuilder(use_interactions=False)
@@ -113,19 +117,19 @@ class TestScaler:
 
     def test_fit_transform(self):
         builder = FeatureBuilder(use_interactions=True)
-        X = np.random.randn(100, 43).astype(np.float32)
+        X = np.random.randn(100, 53).astype(np.float32)
         builder.fit_scaler(X)
         transformed = builder.transform(X)
-        assert transformed.shape == (100, 43)
+        assert transformed.shape == (100, 53)
         assert abs(np.mean(transformed)) < 0.5
         assert 0.5 < np.std(transformed) < 1.5
 
     def test_transform_without_fit_returns_identity(self):
         builder = FeatureBuilder(use_interactions=True)
-        X = np.random.randn(10, 43).astype(np.float32)
+        X = np.random.randn(10, 53).astype(np.float32)
         result = builder.transform(X)
         assert np.allclose(result, X)
 
     def test_get_input_dim(self):
-        assert FeatureBuilder(use_interactions=True).get_input_dim() == 48
-        assert FeatureBuilder(use_interactions=False).get_input_dim() == 43
+        assert FeatureBuilder(use_interactions=True).get_input_dim() == 53
+        assert FeatureBuilder(use_interactions=False).get_input_dim() == 48
