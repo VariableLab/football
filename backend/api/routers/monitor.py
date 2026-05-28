@@ -49,26 +49,10 @@ def trigger_self_heal(reason: str = "manual_api", user: User = Depends(get_curre
 @router.get("/accuracy-stats")
 def get_accuracy_stats(db: Session = Depends(get_db)):
     """获取整体准确率统计（用于看板）"""
-    from sqlalchemy import func
-    from models import Match, Prediction, MatchStatus
+    from core.prediction_engine import PredictionEngine
+    from monitor.model_audit import ModelAuditor
     
-    # 统计 SPF 准确率
-    stats = db.query(
-        func.count(Match.id).label("total"),
-        func.sum(case((Match.actual_outcome == func.json_extract(Prediction.probabilities, '$.predicted'), 1), else_=0)).label("correct")
-    ).join(
-        Prediction, Prediction.match_id == Match.id
-    ).filter(
-        Match.status == MatchStatus.FINISHED,
-        Prediction.play_type == "SPF",
-        Match.actual_outcome.isnot(None)
-    ).first()
-    
-    # 注意：上面的 query 逻辑中 probabilities 存的是字典，sqlite 提取 max 可能需要更复杂的逻辑
-    # 我们可以通过读取最近的 audit 报告来获取这些信息，这更高效。
     reports = ModelAuditor.get_latest_reports(30)
-    if not reports:
-        return {"error": "No audit data available"}
     
     history = []
     for r in reversed(reports):
@@ -80,16 +64,20 @@ def get_accuracy_stats(db: Session = Depends(get_db)):
         })
         
     # 获取当前模型维度
-    from prediction_engine import PredictionEngine
-    engine = PredictionEngine()
-    model_dim = engine._lr_weights.coef_home.shape[0] if engine._lr_weights else 0
+    engine = PredictionEngine(db_session=db)
+    # 尝试加载全局权重以确定维度
+    model_dim = 0
+    lr_active = False
+    if engine._lr_weights:
+        model_dim = engine._lr_weights.coef_home.shape[0]
+        lr_active = True
         
     return {
         "overall_history": history,
         "latest_brier": history[-1]["brier"] if history else None,
         "latest_accuracy": history[-1]["accuracy"] if history else None,
         "model_dimension": model_dim,
-        "is_lr_enabled": engine._lr_weights is not None
+        "is_lr_enabled": lr_active
     }
 
 

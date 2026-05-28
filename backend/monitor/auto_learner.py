@@ -15,12 +15,25 @@ def auto_learn_trigger():
     if new < MIN_NEW: return {"triggered":False,"new_results":new}
     logger.info(f"[auto-learn] {new} new results, triggering incremental training")
     result = {"triggered":True,"new_results":new,"trained":[]}
-    for mod, fn in [("bet_nn","bet_nn_train_job"),("draw_classifier","draw_classifier_train_job")]:
-        try: m=__import__(mod); getattr(m,fn)(); result["trained"].append(mod)
-        except Exception as e: logger.warning(f"[auto-learn] {mod}: {e}")
+    
+    # Train draw classifier
+    try:
+        from core.draw_classifier import draw_classifier_train_job
+        draw_classifier_train_job()
+        result["trained"].append("draw_classifier")
+    except Exception as e:
+        logger.warning(f"[auto-learn] draw_classifier: {e}")
+
+    # Train residual NN
     try:
         lrfs = glob.glob("./data/weights/lr/global_*.json")
-        if lrfs: from residual_nn import residual_nn_train_job; residual_nn_train_job(); result["trained"].append("residual_nn")
+        if lrfs: 
+            from core.residual_nn import StackingTrainer
+            s_local = SessionLocal()
+            trainer = StackingTrainer(db_session=s_local)
+            trainer.train()
+            s_local.close()
+            result["trained"].append("residual_nn")
     except Exception as e: logger.warning(f"[auto-learn] residual_nn: {e}")
     return result
 

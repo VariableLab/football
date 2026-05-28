@@ -12,6 +12,9 @@ settings = get_settings()
 engine = create_engine(
     settings.DATABASE_URL,
     connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {},
+    pool_size=settings.DB_POOL_SIZE,
+    max_overflow=settings.DB_MAX_OVERFLOW,
+    pool_timeout=settings.DB_POOL_TIMEOUT,
     pool_pre_ping=True,
 )
 
@@ -135,7 +138,63 @@ class LicenseRedemption(Base):
 
 
 # ────────────────────────────
-# Team
+# AI 专属数据模型 (Multi-Tenant AI)
+# ────────────────────────────
+class UserQuantProfile(Base):
+    """用户的量化偏好档案（千人千面）"""
+    __tablename__ = "user_quant_profiles"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False, index=True)
+    base_bankroll = Column(Float, default=1000.0)
+    risk_tolerance = Column(String(50), default="balanced") # strict, balanced, aggressive
+    preferred_leagues = Column(JSON, default=list) # e.g., ["EPL", "LaLiga"]
+    ai_behavior_prompt = Column(Text, nullable=True) # 用户专属的 AI 隐藏提示词
+    
+    user = relationship("User")
+
+class AIChatSession(Base):
+    """用户的 AI 对话会话（支持多轮上下文）"""
+    __tablename__ = "ai_chat_sessions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    title = Column(String(255), default="新分析会话")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    user = relationship("User")
+    messages = relationship("AIMessage", back_populates="session", cascade="all, delete-orphan", order_by="AIMessage.created_at")
+
+class AIMessage(Base):
+    """对话内容与数据快照"""
+    __tablename__ = "ai_messages"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("ai_chat_sessions.id", ondelete="CASCADE"), nullable=False, index=True)
+    role = Column(String(50), nullable=False) # 'user' or 'assistant'
+    content = Column(Text, nullable=False)
+    context_snapshot = Column(JSON, nullable=True) # 提问或回答时系统所引用的盘口和模型数据
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    session = relationship("AIChatSession", back_populates="messages")
+
+class AIInteractionFeedback(Base):
+    """用于强化学习的反馈环"""
+    __tablename__ = "ai_interaction_feedback"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    message_id = Column(Integer, ForeignKey("ai_messages.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    is_helpful = Column(Boolean, nullable=False)
+    feedback_text = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    message = relationship("AIMessage")
+    user = relationship("User")
+
+# ────────────────────────────
+# Team (队名合并与清理准备)
 # ────────────────────────────
 class Team(Base):
     __tablename__ = "teams"
@@ -211,7 +270,7 @@ class Match(Base):
 
     # Match type & competition
     match_type = Column(Enum(MatchType), default=MatchType.WORLD_CUP)
-    competition = Column(String(50), nullable=True)  # WC2026 / International Friendly
+    competition = Column(String(100), nullable=True)  # WC2026 / International Friendly
 
     # Status
     status = Column(Enum(MatchStatus), default=MatchStatus.SCHEDULED, index=True)
@@ -227,20 +286,20 @@ class Match(Base):
     odds_home = Column(Float, nullable=True)
     odds_draw = Column(Float, nullable=True)
     odds_away = Column(Float, nullable=True)
-    odds_source = Column(String(20), nullable=True)  # synthetic / betexplorer / oddsapi / football-data / manual
+    odds_source = Column(String(100), nullable=True)  # synthetic / betexplorer / oddsapi / football-data / manual
 
     # ─── 开盘赔率（最早的真实赔率快照，用于赔率变化分析） ───
     opening_odds_home = Column(Float, nullable=True)
     opening_odds_draw = Column(Float, nullable=True)
     opening_odds_away = Column(Float, nullable=True)
-    opening_odds_source = Column(String(20), nullable=True)
+    opening_odds_source = Column(String(100), nullable=True)
     opening_odds_at = Column(DateTime(timezone=True), nullable=True)
 
     # ─── 收盘赔率（赛前最后采集的真实赔率，与实时odds分离） ───
     closing_odds_home = Column(Float, nullable=True)
     closing_odds_draw = Column(Float, nullable=True)
     closing_odds_away = Column(Float, nullable=True)
-    closing_odds_source = Column(String(20), nullable=True)
+    closing_odds_source = Column(String(100), nullable=True)
     odds_locked_at = Column(DateTime(timezone=True), nullable=True)  # 赔率锁定时间
 
     # Model confidence

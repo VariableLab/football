@@ -21,7 +21,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str = _generate_secret()
 
     # Database
-    DATABASE_URL: str = "sqlite:///./database.sqlite"
+    DATABASE_URL: str = "postgresql://postgre:prefect@129.146.124.72:5432/wcanalytics"
+    DB_POOL_SIZE: int = 20
+    DB_MAX_OVERFLOW: int = 40
+    DB_POOL_TIMEOUT: int = 60
 
     # JWT
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
@@ -48,6 +51,11 @@ class Settings(BaseSettings):
 
     # Admin
     ADMIN_API_KEY: str = _generate_secret()
+
+    # AI Advisor (Deepstock)
+    ADVISOR_API_URL: str = "https://deepstock.zone.id/v1/chat/completions"
+    ADVISOR_API_KEY: str = "sk-F9fKBTHbEJE4AEY9aOy5IwwUdxOPrZ3NilvAnohOO1ODm1KT"
+    ADVISOR_MODEL: str = "z-ai/glm-5.1"
 
     class Config:
         env_file = ".env" if not _PRODUCTION else ""

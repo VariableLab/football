@@ -1218,13 +1218,21 @@ class PredictionEngine:
             if global_w:
                 self._lr_weights_cache["global"] = global_w
 
+    @property
+    def _lr_weights(self) -> Optional["LogisticFusionWeights"]:
+        """兼容属性：返回全局主权重"""
+        return self._lr_weights_cache.get("global")
+
     @staticmethod
     def _load_lr_weights(league: str = "global") -> Optional["LogisticFusionWeights"]:
         """加载指定联赛的最新的 LR 融合权重，fallback 为 None"""
         import glob
         import os
         try:
-            _lr_weights_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "weights", "lr")
+            # 修正路径：从 backend/core 到 backend/data
+            _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            _lr_weights_dir = os.path.join(_root, "data", "weights", "lr")
+            
             # 匹配模式: {league}_v1_*.json
             pattern = os.path.join(_lr_weights_dir, f"{league}_v1_*.json")
             lr_files = sorted(glob.glob(pattern))
@@ -1259,24 +1267,47 @@ class PredictionEngine:
         return self._lr_weights_cache.get("global")
 
     def _apply_live_odds_override(
-
         self, spf: Dict[str, float], ctx: MatchContext
     ) -> Dict[str, float]:
-        """临场跳水/异常赔率监控：当市场发生剧烈波动时，强制修正预测概率"""
+        """
+        [意图识别层] 动态市场异动修正 (Steam Move Adjustment)
+        
+        不再使用死板的阈值拦截，而是使用平滑函数计算‘市场热值’。
+        """
         if not ctx.has_closing_odds or not ctx.has_odds:
             return spf
 
-        # 1. 检测主队赔率波动
-        move_h = (ctx.closing_odds_home - ctx.odds_home) / ctx.odds_home
+        moves = {}
+        for sel in ["home", "draw", "away"]:
+            closing = getattr(ctx, f"closing_odds_{sel}")
+            opening = getattr(ctx, f"odds_{sel}")
+            if closing and opening:
+                moves[sel] = (closing - opening) / opening
+            else:
+                moves[sel] = 0.0
+
+        # 找出波动最剧烈的方向 (通常是跳水方向)
+        best_move_sel = min(moves, key=moves.get)
+        best_move_val = moves[best_move_sel]
+
+        # 💡 使用 Sigmoid 激活函数计算修正强度 (Alpha)
+        # 当跳水 > 5% 时开始介入，跳水 > 15% 时达到最高强度
+        intensity = 1.0 / (1.0 + np.exp(-20 * (abs(best_move_val) - 0.10)))
         
-        # 如果赔率大幅下降（即市场极其看好该项）
-        if move_h < -0.12:  # 跳水超过 12%
+        if abs(best_move_val) > 0.05 and best_move_val < 0:
             import logging
-            logging.getLogger("prediction_engine").warning(
-                f"[Override] Steam Move detected for match {ctx.match_id}: home odds dropped {abs(move_h):.1%}"
+            logging.getLogger("prediction_engine").info(
+                f"[Market-Signal] Intensity: {intensity:.2f} for {best_move_sel} move {best_move_val:+.1%}"
             )
-            # 强化该项概率：50% 遵循原预测，50% 遵循市场最强信号
-            spf["home"] = spf["home"] * 0.7 + 0.3 # 暴力补强
+            # 动态融合：根据市场异动的强度，将一部分概率分配给该方向
+            # 这种方式比硬编码更科学，符合 Karpathy 的第一性原理
+            target_prob = 0.65 if intensity > 0.5 else 0.50 # 简化的市场吸纳概率
+            
+            # 修正：(1-alpha)*Original + alpha*Signal
+            alpha = 0.4 * intensity
+            spf[best_move_sel] = (1 - alpha) * spf[best_move_sel] + alpha * target_prob
+            
+            # 归一化
             total = sum(spf.values())
             spf = {k: v / total for k, v in spf.items()}
             
@@ -1427,52 +1458,61 @@ class PredictionEngine:
         poisson_out: Dict,
         market_out: Optional[Dict[str, float]],
     ) -> Dict[str, float]:
-        """使用残差 NN 修正 LR 融合的系统性偏差。NN 不可用时返回原值。"""
+        """使用 Stacking NN (v3) 修正融合概率。"""
         try:
-            from residual_nn import ResidualPredictor
-            predictor = ResidualPredictor()
+            from core.residual_nn import StackingPredictor
+            predictor = StackingPredictor()
             if not predictor.is_ready():
                 return spf
 
-            # 构建 residual NN 所需的输入
-            odds = {
-                "home": ctx.odds_home or ctx.closing_odds_home or 2.0,
-                "draw": ctx.odds_draw or ctx.closing_odds_draw or 3.0,
-                "away": ctx.odds_away or ctx.closing_odds_away or 2.0,
-            }
-            odds_movement = {}
-            for sel in ["home", "draw", "away"]:
-                c = getattr(ctx, f"closing_odds_{sel}", None) or 0
-                o = getattr(ctx, f"opening_odds_{sel}", None) or 0
-                odds_movement[sel] = (c - o) / o if c and o else 0.0
+            # 1. 获取 Layer 2 基础特征 (48维)
+            form_features = None
+            h2h_features = None
+            if self.fusion._db is not None:
+                try:
+                    from features.form_markov_model import FormMarkovModel
+                    from features.h2h_model import H2HModel
+                    fm = FormMarkovModel(self.fusion._db)
+                    form_features = fm.compute(ctx.home_team.recent_results, ctx.home_team.team_id)
+                    hm = H2HModel(self.fusion._db)
+                    h2h_features = hm.compute(ctx.home_team.team_id, ctx.away_team.team_id)
+                except: pass
 
-            delta = predictor.predict_delta(
-                lr_probs=spf,
-                spf_probs=spf,
-                rq_probs=poisson_out.get("rq", spf),
-                score_top3=poisson_out.get("score", {}),
-                odds=odds,
-                elo_diff=0.0,  # 训练时用的0，推理必须一致
-                odds_movement=odds_movement,
-                competition="",  # 训练时用的空串，推理必须一致
+            base_feats = self._feature_builder.build(
+                elo_probs=EloModel.predict(ctx),
+                poisson_result=poisson_out,
+                players_factor=PlayerAdjustmentModel.predict(ctx),
+                market_probs=market_out,
+                form_features=form_features,
+                h2h_features=h2h_features,
+                ctx=ctx
             )
 
-            corrected = ResidualPredictor.apply_correction(spf, delta, alpha=0.3)
+            # 2. 拼接最终输入 (54维): Base(48) + LR_SPF(3) + Market(3)
+            lr_arr = np.array([spf.get('home', 0.33), spf.get('draw', 0.33), spf.get('away', 0.33)], dtype=np.float32)
+            mkt_arr = np.array([market_out.get('home', 0.33), market_out.get('draw', 0.33), market_out.get('away', 0.33)] if market_out else lr_arr, dtype=np.float32)
+            
+            full_input = np.concatenate([base_feats, lr_arr, mkt_arr])
 
-            import logging
-            logging.getLogger("prediction_engine").debug(
-                f"[ResidualNN] correction applied: "
-                f"H {spf['home']:.3f}->{corrected['home']:.3f} "
-                f"D {spf['draw']:.3f}->{corrected['draw']:.3f} "
-                f"A {spf['away']:.3f}->{corrected['away']:.3f}"
-            )
-            return corrected
+            # 3. 执行 Stacking 预测
+            stacking_spf = predictor.predict(full_input)
+            
+            if stacking_spf:
+                # 💡 动态融合：Layer 2 (LR) 与 Layer 3 (NN) 采用 40/60 加权
+                # NN 负责捕捉非线性残差，LR 负责保持基准稳定性
+                final_spf = {
+                    k: 0.4 * spf[k] + 0.6 * stacking_spf[k]
+                    for k in ["home", "draw", "away"]
+                }
+                # 归一化
+                total = sum(final_spf.values())
+                return {k: v / total for k, v in final_spf.items()}
+
+            return spf
 
         except Exception as e:
             import logging
-            logging.getLogger("prediction_engine").debug(
-                f"[ResidualNN] correction skipped: {e}"
-            )
+            logging.getLogger("prediction_engine").warning(f"[StackingNN] correction failed: {e}")
             return spf
 
     @staticmethod
@@ -1482,34 +1522,28 @@ class PredictionEngine:
         ctx: MatchContext,
     ) -> str:
         """
-        置信度分级：
-        high — 模型与市场高度一致，且某一方概率 > 60%
-        medium — 模型与市场基本一致，或概率接近
-        low — 模型与市场分歧大，或存在异常信号
-
-        无赔率时自动降级：缺少市场信号（权重 0.64）的预测
-        可靠性显著下降，high → medium，medium → low。
+        [意图识别层] 基于信息熵与共识分歧的置信度评估。
+        
+        第一性原理：
+        1. 熵 (Entropy) 越高，不确定性越大。
+        2. 与市场分歧越大，风险越高。
         """
-        max_prob = max(spf.values())
-        has_market = market is not None and len(market) > 0
+        probs = np.array([spf["home"], spf["draw"], spf["away"]])
+        entropy = -np.sum(probs * np.log(probs + 1e-8))
+        
+        # 归一化熵 (0~1)，ln(3) 约为 1.098
+        norm_entropy = entropy / 1.098
+        
+        agreement = 1.0
+        if market:
+            m_probs = np.array([market.get("home", 0.33), market.get("draw", 0.33), market.get("away", 0.33)])
+            # 计算余弦相似度作为共识指标
+            agreement = np.dot(probs, m_probs) / (np.linalg.norm(probs) * np.linalg.norm(m_probs))
 
-        # 无赔率降级：缺少最强信号源，置信度上限降低
-        if not has_market:
-            if max_prob >= 0.65:
-                return "medium"
-            return "low"
-
-        # 分歧检测
-        disagreement = sum(abs(spf[k] - market.get(k, 0)) for k in spf) / 2
-        if disagreement > 0.12:
-            return "low"
-        if disagreement > 0.06:
-            return "medium"
-
-        # 概率集中度
-        if max_prob >= 0.60:
+        # 💡 置信度分级逻辑
+        if norm_entropy < 0.4 and agreement > 0.95:
             return "high"
-        if max_prob >= 0.45:
+        if norm_entropy < 0.7 and agreement > 0.85:
             return "medium"
         return "low"
 

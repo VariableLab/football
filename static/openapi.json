@@ -1598,13 +1598,33 @@
         }
       }
     },
+    "/api/advisor/briefing": {
+      "get": {
+        "tags": [
+          "advisor"
+        ],
+        "summary": "Get Proactive Briefing",
+        "description": "\u83b7\u53d6\u4e3b\u52a8\u5f0f\u91cf\u5316\u65e9\u62a5 (VidIQ \u98ce\u683c) - \u5e26 1 \u5c0f\u65f6\u7f13\u5b58",
+        "operationId": "get_proactive_briefing_api_advisor_briefing_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/advisor/chat": {
       "post": {
         "tags": [
           "advisor"
         ],
         "summary": "Advisor Chat",
-        "description": "\u91cf\u5316\u7b56\u7565\u7814\u5224\u987e\u95ee\u5bf9\u8bdd",
+        "description": "\u91cf\u5316\u7b56\u7565\u7814\u5224\u667a\u80fd\u4f53\u5bf9\u8bdd (Agentic Workflow + Streaming SSE)",
         "operationId": "advisor_chat_api_advisor_chat_post",
         "requestBody": {
           "content": {
@@ -1621,9 +1641,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdvisorResponse"
-                }
+                "schema": {}
               }
             }
           },
@@ -1634,6 +1652,31 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/advisor/top-picks": {
+      "get": {
+        "tags": [
+          "advisor"
+        ],
+        "summary": "Get Top Picks",
+        "description": "\u83b7\u53d6\u5168\u91cf\u5728\u552e\u8d5b\u4e8b\u7684 Top 5 \u9ad8\u4ef7\u503c\u7814\u5224",
+        "operationId": "get_top_picks_api_advisor_top_picks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
@@ -3565,19 +3608,6 @@
         ],
         "title": "AdvisorRequest"
       },
-      "AdvisorResponse": {
-        "properties": {
-          "reply": {
-            "type": "string",
-            "title": "Reply"
-          }
-        },
-        "type": "object",
-        "required": [
-          "reply"
-        ],
-        "title": "AdvisorResponse"
-      },
       "ArbitrageOpportunity": {
         "properties": {
           "match_id": {
@@ -5137,6 +5167,22 @@
         ],
         "title": "LiveOddsUpdateData"
       },
+      "LogicChain": {
+        "properties": {
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/TraceStep"
+            },
+            "type": "array",
+            "title": "Steps"
+          }
+        },
+        "type": "object",
+        "required": [
+          "steps"
+        ],
+        "title": "LogicChain"
+      },
       "MatchCreate": {
         "properties": {
           "match_code": {
@@ -6178,6 +6224,16 @@
             },
             "type": "array",
             "title": "Predictions"
+          },
+          "trace": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LogicChain"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -6543,6 +6599,39 @@
           "access_token"
         ],
         "title": "Token"
+      },
+      "TraceStep": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "impact_home": {
+            "type": "number",
+            "title": "Impact Home"
+          },
+          "impact_draw": {
+            "type": "number",
+            "title": "Impact Draw"
+          },
+          "impact_away": {
+            "type": "number",
+            "title": "Impact Away"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "impact_home",
+          "impact_draw",
+          "impact_away"
+        ],
+        "title": "TraceStep"
       },
       "UserLogin": {
         "properties": {

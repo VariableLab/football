@@ -507,6 +507,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/advisor/briefing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Proactive Briefing
+         * @description 获取主动式量化早报 (VidIQ 风格) - 带 1 小时缓存
+         */
+        get: operations["get_proactive_briefing_api_advisor_briefing_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/advisor/chat": {
         parameters: {
             query?: never;
@@ -518,9 +538,29 @@ export interface paths {
         put?: never;
         /**
          * Advisor Chat
-         * @description 量化策略研判顾问对话
+         * @description 量化策略研判智能体对话 (Agentic Workflow + Streaming SSE)
          */
         post: operations["advisor_chat_api_advisor_chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/advisor/top-picks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Top Picks
+         * @description 获取全量在售赛事的 Top 5 高价值研判
+         */
+        get: operations["get_top_picks_api_advisor_top_picks_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1504,11 +1544,6 @@ export interface components {
              */
             history: components["schemas"]["ChatMessage"][];
         };
-        /** AdvisorResponse */
-        AdvisorResponse: {
-            /** Reply */
-            reply: string;
-        };
         /** ArbitrageOpportunity */
         ArbitrageOpportunity: {
             /** Match Id */
@@ -2037,6 +2072,11 @@ export interface components {
             /** Timestamp */
             timestamp: string;
         };
+        /** LogicChain */
+        LogicChain: {
+            /** Steps */
+            steps: components["schemas"]["TraceStep"][];
+        };
         /** MatchCreate */
         MatchCreate: {
             /** Match Code */
@@ -2375,6 +2415,7 @@ export interface components {
             strategies: components["schemas"]["StrategyPickOut"][];
             /** Predictions */
             predictions: components["schemas"]["PredictionOut"][];
+            trace?: components["schemas"]["LogicChain"] | null;
         };
         /** TeamCreate */
         TeamCreate: {
@@ -2463,6 +2504,19 @@ export interface components {
              * @default bearer
              */
             token_type: string;
+        };
+        /** TraceStep */
+        TraceStep: {
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /** Impact Home */
+            impact_home: number;
+            /** Impact Draw */
+            impact_draw: number;
+            /** Impact Away */
+            impact_away: number;
         };
         /** UserLogin */
         UserLogin: {
@@ -3530,6 +3584,26 @@ export interface operations {
             };
         };
     };
+    get_proactive_briefing_api_advisor_briefing_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     advisor_chat_api_advisor_chat_post: {
         parameters: {
             query?: never;
@@ -3549,7 +3623,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AdvisorResponse"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -3559,6 +3633,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_top_picks_api_advisor_top_picks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };

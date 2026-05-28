@@ -50,7 +50,7 @@ def step(name: str) -> None:
 
 def run_local_sync() -> bool:
     step("1/3 本地 zgzcw 同步")
-    from zgzcw_jc_sync import sync_jc_matches
+    from ingestion.zgzcw_jc_sync import sync_jc_matches
     result = sync_jc_matches(DB_PATH)
     log(f"同步结果: {result['matches']} 场, 新增 {result['created']}, 更新 {result['updated']}, 关联 {result.get('issues_linked', 0)}")
     if result.get("errors", 0) > 0 and result["matches"] == 0:

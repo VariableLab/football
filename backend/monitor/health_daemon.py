@@ -13,10 +13,11 @@ from alert_manager import fire_alert, get_active_alerts, check_consecutive_failu
 
 logger = get_logger("health_daemon")
 
-_BASE = os.path.dirname(os.path.abspath(__file__))
+_CUR = os.path.dirname(os.path.abspath(__file__))
+_BASE = os.path.dirname(_CUR)  # Point to backend/
 DB_PATH = os.path.join(_BASE, "database.sqlite")
 BACKUP_DIR = os.path.join(_BASE, "backup")
-HEALTH_FILE = os.path.join(_BASE, "data", "health_status.json")
+HEALTH_FILE = os.path.join(_CUR, "data", "health_status.json")
 
 # 阈值常量
 ODDS_STALE_HOURS = 2
@@ -201,7 +202,7 @@ class HealthDaemon:
             fire_alert("health_daemon", "warning", f"紧急赔率采集(tier1)失败: {e}")
 
         try:
-            from zgzcw_jc_sync import sync_jc_matches
+            from ingestion.zgzcw_jc_sync import sync_jc_matches
             sync_result = sync_jc_matches(DB_PATH)
             if sync_result.get("matches", 0) > 0:
                 actions.append(f"zgzcw({sync_result['matches']})")
@@ -338,7 +339,7 @@ class HealthDaemon:
     # ────────────────────────────
     def _check_zgzcw_sync(self) -> None:
         result = CheckResult(name="zgzcw_sync")
-        from zgzcw_jc_sync import sync_jc_matches
+        from ingestion.zgzcw_jc_sync import sync_jc_matches
         try:
             sync_result = sync_jc_matches(DB_PATH)
             m = sync_result.get("matches", 0)

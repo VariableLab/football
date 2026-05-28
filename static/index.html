@@ -14,35 +14,7 @@
   <meta property="og:url" content="https://football.nett.to" />
 
   <link rel="icon" type="image/png" href="/static/logo.png" />
-  <link rel="stylesheet" href="/static/tailwind.css?v=20260526-extreme-quant" />
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');
-    :root { --cream: #FDFCF8; --charcoal: #1A1A1A; --accent: #D4AF37; }
-    body { font-family: 'Inter', sans-serif; background-color: var(--cream); color: var(--charcoal); -webkit-font-smoothing: antialiased; }
-    .hero-title { font-family: 'Playfair Display', serif; }
-    .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(26, 26, 26, 0.05); border-radius: 1.5rem; transition: all 0.3s ease; }
-    .glass:hover { border-color: rgba(212, 175, 55, 0.2); transform: translateY(-2px); }
-    .glass-modal { background: rgba(253, 252, 248, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(212, 175, 55, 0.1); }
-    .num { font-variant-numeric: tabular-nums; }
-    .bar-bg { background: rgba(26, 26, 26, 0.03); }
-    .bar-fill { background: var(--accent); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
-    .btn-primary { background: var(--charcoal); color: var(--cream); transition: all 0.3s ease; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500; }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-    .btn-outline { border: 1px solid rgba(26, 26, 26, 0.1); transition: all 0.3s ease; }
-    .btn-outline:hover { background: rgba(26, 26, 26, 0.03); border-color: var(--charcoal); }
-    [x-cloak] { display: none !important; }
-    .scrollbar-hide::-webkit-scrollbar { display: none; }
-    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-  </style>
-<style>
-  body { background-color: #0d0d17 !important; color: #ffffff !important; }
-  .glass, .glass-card, .glass-modal { background-color: rgba(22, 22, 42, 0.98) !important; border-color: rgba(124, 108, 240, 0.3) !important; }
-  .hero-title { background: linear-gradient(135deg, #fff 0%, #9d8cf7 100%) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
-  .text-white, .text-white { color: #ffffff !important; }
-  .bg-white { background-color: #16162a !important; }
-  .text-gray-700, .text-gray-500 { color: #d1d1e6 !important; }
-</style>
-
+  <link rel="stylesheet" href="/static/tailwind.css?v=20260527-ultimate-reshaping" />
 </head>
 <body class="bg-cream-light text-charcoal selection:bg-accent/20">
 
@@ -132,106 +104,101 @@
     </template>
 
     <!-- Match Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="matchGrid">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="matchGrid">
       <template x-for="m in matches" :key="m.id">
-        <div x-data="MatchCard(m)" class="glass p-6 cursor-pointer group" @click="openModal(m.id)">
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2 text-base font-normal text-warm-gray num">
-              <span x-text="fmtBJ(m.kickoff_at)"></span>
-              <span class="text-charcoal/15">·</span>
-              <span class="text-warm-gray" x-text="m.group || m.stage || ''"></span>
+        <div x-data="MatchCard(m)" 
+             class="relative group bg-[#111111] border border-white/5 rounded-[2rem] p-6 cursor-pointer hover:border-accent/40 transition-all duration-500 overflow-hidden shadow-2xl hover:shadow-accent/5"
+             @click="openModal(m.id)">
+          
+          <!-- Background Glow Effect -->
+          <div class="absolute -top-24 -right-24 w-48 h-48 bg-accent/5 blur-[80px] rounded-full group-hover:bg-accent/10 transition-colors duration-500"></div>
+
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-6 relative z-10">
+            <div class="flex items-center gap-2.5">
+              <div class="w-2 h-2 rounded-full bg-accent animate-pulse" x-show="m.status === 'live'"></div>
+              <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/40" x-text="m.competition || 'MATCH'"></span>
             </div>
             <div class="flex items-center gap-2">
-              <span class="text-sm px-2 py-0.5 rounded border font-normal" :class="typeBadgeClass" x-text="m.match_type === 'friendly' ? '热身赛' : '世界杯'"></span>
-              <span class="text-sm px-2 py-0.5 rounded border font-normal" :class="statusBadgeClass" x-text="m.status === 'finished' ? '已结束' : '未开赛'"></span>
-              <template x-if="m.updated_at">
-                <span class="text-sm font-normal" x-html="freshnessTag(m.updated_at)"></span>
-              </template>
-            </div>
-          </div>
-          
-          <template x-if="countdown && m.status !== 'finished'">
-            <div class="text-base text-accent-yellow num font-normal mb-2" x-text="countdown"></div>
-          </template>
-
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <template x-if="homeTeam && homeTeam.flag">
-                <span class="text-xl" x-text="homeTeam.flag"></span>
-              </template>
-              <div>
-                <div class="text-lg font-bold text-white" x-text="homeTeam ? homeTeam.name : ''"></div>
-                <div class="text-sm font-normal text-warm-gray num" x-text="'#' + (homeTeam ? homeTeam.fifa_rank : '-')"></div>
-              </div>
-            </div>
-            <div class="text-sm text-warm-gray num font-normal">VS</div>
-            <div class="flex items-center gap-3 flex-row-reverse">
-              <template x-if="awayTeam && awayTeam.flag">
-                <span class="text-xl" x-text="awayTeam.flag"></span>
-              </template>
-              <div class="text-right">
-                <div class="text-lg font-bold text-white" x-text="awayTeam ? awayTeam.name : ''"></div>
-                <div class="text-sm font-normal text-warm-gray num" x-text="'#' + (awayTeam ? awayTeam.fifa_rank : '-')"></div>
-              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded-full border border-white/10 font-bold text-white/50" x-text="fmtBJ(m.kickoff_at)"></span>
             </div>
           </div>
 
-          <div class="mt-3 pt-3 border-t border-accent/10">
-            <div class="flex justify-between text-base font-normal text-warm-gray mb-3">
-              <span class="flex items-center gap-1.5">
-                <span class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium" data-i18n="match.oddsSource">指数</span>
-                <template x-if="m.odds_source">
-                  <span class="px-1.5 py-0.5 rounded text-sm font-normal border" :class="m.odds_source === 'synthetic' ? 'border-accent/15 text-warm-gray' : 'border-accent/30 text-accent'" x-text="m.odds_source === 'synthetic' ? '合成' : '真实'"></span>
-                </template>
-              </span>
-              <span class="num" x-text="(m.odds_home || '-') + ' / ' + (m.odds_draw || '-') + ' / ' + (m.odds_away || '-')"></span>
+          <!-- Teams & Score/VS -->
+          <div class="flex items-center justify-between mb-8 relative z-10 px-2">
+            <div class="flex flex-col items-center gap-3 w-1/3">
+              <div class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:border-white/10 transition-colors">
+                <span class="text-2xl" x-text="homeTeam.flag || '🏴'"></span>
+              </div>
+              <span class="text-sm font-bold text-white text-center truncate w-full" x-text="homeTeam.name"></span>
             </div>
 
-            <template x-if="spf.home">
-              <div class="space-y-2">
-                <!-- SPF Bars -->
-                <div class="flex items-center gap-3 text-base font-normal">
-                  <span class="w-10 text-warm-gray truncate" x-text="homeTeam ? homeTeam.name : ''"></span>
-                  <div class="flex-1 h-1.5 bar-bg rounded-full overflow-hidden">
-                    <div class="h-full bar-fill rounded-full" :style="'width:' + (spf.home * 100) + '%'"></div>
-                  </div>
-                  <span class="num w-10 text-right text-beige" x-text="fmtPct(spf.home)"></span>
-                </div>
-                <div class="flex items-center gap-3 text-base font-normal">
-                  <span class="w-10 text-warm-gray">平局</span>
-                  <div class="flex-1 h-1.5 bar-bg rounded-full overflow-hidden">
-                    <div class="h-full bar-fill rounded-full opacity-50" :style="'width:' + (spf.draw * 100) + '%'"></div>
-                  </div>
-                  <span class="num w-10 text-right text-warm-gray" x-text="fmtPct(spf.draw)"></span>
-                </div>
-                <div class="flex items-center gap-3 text-base font-normal">
-                  <span class="w-10 text-warm-gray truncate" x-text="awayTeam ? awayTeam.name : ''"></span>
-                  <div class="flex-1 h-1.5 bar-bg rounded-full overflow-hidden">
-                    <div class="h-full bar-fill rounded-full opacity-30" :style="'width:' + (spf.away * 100) + '%'"></div>
-                  </div>
-                  <span class="num w-10 text-right text-warm-gray" x-text="fmtPct(spf.away)"></span>
-                </div>
-                
-                <!-- Top Scores -->
-                <template x-if="topScores.length">
-                  <div class="mt-3 flex items-center gap-2 flex-wrap">
-                    <span class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium">比分</span>
-                    <template x-for="(s, i) in topScores" :key="i">
-                      <span class="text-sm px-2 py-0.5 rounded border font-normal" :class="i === 0 ? 'border-beige/30 text-beige' : 'border-accent/15 text-warm-gray'" x-text="s.score + ' ' + fmtPct(s.prob)"></span>
-                    </template>
-                  </div>
-                </template>
-              </div>
-            </template>
-            <template x-if="!spf.home">
-              <div class="mt-4 text-center py-3 text-warm-gray text-sm font-normal">预测数据未加载</div>
-            </template>
-          </div>
-          <template x-if="m.status === 'finished'">
-            <div class="mt-3 pt-3 border-t border-accent/10 text-center">
-              <span class="text-sm text-accent-green font-normal">赛后验证 · 预测结果已开放</span>
+            <div class="flex flex-col items-center gap-1">
+              <template x-if="m.status === 'finished' || m.status === 'live'">
+                <div class="text-3xl font-black text-white tracking-tighter" x-text="(m.home_score ?? 0) + ' : ' + (m.away_score ?? 0)"></div>
+              </template>
+              <template x-if="m.status === 'upcoming' || m.status === 'scheduled'">
+                <div class="text-xs font-black text-accent tracking-[0.3em] pl-1">VS</div>
+              </template>
+              <div class="text-[10px] font-bold text-white/20 uppercase tracking-widest" x-text="m.status === 'finished' ? 'Final' : (countdown || 'SOON')"></div>
             </div>
-          </template>
+
+            <div class="flex flex-col items-center gap-3 w-1/3">
+              <div class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:border-white/10 transition-colors">
+                <span class="text-2xl" x-text="awayTeam.flag || '🏳️'"></span>
+              </div>
+              <span class="text-sm font-bold text-white text-center truncate w-full" x-text="awayTeam.name"></span>
+            </div>
+          </div>
+
+          <!-- Visual Balance Bar (Probability) -->
+          <div class="mb-8 relative z-10">
+            <div class="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/30 mb-2.5 px-1">
+              <span>Model Confidence</span>
+              <span x-text="fmtPct(Math.max(spf.home, spf.draw, spf.away))"></span>
+            </div>
+            <div class="h-3 w-full bg-white/5 rounded-full flex overflow-hidden p-0.5 border border-white/5">
+              <div class="h-full bg-accent transition-all duration-1000 ease-out rounded-l-full" :style="'width:' + (spf.home * 100) + '%'"></div>
+              <div class="h-full bg-white/20 transition-all duration-1000 ease-out mx-0.5" :style="'width:' + (spf.draw * 100) + '%'"></div>
+              <div class="h-full bg-white/10 transition-all duration-1000 ease-out rounded-r-full" :style="'width:' + (spf.away * 100) + '%'"></div>
+            </div>
+            <div class="flex justify-between mt-2 px-1">
+              <div class="flex flex-col">
+                <span class="text-[10px] text-white/20 font-bold uppercase">Home</span>
+                <span class="text-xs font-mono text-white/60" x-text="fmtPct(spf.home)"></span>
+              </div>
+              <div class="flex flex-col items-center">
+                <span class="text-[10px] text-white/20 font-bold uppercase">Draw</span>
+                <span class="text-xs font-mono text-white/60" x-text="fmtPct(spf.draw)"></span>
+              </div>
+              <div class="flex flex-col items-end">
+                <span class="text-[10px] text-white/20 font-bold uppercase">Away</span>
+                <span class="text-xs font-mono text-white/60" x-text="fmtPct(spf.away)"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom: AI Insight Snippet -->
+          <div class="mt-auto pt-5 border-t border-white/5 relative z-10 flex items-center gap-3">
+             <div class="flex-1 flex items-center gap-3 px-3 py-2.5 rounded-2xl bg-accent/5 border border-accent/10 group-hover:bg-accent/10 group-hover:border-accent/20 transition-all duration-500">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <div class="text-[11px] leading-tight font-bold text-white/80" x-text="aiSnippet"></div>
+             </div>
+             
+             <!-- ✨ Copilot Quick Trigger -->
+             <button 
+                @click.stop="window.dispatchEvent(new CustomEvent('open-copilot', { detail: { matchId: m.id, event: $event } }))"
+                class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-accent hover:border-accent transition-all duration-300 text-white/40 hover:text-white group/btn"
+                title="AI Co-pilot Analysis"
+             >
+                <span class="text-lg group-hover/btn:scale-110 transition-transform">✨</span>
+             </button>
+          </div>
+
+          <!-- Interaction Prompt -->
+          <div class="absolute inset-0 bg-accent/40 opacity-0 group-hover:opacity-10 pointer-events-none transition-opacity duration-500"></div>
         </div>
       </template>
     </div>
@@ -418,7 +385,7 @@
             x-model="input"
             rows="2" 
             class="w-full px-4 py-3 pr-12 rounded-xl text-sm placeholder-gray-500 resize-none border border-white/20 focus:border-accent/50 focus:outline-none transition-colors bg-white/5 text-white" 
-            placeholder="输入您的量化研判疑问..." 
+            placeholder="输入您的量化研判疑问... (支持 /trace, /kelly)" 
             @keydown.enter.prevent="sendMessage()"
           ></textarea>
         </div>
@@ -719,6 +686,43 @@
                         </div>
                       </template>
                     </div>
+
+                    <!-- 💡 New: Logic Trace (Explainability) -->
+                    <template x-if="strategyData.trace">
+                      <div class="mt-8 pt-6 border-t border-charcoal/5">
+                        <div class="flex items-center gap-2 mb-4">
+                          <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                          <span class="text-xs uppercase tracking-[0.2em] text-gray-500 font-bold">量化推理溯源 (Logic Trace)</span>
+                        </div>
+                        <div class="space-y-4 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-accent/10">
+                          <template x-for="(step, idx) in strategyData.trace.steps" :key="idx">
+                            <div class="relative pl-8">
+                              <div class="absolute left-0 top-1.5 w-6 h-6 rounded-full bg-white border-2 border-accent/20 flex items-center justify-center z-10">
+                                <span class="text-[10px] font-bold text-accent" x-text="idx + 1"></span>
+                              </div>
+                              <div class="bg-gray-50/50 rounded-xl p-3 border border-transparent hover:border-accent/10 transition-colors">
+                                <div class="text-xs font-bold text-white mb-1" x-text="step.name"></div>
+                                <div class="text-[11px] text-warm-gray leading-relaxed mb-2" x-text="step.description"></div>
+                                <div class="flex gap-4">
+                                  <div class="flex items-center gap-1.5">
+                                    <span class="text-[10px] text-gray-400">H</span>
+                                    <span class="text-[10px] font-mono text-white" x-text="(step.impact_home * 100).toFixed(1) + '%'"></span>
+                                  </div>
+                                  <div class="flex items-center gap-1.5">
+                                    <span class="text-[10px] text-gray-400">D</span>
+                                    <span class="text-[10px] font-mono text-white" x-text="(step.impact_draw * 100).toFixed(1) + '%'"></span>
+                                  </div>
+                                  <div class="flex items-center gap-1.5">
+                                    <span class="text-[10px] text-gray-400">A</span>
+                                    <span class="text-[10px] font-mono text-white" x-text="(step.impact_away * 100).toFixed(1) + '%'"></span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </template>
+                        </div>
+                      </div>
+                    </template>
                   </template>
                 </div>
 
@@ -988,19 +992,54 @@
   </div>
 </footer>
 
+<!-- AI Copilot Floating Bubble -->
+<div x-data="CopilotBubble()" 
+     x-show="show" 
+     x-cloak
+     class="fixed z-[100] w-[320px] glass-modal rounded-3xl shadow-2xl border border-white/10 overflow-hidden animate-fade-in"
+     :style="`left: ${position.x}px; top: ${position.y}px;`"
+     @click.away="close()">
+  
+  <div class="p-4 bg-accent/10 border-b border-white/5 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="text-lg">✨</span>
+      <span class="text-xs font-black uppercase tracking-widest text-white/80">Quant Copilot</span>
+    </div>
+    <button @click="close()" class="text-white/40 hover:text-white transition-colors">&times;</button>
+  </div>
+
+  <div class="p-5 max-h-[300px] overflow-y-auto scrollbar-hide">
+    <template x-if="loading">
+      <div class="flex flex-col items-center py-8 gap-3">
+        <div class="w-6 h-6 border-2 border-accent/20 border-t-accent rounded-full animate-spin"></div>
+        <span class="text-[10px] font-bold text-white/40 uppercase tracking-widest">研判中...</span>
+      </div>
+    </template>
+    
+    <div class="text-sm leading-relaxed text-white/90 whitespace-pre-wrap font-medium" x-text="content"></div>
+  </div>
+
+  <div class="p-3 bg-black/40 border-t border-white/5 flex gap-2">
+    <button @click="close(); switchSection('ai'); window.dispatchEvent(new CustomEvent('request-advisor-analysis', { detail: { matchId: matchId }}))" class="flex-1 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-white/60 transition-all">
+      深度对话
+    </button>
+  </div>
+</div>
+
 <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-<script src="/static/i18n.js?v=20260524-ultimate"></script>
-<script src="/static/api_client.js?v=20260524-ultimate"></script>
-<script src="/static/app.js?v=20260524-ultimate"></script>
-<script src="/static/src/components/MatchCard.js?v=20260524-ultimate"></script>
-<script src="/static/src/components/MonitorDashboard.js?v=20260524-ultimate"></script>
-<script src="/static/src/components/ValidationDashboard.js?v=20260524-ultimate"></script>
-<script src="/static/src/components/FeedbackBoard.js?v=20260524-ultimate"></script>
-<script src="/static/src/components/AdvisorChat.js?v=20260524-ultimate"></script>
-<script src="/static/src/components/MatchDetailModal.js?v=20260524-ultimate"></script>
-<script src="/static/src/components/AuthModal.js?v=20260524-ultimate"></script>
-<script src="/static/src/components/RedeemModal.js?v=20260524-ultimate"></script>
-<script src="/static/src/components/SettingsModal.js?v=20260524-ultimate"></script>
+<script src="/static/i18n.js?v=20260527-ultimate-reshaping"></script>
+<script src="/static/api_client.js?v=20260527-ultimate-reshaping"></script>
+<script src="/static/app.js?v=20260527-ultimate-reshaping"></script>
+<script src="/static/src/components/CopilotBubble.js?v=20260527-ultimate-reshaping"></script>
+<script src="/static/src/components/MatchCard.js?v=20260527-ultimate-reshaping"></script>
+<script src="/static/src/components/MonitorDashboard.js?v=20260527-ultimate-reshaping"></script>
+<script src="/static/src/components/ValidationDashboard.js?v=20260527-ultimate-reshaping"></script>
+<script src="/static/src/components/FeedbackBoard.js?v=20260527-ultimate-reshaping"></script>
+<script src="/static/src/components/AdvisorChat.js?v=20260527-ultimate-reshaping"></script>
+<script src="/static/src/components/MatchDetailModal.js?v=20260527-ultimate-reshaping"></script>
+<script src="/static/src/components/AuthModal.js?v=20260527-ultimate-reshaping"></script>
+<script src="/static/src/components/RedeemModal.js?v=20260527-ultimate-reshaping"></script>
+<script src="/static/src/components/SettingsModal.js?v=20260527-ultimate-reshaping"></script>
 </body>
 </html>

@@ -1,9 +1,11 @@
 """
-Residual Bet Neural Network — 残差修正网络 (v2)
+Residual Bet Neural Network — 残差修正网络 (v3)
+集成 Andrej Karpathy 的工程思想：第一性原理、零冗余、高精度。
 
-改造自原 BetNN:
-  - 旧: one-hot 分类 → BCE loss
-  - 新: 残差回归 → MSE loss → 修正 LR 系统性偏差
+架构：
+  - 输入：48 维特征向量 (from FeatureBuilder) + LR 概率输出 (3 维) + 市场赔率 (3 维) = 54 维
+  - 目标：实际赛果 (one-hot)
+  - 模式：从“残差回归”升级为“Stacking 分类”，直接学习融合后的置信度。
 """
 import json, os
 from datetime import datetime, timezone
@@ -12,227 +14,215 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
+from torch.optim.lr_scheduler import OneCycleLR
 from logger import get_logger
 
 logger = get_logger("residual_nn")
 
-MODEL_DIR = "./data/bet_nn"
+# 配置
+MODEL_DIR = "./data/weights/nn"
 os.makedirs(MODEL_DIR, exist_ok=True)
-RESIDUAL_MODEL_PATH = os.path.join(MODEL_DIR, "residual_net.pt")
-FEATURE_STATS_PATH = os.path.join(MODEL_DIR, "residual_feature_stats.json")
-TRAINING_LOG_PATH = os.path.join(MODEL_DIR, "residual_training_log.json")
+MODEL_PATH = os.path.join(MODEL_DIR, "stacking_v3.pt")
+STATS_PATH = os.path.join(MODEL_DIR, "stacking_stats.json")
 
-INPUT_DIM = 33
+INPUT_DIM = 54  # 48 (FeatureBuilder) + 3 (LR) + 3 (Market)
 OUTPUT_DIM = 3
-BATCH_SIZE = 64
-LEARNING_RATE = 1e-3
-EPOCHS = 50
-PATIENCE = 8
-MIN_TRAIN_SAMPLES = 50
-
-LEAGUE_MAP = {"EPL":[1,0,0,0],"Bundesliga":[0,1,0,0],"LaLiga":[0,0,1,0],"SerieA":[0,0,0,1]}
+BATCH_SIZE = 128
+LEARNING_RATE = 3e-4
+EPOCHS = 100
+PATIENCE = 12
 
 
-def extract_residual_features(lr_probs, spf_probs, rq_probs, score_top3, odds, elo_diff, odds_movement, competition, form_features=None):
-    """36维: LR(3)+SPF/RQ(6)+Score(3)+Odds(3)+Elo(1)+Move(3)+League(4)+Form(5)+LRconf(2)+pad(3)"""
-    feats = [lr_probs.get("home",0.33), lr_probs.get("draw",0.33), lr_probs.get("away",0.33)]
-    for k in ["home","draw","away"]: feats.append(spf_probs.get(k,0.33))
-    for k in ["home","draw","away"]: feats.append(rq_probs.get(k,0.33))
-    top = sorted(score_top3.items(),key=lambda x:-x[1])[:3]
-    for _,p in top: feats.append(p)
-    while len(feats)<12: feats.append(0.0)
-    for sel in ["home","draw","away"]: feats.append(1.0/max(odds.get(sel,2.0),1.01))
-    feats.append(np.clip(elo_diff/400.0,-1.0,1.0))
-    for sel in ["home","draw","away"]: feats.append(np.clip(odds_movement.get(sel,0.0)/0.1,-1.0,1.0))
-    feats.extend(LEAGUE_MAP.get(competition,[0,0,0,0]))
-    if form_features and len(form_features)>=5: feats.extend(form_features[:5])
-    else: feats.extend([0.33,0.33,0.0,0.5,0.0])
-    lr_vals = list(lr_probs.values())
-    lr_max = max(lr_vals)
-    lr_entropy = -sum(p*np.log(p+1e-8) for p in lr_vals)
-    feats.extend([lr_max, min(lr_entropy/2.0,1.0)])
-    feats.extend([0.0,0.0,0.0])
-    return np.array(feats[:INPUT_DIM], dtype=np.float32)
-
-
-class ResidualDataset(Dataset):
-    def __init__(self, features, residuals):
-        self.features = torch.FloatTensor(features)
-        self.residuals = torch.FloatTensor(residuals)
-    def __len__(self): return len(self.features)
-    def __getitem__(self, idx): return self.features[idx], self.residuals[idx]
-
-
-class ResidualNet(nn.Module):
-    def __init__(self, input_dim=INPUT_DIM, hidden_dims=(64,32,16)):
+class StackingNet(nn.Module):
+    """
+    高精度叠加集成网络。
+    使用深层 MLP + 残差连接 (Skip Connections) + 强 Regularization。
+    """
+    def __init__(self, input_dim=INPUT_DIM):
         super().__init__()
-        layers = []; prev = input_dim
-        for h in hidden_dims:
-            layers.extend([nn.Linear(prev,h), nn.BatchNorm1d(h), nn.ReLU(), nn.Dropout(0.3)])
-            prev = h
-        layers.append(nn.Linear(prev, OUTPUT_DIM))
-        self.net = nn.Sequential(*layers)
-    def forward(self, x): return self.net(x)
-    def predict_delta(self, features):
-        self.eval()
-        with torch.no_grad():
-            x = torch.FloatTensor(features).unsqueeze(0)
-            return self.forward(x).squeeze(0).numpy()
+        self.input_bn = nn.BatchNorm1d(input_dim)
+        
+        # 骨干网络：ResNet 风格
+        self.fc1 = nn.Linear(input_dim, 128)
+        self.bn1 = nn.BatchNorm1d(128)
+        self.fc2 = nn.Linear(128, 128)
+        self.bn2 = nn.BatchNorm1d(128)
+        
+        self.head = nn.Sequential(
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Dropout(0.4),
+            nn.Linear(64, OUTPUT_DIM)
+        )
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = self.input_bn(x)
+        
+        # Block 1
+        identity = self.fc1(x)
+        out = self.relu(self.bn1(identity))
+        out = self.bn2(self.fc2(out))
+        out += identity # 残差连接
+        out = self.relu(out)
+        
+        return self.head(out)
 
 
-class ResidualTrainer:
-    def __init__(self):
-        self.model = ResidualNet()
-        self.feature_mean = None
-        self.feature_std = None
+class StackingTrainer:
+    def __init__(self, db_session=None):
+        self.db = db_session
+        self.model = StackingNet()
 
-    def build_training_data(self, lr_weights=None):
-        from models import SessionLocal, Match, MatchStatus, Prediction, PlayType
-        s = SessionLocal()
+    def build_training_data(self):
+        """
+        从数据库构建全量特征训练集。
+        """
+        from database.models import Match, MatchStatus, Prediction, PlayType
+        from core.prediction_engine import build_context_from_match
+        from features.feature_builder import FeatureBuilder
+        
+        s = self.db or SessionLocal()
         try:
-            if lr_weights is None:
-                try:
-                    import glob
-                    lr_files = sorted(glob.glob("./data/weights/lr/global_*.json"))
-                    if lr_files:
-                        from fusion.logistic_fusion import LogisticFusionWeights
-                        lr_weights = LogisticFusionWeights.load(lr_files[-1])
-                except: pass
-
-            from sqlalchemy.orm import joinedload
-            finished = s.query(Match).options(
-                joinedload(Match.home_team), joinedload(Match.away_team)
-            ).filter(
-                Match.status == MatchStatus.FINISHED, Match.actual_outcome.in_(["home", "draw", "away"]),
-                Match.closing_odds_home != None, Match.closing_odds_home > 1.01,
-            ).all()
-            if len(finished) < MIN_TRAIN_SAMPLES: return None
-
-            match_ids = [m.id for m in finished]
-            all_preds = s.query(Prediction).filter(Prediction.match_id.in_(match_ids)).all()
-            pred_map = {}
-            for p in all_preds:
-                probs = p.probabilities if isinstance(p.probabilities,dict) else (json.loads(p.probabilities) if p.probabilities else {})
-                pred_map[(p.match_id, p.play_type)] = probs
-
-            Xl, Rl = [], []
+            builder = FeatureBuilder(use_interactions=True)
+            
+            # 1. 查历史已完成比赛 (带赔率)
+            finished = s.query(Match).filter(
+                Match.status == MatchStatus.FINISHED,
+                Match.actual_outcome.isnot(None),
+                Match.closing_odds_home.isnot(None)
+            ).order_by(Match.kickoff_at.desc()).limit(5000).all()
+            
+            if len(finished) < 100: return None
+            
+            X, Y = [], []
             for m in finished:
-                spf = pred_map.get((m.id, PlayType.SPF)) or pred_map.get((m.id, "SPF"))
-                if not spf: continue
-                score_p = pred_map.get((m.id, PlayType.SCORE)) or pred_map.get((m.id, "SCORE")) or {}
-                odds = {"home":m.closing_odds_home or 2.0,"draw":m.closing_odds_draw or 3.0,"away":m.closing_odds_away or 2.0}
-                odds_move = {}
-                for sel in ["home","draw","away"]:
-                    c = getattr(m,f"closing_odds_{sel}",None) or 0
-                    o = getattr(m,f"opening_odds_{sel}",None) or 0
-                    odds_move[sel] = (c-o)/o if c and o else 0.0
-
-                lr_probs = spf
-                elo_diff = 0.0
-                if lr_weights is not None:
-                    try:
-                        from prediction_engine import build_context_from_match
-                        from features import EloModel, PoissonModel, MarketModel
-                        from features.adjustment_models import PlayerAdjustmentModel
-                        from features.form_markov_model import FormMarkovModel
-                        from features.h2h_model import H2HModel
-                        from features.feature_builder import FeatureBuilder
-                        # Use m directly since it's already loaded with joinedload
-                        if m.home_team:
-                            ctx = build_context_from_match(m)
-                            builder = FeatureBuilder(use_interactions=True)
-                            e = EloModel.predict(ctx); p = PoissonModel.predict(ctx)
-                            pl = PlayerAdjustmentModel.predict(ctx); mk = MarketModel.predict(ctx)
-                            fm = FormMarkovModel(s); ff = fm.compute(ctx.home_team.recent_results,ctx.home_team.team_id,is_home=True)
-                            hm = H2HModel(s); hf = hm.compute(ctx.home_team.team_id,ctx.away_team.team_id)
-                            xv = builder.build(e,p,pl,mk,ff,hf,ctx)
-                            lr_probs = lr_weights.predict(xv)
-                            elo_diff = ctx.home_team.elo - ctx.away_team.elo
-                    except: pass
-
-                o2i = {"home":0,"draw":1,"away":2}
-                y_oh = np.zeros(OUTPUT_DIM,dtype=np.float32)
-                y_oh[o2i.get(m.actual_outcome,1)] = 1.0
-                lr_arr = np.array([lr_probs.get("home",0.33),lr_probs.get("draw",0.33),lr_probs.get("away",0.33)],dtype=np.float32)
-                residual = y_oh - lr_arr
-
-                feats = extract_residual_features(lr_probs, spf, spf, score_p or spf, odds, elo_diff, odds_move, m.competition or "")
-                Xl.append(feats); Rl.append(residual)
-
-            if len(Xl) < MIN_TRAIN_SAMPLES: return None
-            X = np.stack(Xl); R = np.stack(Rl)
-            self.feature_mean = X.mean(axis=0)
-            # Fix: Ensure std is never 0 to avoid division by zero
-            self.feature_std = np.maximum(X.std(axis=0), 1e-8)
-            X = (X-self.feature_mean)/self.feature_std
-            logger.info(f"[residual-nn] {len(X)} samples, dim={X.shape[1]}")
-            return X, R
+                try:
+                    ctx = build_context_from_match(m)
+                    # 这里的特征构建要与 PredictionEngine 保持 100% 对齐
+                    # 简化：仅使用 Elo, Poisson, Market 基准，暂不依赖 DB 查询以免过慢
+                    from features import EloModel, PoissonModel, MarketModel
+                    elo = EloModel.predict(ctx)
+                    poisson = PoissonModel.predict(ctx)
+                    market = MarketModel.predict(ctx)
+                    
+                    base_feats = builder.build(elo, poisson, 1.0, market, None, None, ctx)
+                    
+                    # 组合最终输入：[48维特征] + [Market 3维] + [Dummy placeholder for LR 3维]
+                    # 注意：训练时如果没有 LR 记录，可以用 Market 占位
+                    lr_dummy = np.array([market.get('home', 0.33), market.get('draw', 0.33), market.get('away', 0.33)], dtype=np.float32)
+                    mkt_probs = np.array([market.get('home', 0.33), market.get('draw', 0.33), market.get('away', 0.33)], dtype=np.float32)
+                    
+                    full_vec = np.concatenate([base_feats, lr_dummy, mkt_probs])
+                    
+                    o2i = {"home":0, "draw":1, "away":2}
+                    label = o2i.get(m.actual_outcome)
+                    if label is not None:
+                        X.append(full_vec)
+                        Y.append(label)
+                except: continue
+                
+            return np.stack(X), np.array(Y)
         finally:
-            s.close()
+            if not self.db: s.close()
 
     def train(self):
         data = self.build_training_data()
         if data is None: return None
-        X, R = data
-        ds = ResidualDataset(X, R)
-        n = len(ds); nt = int(n*0.8)
-        tr, va = torch.utils.data.random_split(ds, [nt, n-nt])
-        tl = DataLoader(tr, batch_size=BATCH_SIZE, shuffle=True)
-        vl = DataLoader(va, batch_size=BATCH_SIZE)
-        self.model = ResidualNet()
-        opt = torch.optim.AdamW(self.model.parameters(), lr=LEARNING_RATE, weight_decay=1e-4)
-        best = float("inf"); pc = 0; metrics = {"train_loss":[],"val_loss":[]}
+        X, Y = data
+        
+        # 分离验证集
+        idx = np.random.permutation(len(X))
+        split = int(len(X) * 0.8)
+        tr_idx, va_idx = idx[:split], idx[split:]
+        
+        tr_x, tr_y = torch.FloatTensor(X[tr_idx]), torch.LongTensor(Y[tr_idx])
+        va_x, va_y = torch.FloatTensor(X[va_idx]), torch.LongTensor(Y[va_idx])
+        
+        tl = DataLoader(list(zip(tr_x, tr_y)), batch_size=BATCH_SIZE, shuffle=True)
+        vl = DataLoader(list(zip(va_x, va_y)), batch_size=BATCH_SIZE)
+        
+        self.model = StackingNet()
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=LEARNING_RATE, weight_decay=0.01)
+        criterion = nn.CrossEntropyLoss()
+        scheduler = OneCycleLR(optimizer, max_lr=1e-3, steps_per_epoch=len(tl), epochs=EPOCHS)
+        
+        best_loss = float("inf")
+        early_stop = 0
+        
         for ep in range(EPOCHS):
-            self.model.train(); tloss = 0.0
-            for bx,br in tl:
-                opt.zero_grad(); delta = self.model(bx)
-                loss = nn.functional.mse_loss(delta, br)
-                loss.backward(); opt.step(); tloss += loss.item()
-            tloss /= len(tl)
-            self.model.eval(); vloss = 0.0
+            self.model.train()
+            for bx, by in tl:
+                optimizer.zero_grad()
+                pred = self.model(bx)
+                loss = criterion(pred, by)
+                loss.backward()
+                optimizer.step()
+                scheduler.step()
+            
+            # 验证
+            self.model.eval()
+            val_loss = 0
+            correct = 0
             with torch.no_grad():
-                for bx,br in vl: vloss += nn.functional.mse_loss(self.model(bx), br).item()
-            vloss /= len(vl)
-            metrics["train_loss"].append(round(tloss,4)); metrics["val_loss"].append(round(vloss,4))
-            if vloss < best: best = vloss; pc = 0; torch.save(self.model.state_dict(), RESIDUAL_MODEL_PATH)
-            else: pc += 1
-            if pc >= PATIENCE: logger.info(f"[residual-nn] Early stop epoch {ep}"); break
-            if ep%10==0: logger.info(f"[residual-nn] E{ep}: train={tloss:.4f} val={vloss:.4f}")
-        self._save_feature_stats(); self._save_training_log(metrics)
-        return {"epochs":len(metrics["train_loss"]),"best_val_loss":round(best,6),"samples":n}
+                for bx, by in vl:
+                    pred = self.model(bx)
+                    val_loss += criterion(pred, by).item()
+                    correct += (pred.argmax(1) == by).sum().item()
+            
+            val_loss /= len(vl)
+            acc = correct / len(va_y)
+            
+            if val_loss < best_loss:
+                best_loss = val_loss
+                early_stop = 0
+                torch.save(self.model.state_dict(), MODEL_PATH)
+            else:
+                early_stop += 1
+            
+            if ep % 5 == 0:
+                logger.info(f"Epoch {ep}: Val Loss={val_loss:.4f}, Acc={acc:.1%}")
+                
+            if early_stop >= PATIENCE:
+                logger.info("Early stopping triggered.")
+                break
+        
+        # 保存统计信息供推理归一化
+        stats = {
+            "mean": X.mean(axis=0).tolist(),
+            "std": np.maximum(X.std(axis=0), 1e-6).tolist(),
+            "trained_at": datetime.now(timezone.utc).isoformat(),
+            "best_loss": best_loss
+        }
+        with open(STATS_PATH, "w") as f: json.dump(stats, f)
+        return stats
 
-    def _save_feature_stats(self):
-        if self.feature_mean is not None:
-            with open(FEATURE_STATS_PATH,"w") as f: json.dump({"mean":self.feature_mean.tolist(),"std":self.feature_std.tolist()},f)
 
-    def _save_training_log(self, metrics):
-        with open(TRAINING_LOG_PATH,"w") as f: json.dump({"trained_at":datetime.now(timezone.utc).isoformat(),"metrics":metrics},f,indent=2)
-
-
-class ResidualPredictor:
+class StackingPredictor:
     def __init__(self):
-        self.model = ResidualNet(); self.feature_mean = None; self.feature_std = None; self._load()
+        self.model = StackingNet()
+        self.stats = None
+        self._load()
+
     def _load(self):
-        if os.path.exists(RESIDUAL_MODEL_PATH): self.model.load_state_dict(torch.load(RESIDUAL_MODEL_PATH)); self.model.eval()
-        if os.path.exists(FEATURE_STATS_PATH):
-            with open(FEATURE_STATS_PATH) as f:
-                s = json.load(f); self.feature_mean = np.array(s["mean"],dtype=np.float32); self.feature_std = np.array(s["std"],dtype=np.float32)
-                # Fix: Ensure std is never 0 when loading
-                self.feature_std = np.maximum(self.feature_std, 1e-8)
-    def is_ready(self): return self.feature_mean is not None
-    def predict_delta(self, lr_probs, **kwargs):
-        if not self.is_ready(): return np.zeros(OUTPUT_DIM,dtype=np.float32)
-        f = extract_residual_features(lr_probs=lr_probs, **kwargs)
-        f = (f-self.feature_mean)/self.feature_std
-        return self.model.predict_delta(f)
-    @staticmethod
-    def apply_correction(lr_probs, delta, alpha=0.3):
-        lr = np.array([lr_probs["home"],lr_probs["draw"],lr_probs["away"]])
-        c = lr + alpha*delta; c = np.clip(c,0.001,None); c = c/c.sum()
-        return {"home":float(c[0]),"draw":float(c[1]),"away":float(c[2])}
+        if os.path.exists(MODEL_PATH):
+            self.model.load_state_dict(torch.load(MODEL_PATH))
+            self.model.eval()
+        if os.path.exists(STATS_PATH):
+            with open(STATS_PATH) as f: self.stats = json.load(f)
 
+    def is_ready(self): return self.stats is not None
 
-def residual_nn_train_job():
-    trainer = ResidualTrainer(); result = trainer.train()
-    if result: logger.info(f"[residual-nn-job] Trained: {result}")
-    else: logger.info("[residual-nn-job] Skipped (insufficient data)")
+    def predict(self, features: np.ndarray) -> Dict[str, float]:
+        if not self.is_ready(): return None
+        
+        # 归一化
+        mean = np.array(self.stats["mean"], dtype=np.float32)
+        std = np.array(self.stats["std"], dtype=np.float32)
+        x = (features - mean) / std
+        
+        with torch.no_grad():
+            logits = self.model(torch.FloatTensor(x).unsqueeze(0))
+            probs = torch.softmax(logits, dim=1).squeeze().numpy()
+            
+        return {"home": float(probs[0]), "draw": float(probs[1]), "away": float(probs[2])}

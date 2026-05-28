@@ -40,7 +40,7 @@ def check_ssl() -> Dict:
 
 def check_zgzcw_sync(db_path: str = DB_PATH) -> Dict:
     try:
-        from zgzcw_jc_sync import sync_jc_matches
+        from ingestion.zgzcw_jc_sync import sync_jc_matches
         result = sync_jc_matches(db_path)
         if not isinstance(result, dict):
             return {"status": "fail", "detail": f"unexpected return: {result}"}
@@ -174,7 +174,7 @@ def check_ssl_bundle() -> Dict:
 
 def try_fix_zgzcw() -> bool:
     try:
-        from zgzcw_jc_sync import sync_jc_matches
+        from ingestion.zgzcw_jc_sync import sync_jc_matches
         result = sync_jc_matches(DB_PATH)
         return result.get("errors", 100) == 0
     except Exception:

@@ -601,7 +601,7 @@ def analyze_match_from_db(match_id: int, params: Optional[StrategyParams] = None
     """从数据库加载比赛数据，运行完整分层分析"""
     import json
     from models import SessionLocal, Match, Prediction
-    from bet_nn import BetNetPredictor, extract_features
+    # from bet_nn import BetNetPredictor, extract_features
 
     predictor = BetNetPredictor()
     if not predictor.is_ready():

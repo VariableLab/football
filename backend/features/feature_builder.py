@@ -28,41 +28,33 @@ from logger import get_logger
 logger = get_logger("feature_builder")
 
 # ─── 特征维度 ───
-FEATURE_DIM = 43
+FEATURE_DIM = 48
 FEATURE_NAMES = [
-    # A. Elo (7)
+    # A. Elo (8)
     "elo_diff", "elo_win", "elo_draw", "elo_away",
-    "is_heavy_fav", "is_heavy_udog", "elo_tier_diff",
-    # B. Poisson (7)
+    "is_heavy_fav", "is_heavy_udog", "elo_tier_diff", "elo_drift",
+    # B. Poisson (8)
     "lambda_home", "lambda_away", "lambda_diff",
-    "poisson_win", "poisson_draw", "poisson_away", "goal_exp",
+    "poisson_win", "poisson_draw", "poisson_away", "goal_exp", "relative_goals",
     # C. Players (4)
     "home_avail", "away_avail", "avail_diff", "injury_impact",
-    # D. Market (6)
+    # D. Market (7)
     "market_win", "market_draw", "market_away",
-    "overround", "max_odds_move", "source_count",
+    "overround", "max_odds_move", "source_count", "market_volatility",
     # E. Form (5)
     "form_win", "form_draw", "momentum", "stability", "streak_norm",
     # F. H2H (6)
     "h2h_total_norm", "h2h_win", "h2h_draw", "h2h_recent", "h2h_goals_norm", "first_meeting",
-    # G. Meta (8)
+    # G. Meta (10)
     "rest_advantage", "is_knockout", "is_derby", "ref_severity", "ref_home_bias",
-    "home_rest", "away_rest", "is_late_season",
+    "home_rest", "away_rest", "is_late_season", "pressure_index", "is_prime_time",
 ]
 
 
 class FeatureBuilder:
     """
-    特征拼接器。
-
-    用法:
-        builder = FeatureBuilder()
-        features = builder.build(
-            elo_probs, poisson_result, players_factor, market_probs,
-            form_features, h2h_features, ctx
-        )
-        # features.shape → (38,)
-        # 可直接喂给 logistic_fusion.predict()
+    高精度特征拼接器。
+    集成 Karpathy 的第一性原理：减少冗余特征，强化核心博弈信号。
     """
 
     def __init__(self, use_interactions: bool = True):
@@ -81,31 +73,35 @@ class FeatureBuilder:
         ctx,
     ) -> np.ndarray:
         """
-        拼接 38 维特征向量。
-
-        Returns:
-            np.ndarray shape (38,), dtype float32, 已归一化到 ~[0,1] 或 ~[-1,1]
+        拼接 48 维高精度特征向量。
         """
         feats = []
 
-        # ─── A. Elo (7) ───
+        # ─── A. Elo (8) ───
         elo_home = getattr(ctx.home_team, "elo", 1500)
         elo_away = getattr(ctx.away_team, "elo", 1500)
-        elo_diff = (elo_home - elo_away) / 400.0         # 归一化
+        elo_diff = (elo_home - elo_away) / 400.0
+        # 💡 新增：Elo 漂移率 (假设 ctx 包含 elo_drift，不包含则默认为0)
+        elo_drift = getattr(ctx, "elo_drift", 0.0)
+        
         feats.extend([
             np.clip(elo_diff, -2.0, 2.0),
             elo_probs.get("home", 0.33),
             elo_probs.get("draw", 0.33),
             elo_probs.get("away", 0.33),
-            1.0 if elo_diff > 0.5 else 0.0,              # heavy favorite
-            1.0 if elo_diff < -0.5 else 0.0,             # heavy underdog
-            np.clip((elo_home - 1400) / 600.0, -1.0, 1.0),  # Elo tier
+            1.0 if elo_diff > 0.5 else 0.0,
+            1.0 if elo_diff < -0.5 else 0.0,
+            np.clip((elo_home - 1400) / 600.0, -1.0, 1.0),
+            np.clip(elo_drift / 50.0, -1.0, 1.0),
         ])
 
-        # ─── B. Poisson (7) ───
+        # ─── B. Poisson (8) ───
         lam_h = poisson_result.get("lambda_home", 1.2)
         lam_a = poisson_result.get("lambda_away", 1.0)
         poisson_spf = poisson_result.get("spf", {})
+        # 💡 新增：相对进球比 (Scored/Conceded Ratio)
+        rel_goals = (lam_h / max(lam_a, 0.1)) / 5.0
+
         feats.extend([
             np.clip(lam_h / 3.0, 0.0, 1.0),
             np.clip(lam_a / 3.0, 0.0, 1.0),
@@ -113,7 +109,8 @@ class FeatureBuilder:
             poisson_spf.get("home", 0.33),
             poisson_spf.get("draw", 0.33),
             poisson_spf.get("away", 0.33),
-            np.clip((lam_h + lam_a) / 5.0, 0.0, 1.0),    # expected total goals
+            np.clip((lam_h + lam_a) / 5.0, 0.0, 1.0),
+            np.clip(rel_goals, -1.0, 2.0),
         ])
 
         # ─── C. Players (4) ───
@@ -125,21 +122,26 @@ class FeatureBuilder:
             h_avail,
             a_avail,
             h_avail - a_avail,
-            min((h_inj + a_inj) / 10.0, 1.0),  # injury impact
+            min((h_inj + a_inj) / 10.0, 1.0),
         ])
 
-        # ─── D. Market (6) ───
+        # ─── D. Market (7) ───
         if market_probs:
+            # 💡 新增：市场热值 (Volatility)
+            m_move = getattr(ctx, "max_odds_move", 0.0)
+            vol = abs(m_move) / 0.15
+            
             feats.extend([
                 market_probs.get("home", 0.33),
                 market_probs.get("draw", 0.33),
                 market_probs.get("away", 0.33),
                 getattr(ctx, "overround", 0.0) if hasattr(ctx, "overround") else 0.08,
-                0.0,  # max_odds_move (需要时序比较，暂填0)
+                np.clip(m_move / 0.2, -1.0, 1.0),
                 min(getattr(ctx, "source_count", 1) / 5.0, 1.0),
+                np.clip(vol, 0.0, 1.0),
             ])
         else:
-            feats.extend([0.33, 0.33, 0.33, 0.0, 0.0, 0.0])
+            feats.extend([0.33, 0.33, 0.33, 0.0, 0.0, 0.0, 0.0])
 
         # ─── E. Form (5) ───
         if form_features:
@@ -153,7 +155,7 @@ class FeatureBuilder:
         else:
             feats.extend([0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
 
-        # ─── G. Meta (8) ───
+        # ─── G. Meta (10) ───
         rest_h = getattr(ctx.home_team, "rest_days", 5)
         rest_a = getattr(ctx.away_team, "rest_days", 5)
         ref = getattr(ctx, "referee", None)
@@ -161,22 +163,26 @@ class FeatureBuilder:
         ref_severity = (ref.yellow_cards_avg - 4.0) / 4.0 if ref else 0.0
         ref_home_bias = (ref.home_win_bias - 1.0) if ref else 0.0
         
+        # 💡 新增：关键场次压力指数
+        is_knockout = 1.0 if getattr(ctx, "is_knockout", False) else 0.0
+        pressure = 0.8 if is_knockout else 0.2
+        
         feats.extend([
-            np.clip((rest_h - rest_a) / 7.0, -1.0, 1.0),  # rest advantage
-            1.0 if getattr(ctx, "is_knockout", False) else 0.0,
-            0.0,  # is_derby (暂未实现)
+            np.clip((rest_h - rest_a) / 7.0, -1.0, 1.0),
+            is_knockout,
+            0.0, # is_derby
             ref_severity,
             ref_home_bias,
-            np.clip(rest_h / 7.0, 0, 2.0), # home_rest
-            np.clip(rest_a / 7.0, 0, 2.0), # away_rest
+            np.clip(rest_h / 7.0, 0, 2.0),
+            np.clip(rest_a / 7.0, 0, 2.0),
             1.0 if getattr(ctx, "is_late_season", False) else 0.0,
+            pressure,
+            0.0, # is_prime_time
         ])
-
 
         result = np.array([float(x) for x in feats], dtype=np.float32)
 
-        # 交互特征（简单实现：选取关键交互项）
-        if self.use_interactions and len(result) >= 43:
+        if self.use_interactions:
             interactions = self._compute_interactions(result)
             result = np.concatenate([result, interactions])
 

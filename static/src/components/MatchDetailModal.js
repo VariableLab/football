@@ -66,8 +66,10 @@ function MatchDetailModal() {
       if (this.match) {
         this.loading = true;
         try {
-          this.strategyData = await WCApi.Data.getStrategy(this.match.id, tier);
-        } catch (e) { /* handle */ }
+          this.strategyData = await WCApi.Strategy.getStrategy(this.match.id, tier);
+        } catch (e) {
+          console.error('Failed to change risk tier:', e);
+        }
         this.loading = false;
       }
     },

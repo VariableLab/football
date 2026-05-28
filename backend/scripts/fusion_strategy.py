@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 from edge_calculator import EdgeCalculator
-from bet_nn import BetNetPredictor, extract_features
+# from bet_nn import BetNetPredictor, extract_features
 from logger import get_logger
 
 logger = get_logger("fusion_strategy")

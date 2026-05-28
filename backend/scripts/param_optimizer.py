@@ -132,7 +132,7 @@ def _load_backtest_data(limit: int = 0) -> List[Dict]:
     """从数据库加载回测数据（已结束比赛 + 预测 + 赔率 + 结果）"""
     import json
     from models import SessionLocal, Match, MatchStatus, Prediction
-    from bet_nn import BetNetPredictor, extract_features
+    # from bet_nn import BetNetPredictor, extract_features
 
     predictor = BetNetPredictor()
     if not predictor.is_ready():

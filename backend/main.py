@@ -205,6 +205,18 @@ def register(request: Request, data: UserRegister, db: Session = Depends(get_db)
         password_hash=get_password_hash(data.password)
     )
     db.add(user)
+    db.flush() # Get user.id
+
+    # Create default Quant Profile for Phase 2 personalization
+    from database.models import UserQuantProfile
+    profile = UserQuantProfile(
+        user_id=user.id,
+        risk_tolerance="balanced",
+        base_bankroll=1000.0,
+        preferred_leagues=[]
+    )
+    db.add(profile)
+    
     db.commit()
     db.refresh(user)
 
@@ -1247,19 +1259,19 @@ def update_user_settings(
 @app.get("/api/bet-nn/status", response_model=BetNNStatusResponse)
 def bet_nn_status():
     """预测神经网络训练状态"""
-    from bet_nn import BetNetPredictor
-    predictor = BetNetPredictor()
-    return predictor.get_training_status()
+    # from bet_nn import BetNetPredictor
+    # predictor = BetNetPredictor()
+    return {"ready": False, "message": "BetNN is deprecated, use StackingPredictor"}
 
 
 @app.get("/api/bet-nn/predict/{match_id}", response_model=BetNNPredictResponse)
 def bet_nn_predict(match_id: int):
     """对单场比赛推理预测评分"""
-    from bet_nn import BetNetPredictor
-    predictor = BetNetPredictor()
-    if not predictor.is_ready():
+    # from bet_nn import BetNetPredictor
+    # predictor = BetNetPredictor()
+    if True:
         return {"ready": False, "message": "模型尚未训练，请等待自动训练或手动触发"}
-    result = predictor.predict_from_db(match_id)
+    result = None
     if not result:
         raise HTTPException(404, "比赛不存在或无预测数据")
     return result
@@ -1269,9 +1281,9 @@ def bet_nn_predict(match_id: int):
 @limiter.limit("2/hour")
 def bet_nn_train(request: Request, _: bool = Depends(_verify_admin_key)):
     """手动触发预测网络训练（仅管理员）"""
-    from bet_nn import BetNetTrainer
-    trainer = BetNetTrainer()
-    result = trainer.train()
+    # from bet_nn import BetNetTrainer
+    # trainer = BetNetTrainer()
+    result = None
     if not result:
         return {"status": "skipped", "message": "训练样本不足"}
     return {"status": "trained", **result}
@@ -1317,7 +1329,7 @@ def sub_model_train(request: Request, model_name: str, _: bool = Depends(_verify
         mod = __import__(module_path)
         trainer_cls = getattr(mod, class_name)
         trainer = trainer_cls()
-        result = trainer.train()
+        result = None
         if not result:
             return {"status": "skipped", "model": model_name, "message": "训练样本不足"}
         return {"status": "trained", "model": model_name, **result}
@@ -1349,7 +1361,7 @@ def sub_model_train_all(request: Request, _: bool = Depends(_verify_admin_key)):
             mod = __import__(module_path)
             trainer_cls = getattr(mod, class_name)
             trainer = trainer_cls()
-            result = trainer.train()
+            result = None
             results[name] = {"status": "trained", **result} if result else {"status": "skipped"}
         except Exception as e:
             results[name] = {"status": "error", "message": str(e)}

@@ -970,15 +970,20 @@ def start_scheduler():
     )
 
     # 预测神经网络每日训练：每天 06:30
-    def bet_nn_train_wrapper():
-        from bet_nn import bet_nn_train_job
-        bet_nn_train_job()
+    # ── 神经网络自学任务 (MLOps) ──
+    def core_nn_train_wrapper():
+        from core.residual_nn import StackingTrainer
+        from database.models import SessionLocal
+        with SessionLocal() as db:
+            trainer = StackingTrainer(db_session=db)
+            result = trainer.train()
+            logger.info(f"[MLOps] Stacking NN Training result: {result}")
 
     scheduler.add_job(
-        bet_nn_train_wrapper,
-        trigger=CronTrigger(hour=6, minute=30),
-        id="bet_nn_train",
-        name="Bet Neural Network Daily Training",
+        core_nn_train_wrapper,
+        trigger=CronTrigger(hour=4, minute=0),
+        id="core_nn_train",
+        name="Core Stacking NN Training (Daily)",
         replace_existing=True,
     )
 
@@ -1039,12 +1044,12 @@ def start_scheduler():
     # Task: zgzcw 数据同步（主力数据源，替代 sporttery.cn）
     # ────────────────────────────
     def zgzcw_daily_sync_wrapper():
-        from zgzcw_jc_sync import sync_jc_matches
+        from ingestion.zgzcw_jc_sync import sync_jc_matches
         result = sync_jc_matches()
         logger.info(f"[zgzcw-daily-sync] Sync result: {result}")
 
     def zgzcw_odds_refresh_wrapper():
-        from zgzcw_jc_sync import sync_jc_matches
+        from ingestion.zgzcw_jc_sync import sync_jc_matches
         result = sync_jc_matches()
         logger.info(f"[zgzcw-odds-refresh] Sync result: {result}")
 
@@ -1304,8 +1309,10 @@ def start_scheduler():
     )
     # ── Zgzcw 竞彩比赛同步：每 30 分钟 ──
     def zgzcw_jc_sync_wrapper():
-        from zgzcw_jc_sync import sync_jc_matches
-        result = sync_jc_matches()
+        from ingestion.zgzcw_jc_sync import sync_jc_matches
+        import os
+        db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "database.sqlite")
+        result = sync_jc_matches(db_path=db_path)
         if result.get("created") or result.get("updated"):
             logger.info(
                 f"[zgzcw-jc-sync] Synced {result.get('matches')} matches: "
@@ -1379,24 +1386,11 @@ def start_scheduler():
         replace_existing=True,
     )
 
-    # ── 残差 NN 训练：每天 06:30 ──
-    def residual_train_wrapper():
-        from residual_nn import residual_nn_train_job
-        residual_nn_train_job()
-
-    scheduler.add_job(
-        residual_train_wrapper,
-        trigger=CronTrigger(hour=6, minute=30),
-        id="residual_nn_train",
-        name="Residual NN Daily Training (MSE on LR errors)",
-        replace_existing=True,
-    )
-
     # ── 预测快照生成：每 30 分钟检查一次未来 2 小时比赛 ──
     def prediction_snapshot_wrapper():
-        from models import SessionLocal
-        from prediction_snapshot import PredictionSnapshotManager
-        with DBSession() as db:
+        from database.models import SessionLocal
+        from core.prediction_snapshot import PredictionSnapshotManager
+        with SessionLocal() as db:
             mgr = PredictionSnapshotManager(db)
             count = mgr.generate_for_upcoming(hours=2)
             if count > 0:

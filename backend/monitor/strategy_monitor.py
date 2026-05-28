@@ -373,7 +373,7 @@ def _compute_window_metrics(days: int) -> Optional[DriftSnapshot]:
 
         from tiered_strategy import classify_tier, select_spf_recommendation
         from strategy_config import compute_position_ratio
-        from bet_nn import BetNetPredictor, extract_features
+        # from bet_nn import BetNetPredictor, extract_features
 
         predictor = BetNetPredictor()
         if not predictor.is_ready():

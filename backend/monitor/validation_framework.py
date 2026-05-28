@@ -148,7 +148,7 @@ def _breakeven_rate(avg_odds: float) -> float:
 def _load_validation_data(limit: int = 0) -> List[Dict]:
     """加载回测数据（同 param_optimizer，独立加载以保证隔离）"""
     from models import SessionLocal, Match, MatchStatus, Prediction
-    from bet_nn import BetNetPredictor, extract_features
+    # from bet_nn import BetNetPredictor, extract_features
 
     predictor = BetNetPredictor()
     if not predictor.is_ready():

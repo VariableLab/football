@@ -11,7 +11,7 @@
 - 用校准因子修正: calibrated = model_p × factor
 
 用法:
-    from calibrator import Calibrator
+    from core.calibrator import Calibrator
     cal = Calibrator()
     calibrated = cal.calibrate_spf({"home": 0.58, "draw": 0.24, "away": 0.18})
 """
@@ -221,10 +221,10 @@ class Calibrator:
         从数据库的历史比赛+预测数据拟合校准曲线。
         """
         if db_session is None:
-            from models import SessionLocal
+            from database.models import SessionLocal
             db_session = SessionLocal()
 
-        from models import Match, MatchStatus, Prediction
+        from database.models import Match, MatchStatus, Prediction
 
         matches = db_session.query(Match).filter(
             Match.status == MatchStatus.FINISHED,
