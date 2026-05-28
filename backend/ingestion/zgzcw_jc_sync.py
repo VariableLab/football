@@ -352,6 +352,10 @@ def sync_jc_matches(db_path: str = None) -> Dict:
                 issues_linked += 1
 
             db.commit()
+            
+            # 触发 AI 预测引擎自动重算
+            from core.prediction_recalc import on_odds_updated
+            on_odds_updated(db, match.id)
 
             logger.info(
                 f"[zgzcw_jc] {jc_code}: {home_en} vs {away_en} | "

@@ -111,10 +111,11 @@ async def generate_daily_report():
                     print(analysis)
                     print("=" * 60 + "\n")
                     
-                    await asyncio.sleep(2) # 增加延迟避免 API 速率限制
+                    await asyncio.sleep(5) # 增加延迟避免 API 速率限制
                     
                 except Exception as e:
                     print(f"❌ 推理失败 ({home.name} vs {away.name}): {e}")
+                    await asyncio.sleep(5) # 失败也等待
                     
     finally:
         db.close()
