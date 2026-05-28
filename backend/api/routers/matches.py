@@ -1,6 +1,6 @@
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 from datetime import datetime, timezone, timedelta
 import os
 
@@ -29,23 +29,20 @@ def _enrich_rationale(pick, match) -> str:
     if pick.edge > 0.05:
         parts.append(f"{sel_label}有显著价值: 模型概率{pick.model_prob_calibrated:.0%}高于市场隐含{pick.market_prob:.0%}，边际{pick.edge:+.1%}")
     elif pick.edge > 0:
-        parts.append(f"{sel_label}有正期望: 模型概率{pick.model_prob_calibrated:.0%}略高于市场{pick.market_prob:.0%}，EV {pick.ev:+.1%}")
-    else:
-        parts.append(f"模型概率{pick.model_prob_calibrated:.0%}，赔率{pick.odds:.2f}")
+        parts.append(f"{sel_label}具备正期望: 模型概率{pick.model_prob_calibrated:.1%}略高于赔率折算")
 
-    # 2. Elo 差值
+    # 2. 球队基本面
     home = match.home_team
     away = match.away_team
-    if home and away and home.elo and away.elo:
-        elo_diff = home.elo - away.elo
-        if abs(elo_diff) > 50:
-            stronger = home.name if elo_diff > 0 else away.name
-            parts.append(f"Elo差{elo_diff:+.0f}({stronger}占优)")
-        elif abs(elo_diff) > 20:
-            stronger = home.name if elo_diff > 0 else away.name
-            parts.append(f"Elo差{elo_diff:+.0f}({stronger}略优)")
+    if home and away:
+        if home.elo and away.elo:
+            elo_diff = home.elo - away.elo
+            if elo_diff > 150:
+                parts.append(f"{home.name}实力占优(ELO +{elo_diff})")
+            elif elo_diff < -150:
+                parts.append(f"{away.name}实力占优(ELO {elo_diff})")
 
-    # 3. 近期状态
+    # 3. 状态因子
     if home and home.form_factor and home.form_factor > 1.1:
         parts.append(f"{home.name}状态良好(系数{home.form_factor:.2f})")
     if away and away.form_factor and away.form_factor > 1.1:
@@ -64,7 +61,7 @@ def _enrich_rationale(pick, match) -> str:
     return "。".join(parts)
 
 @router.get("", response_model=MatchListResponse)
-@cached_api(ttl_seconds=60)
+@cached_api(ttl_seconds=300) # 增加到 5 分钟加速响应
 def list_matches(
     status: str = None,
     group: str = None,
@@ -85,10 +82,11 @@ def list_matches(
     if match_type and match_type not in _VALID_MATCH_TYPES:
         raise HTTPException(status_code=400, detail=f"Invalid match_type. Valid values: {sorted(_VALID_MATCH_TYPES)}")
 
+    # 使用 selectinload 优化集合加载性能
     q = db.query(Match).options(
         joinedload(Match.home_team),
         joinedload(Match.away_team),
-        joinedload(Match.predictions)
+        selectinload(Match.predictions)
     )
 
     if status == "jingcai":
@@ -113,6 +111,7 @@ def list_matches(
         start = now.replace(hour=0, minute=0, second=0, microsecond=0) + _td(days=1)
         end = start + _td(days=1)
         q = q.filter(Match.kickoff_at >= start, Match.kickoff_at < end)
+    
     total = q.count()
     items = q.order_by(Match.kickoff_at.desc()).offset(offset).limit(min(limit, 200)).all()
     return {"total": total, "offset": offset, "limit": limit, "items": items}
@@ -123,7 +122,7 @@ def get_match(match_id: int, db: Session = Depends(get_db)):
     match = db.query(Match).options(
         joinedload(Match.home_team),
         joinedload(Match.away_team),
-        joinedload(Match.predictions)
+        selectinload(Match.predictions)
     ).filter(Match.id == match_id).first()
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
@@ -165,21 +164,44 @@ def get_strategy(
                 )
 
     preds = db.query(Prediction).filter(Prediction.match_id == match_id).all()
+    
+    # 如果数据库中没有预测，则即时生成（实时计算模式）
     if not preds:
-        raise HTTPException(status_code=404, detail="Predictions not found for this match")
-
-    predictions = [
-        {
-            "id": p.id,
-            "match_id": p.match_id,
-            "play_type": p.play_type,
-            "probabilities": p.probabilities,
-            "model_version": p.model_version,
-            "input_checksum": p.input_checksum,
-            "locked_at": p.locked_at.isoformat() if p.locked_at else None,
-        }
-        for p in preds
-    ]
+        try:
+            from prediction_engine import PredictionEngine, build_context_from_match
+            ctx = build_context_from_match(match)
+            engine = PredictionEngine(db_session=db)
+            result = engine.predict(ctx)
+            
+            # 模拟数据库负载结构
+            predictions = []
+            for payload in result.to_db_payload():
+                predictions.append({
+                    "id": 0, # 虚拟 ID
+                    "match_id": match.id,
+                    "play_type": payload["play_type"],
+                    "probabilities": payload["probabilities"],
+                    "model_version": payload.get("model_version", "v1.0"),
+                    "input_checksum": "live-calc",
+                    "locked_at": None,
+                })
+        except Exception as e:
+            import logging
+            logging.getLogger("matches").error(f"Live prediction failed for match {match_id}: {e}")
+            raise HTTPException(status_code=404, detail="Predictions not found and live calculation failed")
+    else:
+        predictions = [
+            {
+                "id": p.id,
+                "match_id": p.match_id,
+                "play_type": p.play_type,
+                "probabilities": p.probabilities,
+                "model_version": p.model_version,
+                "input_checksum": p.input_checksum,
+                "locked_at": p.locked_at.isoformat() if p.locked_at else None,
+            }
+            for p in preds
+        ]
 
     pipeline = StrategyPipeline(risk_tier=risk_tier, bankroll=100.0)
     picks = pipeline.generate(
@@ -202,103 +224,58 @@ def get_strategy(
             probability=p.model_prob_calibrated,
             odds=p.odds,
             ev=p.ev,
-            kelly_fraction=p.kelly_raw,
-            stake_pct=p.stake_pct,
-            confidence=p.confidence,
-            rationale=_enrich_rationale(p, match),
-            risk_level=p.risk_label,
-            risk_tier=p.risk_tier,
-            model_prob_calibrated=p.model_prob_calibrated,
-            market_prob=p.market_prob,
             edge=p.edge,
-            var_95=p.var_95,
-            cvar_95=p.cvar_95,
-            risk_score=p.risk_score,
-            is_recommended=p.is_recommended,
+            kelly_stake=p.kelly_stake,
+            rationale=_enrich_rationale(p, match),
+            risk_label=p.risk_label,
+            confidence=p.confidence,
         )
         for p in picks
     ]
 
-    # 💡 关键进化：生成逻辑溯源 Trace
-    trace_data = None
-    try:
-        from core.prediction_engine import PredictionEngine, build_context_from_match
-        engine = PredictionEngine(db_session=db)
-        ctx = build_context_from_match(match)
-        res = engine.predict(ctx)
-        if res.trace:
-            trace_data = res.trace.model_dump() if hasattr(res.trace, 'model_dump') else res.trace
-    except Exception as e:
-        logger.warning(f"Failed to generate trace for match {match_id}: {e}")
-
-    return {
-        "match_id": match_id,
-        "status": match.status.value if hasattr(match.status, 'value') else match.status,
-        "confidence": match.confidence or "medium",
-        "odds_degraded": match.odds_degraded or False,
-        "risk_tier": risk_tier,
-        "strategies": [s.model_dump() for s in strategies],
-        "predictions": predictions,
-        "trace": trace_data
-    }
+    return StrategyResponse(
+        match_id=match_id,
+        risk_tier=risk_tier,
+        strategies=strategies,
+        updated_at=datetime.now(timezone.utc)
+    )
 
 @router.get("/{match_id}/odds-movement", response_model=OddsMovementResponse)
-def get_odds_movement(
-    match_id: int,
-    db: Session = Depends(get_db),
-):
-    """Odds movement analysis for a match: opening→closing drift, steam moves, late money."""
+def get_odds_movement(match_id: int, db: Session = Depends(get_db)):
+    """Get historical odds movement for a match."""
+    from models import OddsHistory
+    
+    # 1. 基础开/收盘赔率
     match = db.query(Match).filter(Match.id == match_id).first()
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
 
-    tracker = OddsTracker(db)
-    report = tracker.analyze_match(match_id)
+    # 2. 历史趋势
+    history = db.query(OddsHistory).filter(
+        OddsHistory.match_id == match_id
+    ).order_by(OddsHistory.recorded_at.asc()).all()
 
     return {
         "match_id": match_id,
-        "has_opening": report.has_opening,
-        "opening_odds": {
-            "home": report.opening_odds.odds_home,
-            "draw": report.opening_odds.odds_draw,
-            "away": report.opening_odds.odds_away,
-            "source": report.opening_odds.source,
-            "at": report.opening_odds.recorded_at.isoformat() if report.opening_odds else None,
-        } if report.opening_odds else None,
-        "closing_odds": {
-            "home": report.closing_odds.odds_home,
-            "draw": report.closing_odds.odds_draw,
-            "away": report.closing_odds.odds_away,
-        } if report.closing_odds else None,
-        "drift": {
-            "home_pct": report.drift_home_pct,
-            "draw_pct": report.drift_draw_pct,
-            "away_pct": report.drift_away_pct,
+        "opening": {
+            "h": match.opening_odds_home,
+            "d": match.opening_odds_draw,
+            "a": match.opening_odds_away,
+            "at": match.opening_odds_at.isoformat() if match.opening_odds_at else None
         },
-        "steam_moves": [
-            {
-                "selection": s.selection,
-                "from_odds": s.from_odds,
-                "to_odds": s.to_odds,
-                "change_pct": round(s.change_pct, 4),
-                "window_minutes": round(s.window_minutes, 1),
-                "direction": s.direction,
-            }
-            for s in report.steam_moves
-        ],
-        "late_money": [
-            {
-                "selection": s.selection,
-                "from_odds": s.from_odds,
-                "to_odds": s.to_odds,
-                "change_pct": round(s.change_pct, 4),
-                "direction": s.direction,
-            }
-            for s in report.late_money
-        ],
-        "signal": report.signal,
-        "snapshots": {
-            "total": report.total_snapshots,
-            "real": report.real_snapshots,
+        "closing": {
+            "h": match.closing_odds_home,
+            "d": match.closing_odds_draw,
+            "a": match.closing_odds_away,
+            "at": match.odds_locked_at.isoformat() if match.odds_locked_at else None
         },
+        "history": [
+            {
+                "h": h.odds_home,
+                "d": h.odds_draw,
+                "a": h.odds_away,
+                "at": h.recorded_at.isoformat(),
+                "source": h.source
+            } for h in history
+        ]
     }

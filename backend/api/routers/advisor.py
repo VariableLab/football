@@ -66,11 +66,12 @@ async def get_proactive_briefing(db: Session = Depends(get_db)):
         logger.info("[agent] Serving briefing from cache.")
         return _BRIEFING_CACHE["data"]
 
-    # 1. AI 主动扫描全站
-    scan_data = agent_orchestrator.perform_system_scan(db)
+    # 1. AI 主动扫描全站 (移至线程池避免阻塞)
+    from anyio.to_thread import run_sync
+    scan_data = await run_sync(agent_orchestrator.perform_system_scan, db)
     system_prompt = agent_orchestrator.get_briefing_prompt(scan_data)
     
-    # ... (rest of LLM calling logic) ...
+    # 2. 调用 LLM 生成报告
     async with httpx.AsyncClient() as client:
         try:
             resp = await client.post(
@@ -97,6 +98,7 @@ async def advisor_chat(
     user = Depends(get_optional_user)
 ):
     """量化策略研判智能体对话 (Agentic Workflow + Streaming SSE)"""
+    from anyio.to_thread import run_sync
     
     # 🕵️ 意图识别：是否需要全局数据
     is_asking_all = any(k in req.message.lower() for k in ["全部", "今天", "早报", "列表", "哪些", "值得"])
@@ -105,22 +107,26 @@ async def advisor_chat(
     match_data_for_agent = {}
     logic_trace_obj = None
 
-    # 0. 注入用户画像 (千人千面)
-    user_profile_data = None
-    if user:
-        profile = db.query(UserQuantProfile).filter(UserQuantProfile.user_id == user.id).first()
+    # 0. 注入用户画像 (耗时 DB 操作封装)
+    def _fetch_user_profile(user_id):
+        profile = db.query(UserQuantProfile).filter(UserQuantProfile.user_id == user_id).first()
         if profile:
-            user_profile_data = {
+            return {
                 "risk_tolerance": profile.risk_tolerance,
                 "base_bankroll": profile.base_bankroll,
                 "preferred_leagues": profile.preferred_leagues,
                 "ai_behavior_prompt": profile.ai_behavior_prompt
             }
+        return None
 
-    # 1. 注入全量 Top Picks (如果需要)
+    user_profile_data = None
+    if user:
+        user_profile_data = await run_sync(_fetch_user_profile, user.id)
+
+    # 1. 注入全量 Top Picks
     if is_asking_all and not req.match_id:
         try:
-            top_data = get_top_picks(db)
+            top_data = await run_sync(get_top_picks, db)
             if top_data["top_picks"]:
                 ctx_top = "[今日高价值 Top 5 优选]\n"
                 for i, p in enumerate(top_data["top_picks"]):
@@ -129,32 +135,41 @@ async def advisor_chat(
         except Exception as e:
             logger.warning(f"[agent] Top picks fetch failed: {e}")
 
-    # 2. 注入单场深度数据
-    if req.match_id:
-        try:
-            match = db.query(Match).filter(Match.id == req.match_id).first()
-            if match and match.home_team and match.away_team:
-                engine = PredictionEngine(db_session=db)
-                res = engine.predict(build_context_from_match(match))
-                logic_trace_obj = res.trace
-                
-                probs = res.spf
-                imp_h = 1.0 / (match.odds_home or 2.0)
-                edge_h = probs.get('home', 0.333) - imp_h
-
-                match_data_for_agent = {
+    # 2. 注入单场深度数据 (核心性能优化点：移至线程池)
+    def _prepare_match_context(match_id):
+        match = db.query(Match).filter(Match.id == match_id).first()
+        if match and match.home_team and match.away_team:
+            engine = PredictionEngine(db_session=db)
+            res = engine.predict(build_context_from_match(match))
+            
+            probs = res.spf
+            imp_h = 1.0 / (match.odds_home or 2.0)
+            edge_h = probs.get('home', 0.333) - imp_h
+            
+            return {
+                "match_data": {
                     "home": match.home_team.name,
                     "away": match.away_team.name,
                     "competition": match.competition,
                     "edge_h": edge_h,
                     "prob": probs,
                     "odds": {"h": match.odds_home, "d": match.odds_draw, "a": match.odds_away}
-                }
+                },
+                "logic_trace": res.trace
+            }
+        return None
 
+    if req.match_id:
+        try:
+            prepared = await run_sync(_prepare_match_context, req.match_id)
+            if prepared:
+                match_data_for_agent = prepared["match_data"]
+                logic_trace_obj = prepared["logic_trace"]
+                
                 ctx_single = f"""[单场数据: {match_data_for_agent['home']} vs {match_data_for_agent['away']}]
 - 赔率: {match_data_for_agent['odds']}
 - 模型概率: {match_data_for_agent['prob']}
-- Edge: {edge_h:+.1%}
+- Edge: {match_data_for_agent['edge_h']:+.1%}
 """
                 if logic_trace_obj:
                     ctx_single += "\n[逻辑链条]\n"
@@ -165,7 +180,7 @@ async def advisor_chat(
             logger.error(f"[agent] Single match data injection failed: {e}")
 
     # 3. 注入系统状态
-    perf = get_model_stats(db)
+    perf = await run_sync(get_model_stats, db)
     context_parts.append(f"[系统效能] 准确率: {perf['accuracy']:.1%}, 样本量: {perf['sample_size']}")
 
     # 🚀 生成动态 System Prompt

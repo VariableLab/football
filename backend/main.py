@@ -17,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from starlette.responses import FileResponse
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import text
@@ -162,6 +163,7 @@ else:
         allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization", "X-Api-Key"],
     )
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
     # HTTPS 强制默认关闭，由 Nginx 反代层处理 HTTP→HTTPS 重定向
     # 如需在应用层强制 HTTPS，设置 ENFORCE_HTTPS=1
     if os.getenv("ENFORCE_HTTPS", "0") == "1":

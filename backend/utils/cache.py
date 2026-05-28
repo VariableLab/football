@@ -2,7 +2,7 @@
 ProQuant 高性能缓存中间件
 
 功能:
-1. 提供基于内存的 LRU 缓存 (开发环境)
+1. 提供基于内存所在的 LRU 缓存 (开发环境)
 2. 提供可选的 Redis 缓存 (生产环境)
 3. 装饰器支持，一键加速 API 响应
 """
@@ -43,13 +43,30 @@ cache = ProQuantCache()
 def cached_api(ttl_seconds: int = 300):
     """API 缓存装饰器 - 支持同步和异步"""
     import asyncio
+    from sqlalchemy.orm import Session
+    from fastapi import Request
+
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            key = f"api_cache:{func.__name__}:{str(args)}:{str(kwargs)}"
+            # 过滤掉不可序列化或随请求变化的对象 (Session, Request)
+            clean_args = []
+            for arg in args:
+                if not isinstance(arg, (Session, Request)):
+                    clean_args.append(arg)
+            
+            clean_kwargs = {}
+            for k, v in kwargs.items():
+                if not isinstance(v, (Session, Request)):
+                    clean_kwargs[k] = v
+
+            key = f"api_cache:{func.__name__}:{str(clean_args)}:{str(clean_kwargs)}"
             cached_val = cache.get(key)
             if cached_val is not None:
+                logger.info(f"[cache] HIT: {func.__name__}")
                 return cached_val
+            
+            logger.debug(f"[cache] MISS: {func.__name__}")
             
             if asyncio.iscoroutinefunction(func):
                 async def async_inner():
