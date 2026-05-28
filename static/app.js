@@ -67,7 +67,8 @@ function handleLogout() {
 
 // ─── 视图控制 ───
 function switchSection(section) {
-  const sections = { matches: 'sectionMatches', report: 'sectionReport', validation: 'sectionValidation', feedback: 'sectionFeedback', ai: 'sectionAI' };
+  // 仅保留精简后的模块
+  const sections = { matches: 'sectionMatches', 'content-gen': 'sectionContentGen', ai: 'sectionAI', feedback: 'sectionFeedback' };
   for (const [key, id] of Object.entries(sections)) {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('hidden', key !== section);
@@ -81,7 +82,6 @@ function switchSection(section) {
     btn.classList.toggle('text-warm-gray', !isActive);
   });
   
-  if (section === 'validation') loadValidationDashboard();
   if (section === 'feedback') loadFeedback();
 }
 
@@ -97,6 +97,48 @@ function closeModal() {
 function openLoginModal() { window.dispatchEvent(new CustomEvent('open-login-modal')); }
 function openRedeemModal() { window.dispatchEvent(new CustomEvent('open-redeem-modal')); }
 function openSettingsModal() { window.dispatchEvent(new CustomEvent('open-settings-modal')); }
+
+// ─── 战报生成 (Content Gen) ───
+async function generateReport(matchId) {
+  const genScope = document.getElementById('sectionContentGen').__x.$data;
+  genScope.activeReport = null;
+  genScope.loading = true;
+  
+  try {
+    const token = localStorage.getItem('token');
+    const resp = await fetch(`/api/advisor/report/${matchId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
+    });
+    
+    if (resp.ok) {
+      const data = await resp.json();
+      genScope.activeReport = data.content;
+    } else {
+      genScope.activeReport = '⚠️ 生成失败，请稍后重试或检查服务器状态。';
+    }
+  } catch (e) {
+    console.error('Report generation failed', e);
+    genScope.activeReport = '⚠️ 网络错误，无法连接到量化专家。';
+  } finally {
+    genScope.loading = false;
+  }
+}
+
+async function copyReport() {
+  const genScope = document.getElementById('sectionContentGen').__x.$data;
+  if (genScope.activeReport) {
+    try {
+      await navigator.clipboard.writeText(genScope.activeReport);
+      alert('文案已复制到剪贴板！');
+    } catch (e) {
+      alert('复制失败，请手动复制。');
+    }
+  }
+}
 
 // ─── 比赛数据加载 ───
 async function loadMatchView() {

@@ -51,31 +51,38 @@
   <section class="mb-12">
     <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-6">
       <div>
-        <h1 class="font-serif text-4xl lg:text-5xl font-semibold tracking-wide mb-1 hero-title" data-i18n="hero.title">赛事智能分析</h1>
-        <p class="text-sm font-normal leading-relaxed text-warm-gray max-w-xl" data-i18n="hero.subtitle">市场数据追踪 · 概率校准模型 · 预测结果参考</p>
+        <h1 class="font-serif text-4xl lg:text-5xl font-semibold tracking-wide mb-1 hero-title" data-i18n="hero.title">AI 足球研判与内容引擎</h1>
+        <p class="text-sm font-normal leading-relaxed text-warm-gray max-w-xl" data-i18n="hero.subtitle">量化模型驱动 · 自动化战报成稿 · 核心价值挖掘</p>
       </div>
-      <a href="https://github.com/VariableLab/football" target="_blank"
-         class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium bg-white/60 text-charcoal rounded-full hover:bg-white/80 backdrop-blur-sm transition-all duration-300 flex-shrink-0">
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-        <span data-i18n="hero.star">Star on GitHub</span>
-      </a>
+      
+      <!-- Community CTA -->
+      <div class="flex items-center gap-3">
+        <a href="https://t.me/your_channel" target="_blank"
+           class="inline-flex items-center gap-2 px-6 py-3 text-sm font-bold bg-accent text-white rounded-full hover:shadow-lg hover:shadow-accent/30 transition-all duration-300">
+           <span>🚀 加入 Telegram VIP 频道</span>
+        </a>
+      </div>
     </div>
-    <div class="flex flex-wrap gap-3 text-xs text-warm-gray font-normal">
-      <span class="px-3 py-1.5 bg-warm-gray/5 rounded-full" data-i18n="hero.badges.matches">31K+ matches</span>
-      <span class="px-3 py-1.5 bg-warm-gray/5 rounded-full" data-i18n="hero.badges.teams">462 teams</span>
-      <span class="px-3 py-1.5 bg-warm-gray/5 rounded-full" data-i18n="hero.badges.predictions">157K predictions</span>
-      <span class="px-3 py-1.5 bg-warm-gray/5 rounded-full" data-i18n="hero.badges.fusion">3-layer fusion</span>
-      <span class="px-3 py-1.5 bg-warm-gray/5 rounded-full" data-i18n="hero.badges.opensource">Open source</span>
+    
+    <!-- Revenue/Conversion Banner -->
+    <div class="bg-charcoal text-white-light p-4 rounded-2xl mb-8 flex items-center justify-between border border-white/10">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">🔐</span>
+        <div>
+          <div class="text-sm font-bold">解锁每日高胜率 VIP 核心推介</div>
+          <div class="text-[10px] text-white/40 uppercase tracking-widest">Deep Quant Analysis & Insider Logic</div>
+        </div>
+      </div>
+      <button onclick="openLoginModal()" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold transition-all">立即订阅</button>
     </div>
   </section>
 
-  <!-- Tabs -->
-  <div class="flex items-center gap-2 mb-10" id="sectionTabs">
-    <button onclick="switchSection('matches')" class="section-tab px-6 py-2.5 text-sm font-medium tracking-wide border-b-2 border-accent text-charcoal transition-all" data-section="matches" data-i18n="tab.matches">赛事</button>
-    <button onclick="switchSection('validation')" class="section-tab px-6 py-2.5 text-sm font-normal tracking-wide border-b-2 border-transparent text-warm-gray hover:text-charcoal transition-all" data-section="validation" data-i18n="tab.validation">验证</button>
-    <button onclick="switchSection('report')" class="section-tab px-6 py-2.5 text-sm font-normal tracking-wide border-b-2 border-transparent text-warm-gray hover:text-charcoal transition-all" data-section="report" data-i18n="tab.report">报告</button>
-    <button onclick="switchSection('ai')" class="section-tab px-6 py-2.5 text-sm font-normal tracking-wide border-b-2 border-transparent text-warm-gray hover:text-charcoal transition-all" data-section="ai" data-i18n="tab.ai">量化研判</button>
-    <button onclick="switchSection('feedback')" class="section-tab px-6 py-2.5 text-sm font-normal tracking-wide border-b-2 border-transparent text-warm-gray hover:text-charcoal transition-all" data-section="feedback" data-i18n="tab.feedback">留言</button>
+  <!-- Tabs (Simplified) -->
+  <div class="flex items-center gap-2 mb-10 border-b border-charcoal/5" id="sectionTabs">
+    <button onclick="switchSection('matches')" class="section-tab px-6 py-4 text-sm font-medium tracking-wide border-b-2 border-accent text-charcoal transition-all" data-section="matches">🏆 今日推介</button>
+    <button onclick="switchSection('content-gen')" class="section-tab px-6 py-4 text-sm font-normal tracking-wide border-b-2 border-transparent text-warm-gray hover:text-charcoal transition-all" data-section="content-gen">📝 战报生成</button>
+    <button onclick="switchSection('ai')" class="section-tab px-6 py-4 text-sm font-normal tracking-wide border-b-2 border-transparent text-warm-gray hover:text-charcoal transition-all" data-section="ai">💬 量化顾问</button>
+    <button onclick="switchSection('feedback')" class="section-tab px-6 py-4 text-sm font-normal tracking-wide border-b-2 border-transparent text-warm-gray hover:text-charcoal transition-all" data-section="feedback">💬 留言</button>
   </div>
 
   <!-- Section: 赛事分析 -->
@@ -276,6 +283,59 @@
         </div>
       </div>
     </template>
+  </div>
+
+  <!-- Section: 战报生成 -->
+  <div id="sectionContentGen" class="hidden" x-data="{ matches: [], loading: true, activeReport: null }" x-init="
+    window.addEventListener('matches-updated', (e) => {
+      matches = e.detail.matches;
+      loading = false;
+    })
+  ">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Match List for Selection -->
+      <div class="space-y-4">
+        <h3 class="text-xs font-black uppercase tracking-widest text-warm-gray mb-6 px-1">选择比赛生成文案</h3>
+        <template x-for="m in matches" :key="m.id">
+          <div @click="generateReport(m.id)" 
+               class="glass p-4 cursor-pointer hover:border-accent transition-all group flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="text-xs font-bold text-warm-gray w-12" x-text="m.status === 'finished' ? '复盘' : '前瞻'"></div>
+              <div class="text-sm font-bold text-charcoal" x-text="m.home_team.name + ' vs ' + m.away_team.name"></div>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-accent/5 flex items-center justify-center group-hover:bg-accent text-accent group-hover:text-white transition-all">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Content Output -->
+      <div class="glass p-8 sticky top-24 h-fit min-h-[400px] flex flex-col">
+        <div id="reportOutput" class="flex-1">
+          <template x-if="!activeReport">
+            <div class="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-40">
+              <div class="text-4xl">✍️</div>
+              <div class="text-sm font-medium">点击左侧比赛<br>即刻生成自媒体爆款文案</div>
+            </div>
+          </template>
+          <template x-if="activeReport">
+            <div class="animate-fade-in">
+              <div class="flex items-center justify-between mb-6">
+                <span class="text-[10px] font-black uppercase tracking-widest text-accent bg-accent/10 px-2 py-1 rounded">AI Content Generated</span>
+                <button @click="copyReport()" class="text-xs font-bold text-warm-gray hover:text-charcoal transition-all">复制文案</button>
+              </div>
+              <div class="text-base leading-relaxed text-charcoal whitespace-pre-wrap font-medium" x-text="activeReport"></div>
+            </div>
+          </template>
+        </div>
+        
+        <div x-show="activeReport" class="mt-8 pt-6 border-t border-charcoal/5 flex gap-3">
+          <button class="flex-1 py-3 bg-charcoal text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-all">发布到 Twitter</button>
+          <button class="flex-1 py-3 bg-white border border-charcoal/10 text-charcoal rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-charcoal/5 transition-all">下载封面图</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Section: 模型验证 -->

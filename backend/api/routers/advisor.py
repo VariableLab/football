@@ -35,6 +35,76 @@ class AdvisorRequest(BaseModel):
 class AdvisorResponse(BaseModel):
     reply: str
 
+class ReportResponse(BaseModel):
+    content: str
+    match_code: str
+
+@router.post("/report/{match_id}")
+async def generate_match_report(
+    match_id: int,
+    db: Session = Depends(get_db),
+    user = Depends(get_optional_user)
+):
+    """一键生成 AI 足球战报/前瞻 (小红书/Twitter 风格)"""
+    from anyio.to_thread import run_sync
+    
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    # 1. 准备深度上下文
+    def _get_context(m):
+        engine = PredictionEngine(db_session=db)
+        res = engine.predict(build_context_from_match(m))
+        return {
+            "home": m.home_team.name,
+            "away": m.away_team.name,
+            "kickoff": m.kickoff_at.strftime("%Y-%m-%d %H:%M") if m.kickoff_at else "TBD",
+            "odds": {"h": m.odds_home, "d": m.odds_draw, "a": m.odds_away},
+            "prob": res.spf,
+            "status": m.status,
+            "score": f"{m.actual_home_goals}:{m.actual_away_goals}" if m.status == "finished" else "vs"
+        }
+
+    ctx_data = await run_sync(_get_context, match)
+    
+    # 2. 构造提示词 (网感增强)
+    report_type = "赛后复盘" if match.status == "finished" else "赛前深度研判"
+    prompt = f"""你是一个资深的足球量化推介专家。请为这场比赛写一篇吸引人的社交媒体推文（小红书/X风格）。
+    
+### 比赛数据:
+- 赛事: {ctx_data['home']} {ctx_data['score']} {ctx_data['away']}
+- 时间: {ctx_data['kickoff']}
+- 市场赔率: {ctx_data['odds']}
+- AI 预测概率: {ctx_data['prob']}
+
+### 写作要求:
+1. **标题要爆**: 使用 Emoji，突出“量化”、“爆料”或“核心”。
+2. **内容精炼**: 200字以内。
+3. **网感强**: 使用“大数据拆解”、“逻辑闭环”、“Edge 捕捉”等词汇。
+4. **强引导**: 文末必须带一句话：“👇 更多每日 VIP 独家推介，点击头像加入 Telegram / 微信私域频道”。
+5. **风格**: {report_type}。
+"""
+
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.post(
+                settings.ADVISOR_API_URL,
+                headers={"Authorization": f"Bearer {settings.ADVISOR_API_KEY}"},
+                json={
+                    "model": settings.ADVISOR_MODEL,
+                    "messages": [{"role": "system", "content": "你是一个擅长写爆款足球内容的 AI。"}, {"role": "user", "content": prompt}],
+                    "temperature": 0.7
+                },
+                timeout=60.0
+            )
+            resp.raise_for_status()
+            content = resp.json()["choices"][0]["message"]["content"]
+            return ReportResponse(content=content, match_code=match.match_code)
+        except Exception as e:
+            logger.error(f"Report generation failed: {e}")
+            raise HTTPException(status_code=502, detail="内容生成失败，请稍后重试。")
+
 def get_model_stats(db: Session):
     """获取模型真实效能指标快照"""
     try:
