@@ -27,7 +27,7 @@ from itertools import product
 import numpy as np
 from scipy.stats import poisson
 
-from models import PlayType
+from database.models import PlayType
 import yaml
 import os
 
@@ -922,7 +922,7 @@ class DrawDetectionModel:
     def _get_nn_predictor(cls) -> Optional[Any]:
         if cls._nn_predictor is None:
             try:
-                from draw_classifier import DrawClassifierPredictor
+                from core.draw_classifier import DrawClassifierPredictor
                 predictor = DrawClassifierPredictor()
                 if predictor.is_ready():
                     cls._nn_predictor = predictor
@@ -959,7 +959,7 @@ class DrawDetectionModel:
             return nn.adjust_spf(spf, draw_prob_nn)
 
         # Fallback: 规则式draw_calibrator (已验证效果差, 仅作兜底)
-        from draw_calibrator import (
+        from core.draw_calibrator import (
             DrawFeatures,
             apply_draw_calibration,
             load_draw_params,
@@ -1012,7 +1012,7 @@ class EnsembleFusion:
         if self._db is None:
             return None
         try:
-            from models import FusionWeight
+            from database.models import FusionWeight
 
             elo_tier = self._elo_diff_tier(elo_home, elo_away)
             stage_cat = self._stage_category(stage)

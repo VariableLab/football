@@ -11,8 +11,8 @@ import asyncio
 
 from database.models import get_db, Match, Team, Prediction, UserQuantProfile
 from api.auth import get_optional_user
-from logger import get_logger
-from config import get_settings
+from utils.logger import get_logger
+from database.config import get_settings
 from core.prediction_engine import PredictionEngine, build_context_from_match
 from core.agent_brain import get_agent_context_prompt
 from core.agent_engine import AgentEngine, AgentContext
@@ -68,22 +68,29 @@ async def generate_match_report(
 
     ctx_data = await run_sync(_get_context, match)
     
-    # 2. 构造提示词 (网感增强)
-    report_type = "赛后复盘" if match.status == "finished" else "赛前深度研判"
-    prompt = f"""你是一个资深的足球量化推介专家。请为这场比赛写一篇吸引人的社交媒体推文（小红书/X风格）。
-    
-### 比赛数据:
-- 赛事: {ctx_data['home']} {ctx_data['score']} {ctx_data['away']}
-- 时间: {ctx_data['kickoff']}
-- 市场赔率: {ctx_data['odds']}
-- AI 预测概率: {ctx_data['prob']}
+    # 2. 构造提示词 (网感增强，与 daily_ai_report 脚本对齐)
+    def format_team_data(t):
+        return f"""
+  - 近期战绩: {t.recent_results if t.recent_results else '暂无数据'}
+  - 场均进球/失球: {t.avg_goals_scored or 0}/{t.avg_goals_conceded or 0}
+  - 伤病情况: {t.key_injuries if t.key_injuries else '全员健康'}
+  - 实力评分 (Elo): {t.elo or '未知'}"""
 
-### 写作要求:
-1. **标题要爆**: 使用 Emoji，突出“量化”、“爆料”或“核心”。
-2. **内容精炼**: 200字以内。
-3. **网感强**: 使用“大数据拆解”、“逻辑闭环”、“Edge 捕捉”等词汇。
-4. **强引导**: 文末必须带一句话：“👇 更多每日 VIP 独家推介，点击头像加入 Telegram / 微信私域频道”。
-5. **风格**: {report_type}。
+    match_info = f"""
+[赛事基本面]
+对阵: {ctx_data['home']} (主) vs {ctx_data['away']} (客)
+时间: {ctx_data['kickoff']}
+当前盘口(欧赔): {ctx_data['odds']}
+系统测算真实胜率: {ctx_data['prob']}
+
+[主队概况 - {ctx_data['home']}]{format_team_data(match.home_team)}
+
+[客队概况 - {ctx_data['away']}]{format_team_data(match.away_team)}
+"""
+
+    prompt = f"""你是一个精通欧洲五大联赛的专业足彩精算师。请根据以下数据，从进攻、防守、战意三个维度进行极简分析，并最终给出一个明确的预测方向（胜/平/负）和预测比分。要求：语言风格要犀利、专业，像懂球帝的资深专栏作家。不要废话。文末加上一句：“👇 更多每日 VIP 核心推介，请关注主页加入内部私域频道”。
+
+{match_info}
 """
 
     async with httpx.AsyncClient() as client:
@@ -93,8 +100,8 @@ async def generate_match_report(
                 headers={"Authorization": f"Bearer {settings.ADVISOR_API_KEY}"},
                 json={
                     "model": settings.ADVISOR_MODEL,
-                    "messages": [{"role": "system", "content": "你是一个擅长写爆款足球内容的 AI。"}, {"role": "user", "content": prompt}],
-                    "temperature": 0.7
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.5
                 },
                 timeout=60.0
             )

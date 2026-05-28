@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
 from bs4 import BeautifulSoup
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("zgzcw_jc_sync")
 
@@ -203,8 +203,9 @@ def _get_issue_id_for_date(date_str: str) -> str:
     return f"JC{date_str[:10].replace('-', '')}"
 
 
-def _sync_issue_links(cur, match_id: int, jc_code: str, kickoff_at: str, sp_home: float, sp_draw: float, sp_away: float, rq_home, rq_draw, rq_away) -> bool:
+def _sync_issue_links(db, match_id: int, jc_code: str, kickoff_at: str, sp_home: float, sp_draw: float, sp_away: float, rq_home, rq_draw, rq_away) -> bool:
     """创建 jingcai_issue + jingcai_issue_matches 关联"""
+    from database.models import JingcaiIssue, JingcaiIssueMatch
     try:
         match_date = kickoff_at[:10] if kickoff_at else ""
         if not match_date:
@@ -212,65 +213,52 @@ def _sync_issue_links(cur, match_id: int, jc_code: str, kickoff_at: str, sp_home
 
         issue_id = _get_issue_id_for_date(match_date)
 
-        # 查找或创建期号
-        cur.execute("SELECT id FROM jingcai_issues WHERE issue_id = ?", (issue_id,))
-        row = cur.fetchone()
-        if row:
-            ji_id = row[0]
-        else:
-            cur.execute(
-                "INSERT INTO jingcai_issues (issue_id, issue_type, status, created_at) VALUES (?, ?, ?, ?)",
-                (issue_id, "spf14", "on_sale", datetime.now(timezone.utc).isoformat()),
-            )
-            ji_id = cur.lastrowid
+        issue = db.query(JingcaiIssue).filter(JingcaiIssue.issue_id == issue_id).first()
+        if not issue:
+            issue = JingcaiIssue(issue_id=issue_id, issue_type="spf14", status="on_sale")
+            db.add(issue)
+            db.flush()
 
-        # 检查关联是否已存在
-        cur.execute(
-            "SELECT id FROM jingcai_issue_matches WHERE issue_id = ? AND match_id = ?",
-            (ji_id, match_id),
-        )
-        if cur.fetchone():
+        link = db.query(JingcaiIssueMatch).filter(
+            JingcaiIssueMatch.issue_id == issue.id,
+            JingcaiIssueMatch.match_id == match_id
+        ).first()
+        
+        if link:
             return True
 
-        # 获取下一个 sequence
-        cur.execute(
-            "SELECT COALESCE(MAX(sequence), 0) + 1 FROM jingcai_issue_matches WHERE issue_id = ?",
-            (ji_id,),
-        )
-        seq = cur.fetchone()[0]
-
-        # 构建让球赔率 JSON
+        max_seq = db.query(JingcaiIssueMatch).filter(JingcaiIssueMatch.issue_id == issue.id).count()
+        
         rq_odds = None
         if rq_home is not None:
-            rq_odds = json.dumps({
-                "h": str(rq_home), "d": str(rq_draw), "a": str(rq_away),
-            }, ensure_ascii=False)
+            rq_odds = json.dumps({"h": str(rq_home), "d": str(rq_draw), "a": str(rq_away)}, ensure_ascii=False)
 
-        cur.execute(
-            """
-            INSERT INTO jingcai_issue_matches
-                (issue_id, match_id, sequence, handicap, rq_odds)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (ji_id, match_id, seq, 0, rq_odds),
+        link = JingcaiIssueMatch(
+            issue_id=issue.id,
+            match_id=match_id,
+            sequence=max_seq + 1,
+            handicap=0,
+            rq_odds=rq_odds
         )
+        db.add(link)
+        db.flush()
 
-        logger.info(f"[zgzcw_jc] Linked {jc_code} -> {issue_id} (seq={seq})")
+        logger.info(f"[zgzcw_jc] Linked {jc_code} -> {issue_id} (seq={max_seq + 1})")
         return True
     except Exception as e:
         logger.error(f"[zgzcw_jc] issue link failed for {jc_code}: {e}")
         return False
 
 
-def sync_jc_matches(db_path: str = "database.sqlite") -> Dict:
+def sync_jc_matches(db_path: str = None) -> Dict:
     """同步 zgzcw 竞彩比赛到数据库"""
+    from database.models import SessionLocal, Team, Match, OddsHistory
+    
     matches = fetch_jc_matches()
     if not matches:
-        return {"matches": 0, "created": 0, "updated": 0, "errors": 0}
+        return {"matches": 0, "created": 0, "updated": 0, "errors": 0, "issues_linked": 0}
 
-    conn = sqlite3.connect(db_path)
-    cur = conn.cursor()
-
+    db = SessionLocal()
     created = 0
     updated = 0
     errors = 0
@@ -285,101 +273,85 @@ def sync_jc_matches(db_path: str = "database.sqlite") -> Dict:
             jc_code = generate_jc_code(home_en, away_en, m["kickoff_at"])
 
             # 查找或创建主队
-            cur.execute("SELECT id FROM teams WHERE name_en = ?", (home_en,))
-            row = cur.fetchone()
-            if row:
-                home_id = row[0]
-            else:
-                home_code = home_en[:10].upper().replace(" ", "")
-                cur.execute(
-                    "INSERT OR IGNORE INTO teams (name, name_en, code) VALUES (?, ?, ?)",
-                    (m["home_zh"], home_en, home_code),
-                )
-                cur.execute("SELECT id FROM teams WHERE name_en = ?", (home_en,))
-                home_id = cur.fetchone()[0]
-
+            home_team = db.query(Team).filter(Team.name_en == home_en).first()
+            if not home_team:
+                home_team = Team(name=m["home_zh"], name_en=home_en, code=home_en[:10].upper().replace(" ", ""))
+                db.add(home_team)
+                db.flush()
+                
             # 查找或创建客队
-            cur.execute("SELECT id FROM teams WHERE name_en = ?", (away_en,))
-            row = cur.fetchone()
-            if row:
-                away_id = row[0]
-            else:
-                away_code = away_en[:10].upper().replace(" ", "")
-                cur.execute(
-                    "INSERT OR IGNORE INTO teams (name, name_en, code) VALUES (?, ?, ?)",
-                    (m["away_zh"], away_en, away_code),
-                )
-                cur.execute("SELECT id FROM teams WHERE name_en = ?", (away_en,))
-                away_id = cur.fetchone()[0]
+            away_team = db.query(Team).filter(Team.name_en == away_en).first()
+            if not away_team:
+                away_team = Team(name=m["away_zh"], name_en=away_en, code=away_en[:10].upper().replace(" ", ""))
+                db.add(away_team)
+                db.flush()
 
-            # 查找或创建比赛（使用 match_code 作为唯一标识）
-            cur.execute("SELECT id, opening_odds_home, odds_home FROM matches WHERE match_code = ?", (jc_code,))
-            row = cur.fetchone()
-            if row:
-                match_id = row[0]
-                had_opening = row[1] is not None
-                prev_odds_home = row[2]
-                # 更新赔率
-                cur.execute(
-                    """
-                    UPDATE matches
-                    SET odds_home = ?, odds_draw = ?, odds_away = ?,
-                        odds_source = 'zgzcw', updated_at = ?
-                    WHERE id = ?
-                    """,
-                    (m["sp_home"], m["sp_draw"], m["sp_away"],
-                     now_utc.isoformat(), match_id),
-                )
-                # 首次出现则记录开盘价
+            # 查找比赛
+            match = db.query(Match).filter(Match.match_code == jc_code).first()
+            if match:
+                had_opening = match.opening_odds_home is not None
+                prev_odds_home = match.odds_home
+                
+                match.odds_home = m["sp_home"]
+                match.odds_draw = m["sp_draw"]
+                match.odds_away = m["sp_away"]
+                match.odds_source = "zgzcw"
+                match.updated_at = now_utc
+                
                 if not had_opening:
-                    cur.execute(
-                        """
-                        UPDATE matches
-                        SET opening_odds_home = ?, opening_odds_draw = ?, opening_odds_away = ?,
-                            opening_odds_source = 'zgzcw', opening_odds_at = ?
-                        WHERE id = ?
-                        """,
-                        (m["sp_home"], m["sp_draw"], m["sp_away"], now_utc.isoformat(), match_id),
-                    )
-                # 赔率有变化则记录历史
+                    match.opening_odds_home = m["sp_home"]
+                    match.opening_odds_draw = m["sp_draw"]
+                    match.opening_odds_away = m["sp_away"]
+                    match.opening_odds_source = "zgzcw"
+                    match.opening_odds_at = now_utc
+                    
                 if prev_odds_home != m["sp_home"] and m["sp_home"] is not None:
-                    cur.execute(
-                        """
-                        INSERT INTO odds_history (match_id, source, odds_home, odds_draw, odds_away, recorded_at)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                        """,
-                        (match_id, "zgzcw", m["sp_home"], m["sp_draw"], m["sp_away"], now_utc.isoformat()),
+                    history = OddsHistory(
+                        match_id=match.id,
+                        source="zgzcw",
+                        odds_home=m["sp_home"],
+                        odds_draw=m["sp_draw"],
+                        odds_away=m["sp_away"],
+                        recorded_at=now_utc
                     )
+                    db.add(history)
                 updated += 1
             else:
-                # 创建新比赛
-                cur.execute(
-                    """
-                    INSERT INTO matches (
-                        match_code, home_team_id, away_team_id, kickoff_at,
-                        competition, status, odds_home, odds_draw, odds_away,
-                        odds_source, opening_odds_home, opening_odds_draw, opening_odds_away,
-                        opening_odds_source, opening_odds_at, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        jc_code, home_id, away_id, m["kickoff_at"],
-                        league, "SCHEDULED",
-                        m["sp_home"], m["sp_draw"], m["sp_away"],
-                        "zgzcw",
-                        m["sp_home"], m["sp_draw"], m["sp_away"],
-                        "zgzcw", now_utc.isoformat(),
-                        now_utc.isoformat(),
-                    ),
+                try:
+                    if isinstance(m["kickoff_at"], str):
+                        kickoff_dt = datetime.fromisoformat(m["kickoff_at"]) if "T" in m["kickoff_at"] else datetime.strptime(m["kickoff_at"], "%Y-%m-%d %H:%M:%S")
+                    else:
+                        kickoff_dt = m["kickoff_at"]
+                except Exception:
+                    kickoff_dt = None
+                    
+                match = Match(
+                    match_code=jc_code,
+                    home_team_id=home_team.id,
+                    away_team_id=away_team.id,
+                    kickoff_at=kickoff_dt,
+                    competition=league,
+                    status="SCHEDULED",
+                    odds_home=m["sp_home"],
+                    odds_draw=m["sp_draw"],
+                    odds_away=m["sp_away"],
+                    odds_source="zgzcw",
+                    opening_odds_home=m["sp_home"],
+                    opening_odds_draw=m["sp_draw"],
+                    opening_odds_away=m["sp_away"],
+                    opening_odds_source="zgzcw",
+                    opening_odds_at=now_utc
                 )
-                match_id = cur.lastrowid
+                db.add(match)
+                db.flush()
                 created += 1
 
-            # 创建期号+比赛关联
-            if _sync_issue_links(cur, match_id, jc_code, m["kickoff_at"],
+            if _sync_issue_links(db, match.id, jc_code, m["kickoff_at"],
                                   m["sp_home"], m["sp_draw"], m["sp_away"],
                                   m.get("rq_home"), m.get("rq_draw"), m.get("rq_away")):
                 issues_linked += 1
+
+            db.commit()
 
             logger.info(
                 f"[zgzcw_jc] {jc_code}: {home_en} vs {away_en} | "
@@ -387,11 +359,11 @@ def sync_jc_matches(db_path: str = "database.sqlite") -> Dict:
             )
 
         except Exception as e:
+            db.rollback()
             errors += 1
             logger.error(f"[zgzcw_jc] sync failed for {m.get('zgzcw_id')}: {e}")
 
-    conn.commit()
-    conn.close()
+    db.close()
 
     result = {
         "matches": len(matches),
@@ -404,7 +376,7 @@ def sync_jc_matches(db_path: str = "database.sqlite") -> Dict:
     return result
 
 
-def full_sync_jc_matches(db_path: str = "database.sqlite") -> Dict:
+def full_sync_jc_matches(db_path: str = None) -> Dict:
     """全量同步：比赛数据 + 期号关联 + 赔率历史"""
     return sync_jc_matches(db_path)
 
