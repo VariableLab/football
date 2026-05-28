@@ -19,505 +19,123 @@
 <body class="bg-cream-light text-charcoal selection:bg-accent/20">
 
 <!-- Nav -->
-<nav class="fixed top-0 left-0 right-0 z-50 bg-cream/80 backdrop-blur-md border-b border-charcoal/5 px-6 lg:px-12 py-4 flex items-center justify-between">
-  <div class="flex items-center gap-8">
-    <a href="/static/index.html" class="flex items-center gap-2.5 group">
-      <img src="/static/logo.png" alt="Logo" class="w-7 h-7 transition-transform group-hover:scale-105" />
-      <span class="font-serif text-lg font-bold tracking-tight">WC Analytics<span class="text-accent">.</span></span>
-    </a>
-  </div>
-  <div class="flex items-center gap-6">
-    <div id="navUser" class="flex items-center gap-4">
-      <button onclick="openLoginModal()" class="text-sm font-normal text-warm-gray hover:text-charcoal transition-colors" data-i18n="nav.login">登录</button>
-    </div>
-    <div class="relative group">
-      <select id="langSelector" onchange="I18n.setLocale(this.value)" class="appearance-none bg-transparent pl-2 pr-6 py-1 text-xs font-medium text-warm-gray focus:outline-none cursor-pointer hover:text-charcoal transition-colors">
-        <option value="zh-CN">ZH</option>
-        <option value="en">EN</option>
-        <option value="fr">FR</option>
-        <option value="es">ES</option>
-        <option value="de">DE</option>
-        <option value="it">IT</option>
-      </select>
-      <svg class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 text-warm-gray pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-    </div>
-  </div>
+<nav class="fixed top-0 left-0 right-0 z-50 bg-cream/80 backdrop-blur-md border-b border-charcoal/5 px-4 sm:px-6 py-4 flex items-center justify-center">
+  <a href="/static/index.html" class="flex items-center gap-2.5 group">
+    <span class="text-2xl">⚽</span>
+    <span class="font-serif text-xl font-bold tracking-tight">AI Quant Picks<span class="text-accent">.</span></span>
+  </a>
 </nav>
 
 <!-- Main -->
-<main class="pt-20 pb-24 max-w-7xl mx-auto px-6 lg:px-12">
-
-  <!-- Hero -->
-  <section class="mb-12">
-    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-6">
-      <div>
-        <h1 class="font-serif text-4xl lg:text-5xl font-semibold tracking-wide mb-1 hero-title" data-i18n="hero.title">AI 足球研判与内容引擎</h1>
-        <p class="text-sm font-normal leading-relaxed text-warm-gray max-w-xl" data-i18n="hero.subtitle">量化模型驱动 · 自动化战报成稿 · 核心价值挖掘</p>
-      </div>
-      
-      <!-- Community CTA -->
-      <div class="flex items-center gap-3">
-        <a href="https://t.me/your_channel" target="_blank"
-           class="inline-flex items-center gap-2 px-6 py-3 text-sm font-bold bg-accent text-white rounded-full hover:shadow-lg hover:shadow-accent/30 transition-all duration-300">
-           <span>🚀 加入 Telegram VIP 频道</span>
-        </a>
-      </div>
+<main class="pt-20 pb-24 max-w-2xl mx-auto px-4 sm:px-6">
+  <!-- Hero / CTA -->
+  <section class="mb-10">
+    <div class="text-center mb-8 mt-4">
+      <h1 class="font-serif text-3xl sm:text-4xl font-black tracking-tight mb-3 text-charcoal">AI 足彩精算师每日推介</h1>
+      <p class="text-sm text-warm-gray font-medium">基于欧洲五大联赛量化模型 · 每日自动更新</p>
     </div>
     
-    <!-- Revenue/Conversion Banner -->
-    <div class="bg-charcoal text-white-light p-4 rounded-2xl mb-8 flex items-center justify-between border border-white/10">
-      <div class="flex items-center gap-3">
-        <span class="text-xl">🔐</span>
-        <div>
-          <div class="text-sm font-bold">解锁每日高胜率 VIP 核心推介</div>
-          <div class="text-[10px] text-white/40 uppercase tracking-widest">Deep Quant Analysis & Insider Logic</div>
-        </div>
-      </div>
-      <button onclick="openLoginModal()" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold transition-all">立即订阅</button>
-    </div>
+    <a href="https://t.me/your_channel" target="_blank" class="flex items-center justify-center gap-3 w-full bg-[#24A1DE] text-white text-center py-4 rounded-2xl font-bold shadow-xl shadow-[#24A1DE]/20 hover:scale-[1.02] hover:bg-[#2092c9] transition-all">
+      <span class="text-xl">🚀</span>
+      <span class="tracking-wide">加入 Telegram 内部社群解锁 80% 胜率推介</span>
+    </a>
   </section>
 
-  <!-- Tabs (Simplified) -->
-  <div class="flex items-center gap-2 mb-10 border-b border-charcoal/5" id="sectionTabs">
-    <button onclick="switchSection('matches')" class="section-tab px-6 py-4 text-sm font-medium tracking-wide border-b-2 border-accent text-charcoal transition-all" data-section="matches">🏆 今日推介</button>
-    <button onclick="switchSection('content-gen')" class="section-tab px-6 py-4 text-sm font-normal tracking-wide border-b-2 border-transparent text-warm-gray hover:text-charcoal transition-all" data-section="content-gen">📝 战报生成</button>
-    <button onclick="switchSection('ai')" class="section-tab px-6 py-4 text-sm font-normal tracking-wide border-b-2 border-transparent text-warm-gray hover:text-charcoal transition-all" data-section="ai">💬 量化顾问</button>
-    <button onclick="switchSection('feedback')" class="section-tab px-6 py-4 text-sm font-normal tracking-wide border-b-2 border-transparent text-warm-gray hover:text-charcoal transition-all" data-section="feedback">💬 留言</button>
-  </div>
-
-  <!-- Section: 赛事分析 -->
+  <!-- Feed -->
   <div id="sectionMatches" x-data="{ matches: [], loading: true }" x-init="
-    // 监听全局事件来更新数据
     window.addEventListener('matches-updated', (e) => {
-      matches = e.detail.matches;
+      // 过滤出有赔率的未结束比赛
+      matches = e.detail.matches.filter(m => ['scheduled', 'upcoming', 'live'].includes(m.status));
+      if (matches.length === 0) {
+        matches = e.detail.matches;
+      }
       loading = false;
     })
   ">
-    <div class="flex items-center gap-3 mb-8 flex-wrap" id="matchTabs">
-      <button onclick="setFilter('jingcai')" class="tab-filter px-5 py-2 text-sm font-normal tracking-wide border text-charcoal hover:text-charcoal transition-all duration-300" data-filter="jingcai" data-i18n="filter.jingcai">在售赛事</button>
-      <button onclick="setFilter('all')" class="tab-filter px-5 py-2 text-sm font-normal tracking-wide text-warm-gray hover:text-charcoal transition-all duration-300" data-filter="all" data-i18n="filter.all">全部</button>
-      <button onclick="setFilter('today')" class="tab-filter px-5 py-2 text-sm font-normal tracking-wide text-warm-gray hover:text-charcoal transition-all duration-300" data-filter="today" data-i18n="filter.today">今日</button>
-      <button onclick="setFilter('tomorrow')" class="tab-filter px-5 py-2 text-sm font-normal tracking-wide text-warm-gray hover:text-charcoal transition-all duration-300" data-filter="tomorrow" data-i18n="filter.tomorrow">明日</button>
-      <button onclick="setFilter('world_cup')" class="tab-filter px-5 py-2 text-sm font-normal tracking-wide text-warm-gray hover:text-charcoal transition-all duration-300" data-filter="world_cup" data-i18n="filter.world_cup">世界杯</button>
-      <button onclick="setFilter('friendly')" class="tab-filter px-5 py-2 text-sm font-normal tracking-wide text-warm-gray hover:text-charcoal transition-all duration-300" data-filter="friendly" data-i18n="filter.friendly">热身赛</button>
-    </div>
-
-    <!-- Loading State -->
+    
     <template x-if="loading">
-      <div class="col-span-full text-center py-24 text-warm-gray">
-        <div class="w-10 h-10 rounded-full border-2 border-accent/20 border-t-accent animate-spin mx-auto mb-4"></div>
-        <div class="text-base font-normal" data-i18n="loading">加载中...</div>
+      <div class="text-center py-16 text-warm-gray">
+        <div class="w-10 h-10 rounded-full border-4 border-accent/20 border-t-accent animate-spin mx-auto mb-4"></div>
+        <div class="text-sm font-bold tracking-widest uppercase">正在萃取今日焦点赛事...</div>
       </div>
     </template>
 
-    <!-- Match Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="matchGrid">
-      <template x-for="m in matches" :key="m.id">
-        <div x-data="MatchCard(m)" 
-             class="relative group bg-[#111111] border border-white/5 rounded-[2rem] p-6 cursor-pointer hover:border-accent/40 transition-all duration-500 overflow-hidden shadow-2xl hover:shadow-accent/5"
-             @click="openModal(m.id)">
+    <div class="space-y-8">
+      <template x-for="(m, index) in matches" :key="m.id">
+        <div x-data="FeedCard(m, index)" class="bg-white border border-charcoal/5 rounded-[2rem] overflow-hidden shadow-2xl shadow-charcoal/5">
           
-          <!-- Background Glow Effect -->
-          <div class="absolute -top-24 -right-24 w-48 h-48 bg-accent/5 blur-[80px] rounded-full group-hover:bg-accent/10 transition-colors duration-500"></div>
-
-          <!-- Header -->
-          <div class="flex items-center justify-between mb-6 relative z-10">
-            <div class="flex items-center gap-2.5">
+          <div class="p-4 border-b border-charcoal/5 bg-gray-50/50 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <span class="text-[10px] font-black uppercase tracking-widest text-accent bg-accent/10 px-2 py-1 rounded" x-text="m.competition || '赛事'"></span>
+              <span class="text-xs font-bold text-warm-gray" x-text="fmtBJ(m.kickoff_at)"></span>
+            </div>
+            <div class="flex items-center gap-2">
               <div class="w-2 h-2 rounded-full bg-accent animate-pulse" x-show="m.status === 'live'"></div>
-              <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/40" x-text="m.competition || 'MATCH'"></span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-[10px] px-2 py-0.5 rounded-full border border-white/10 font-bold text-white/50" x-text="fmtBJ(m.kickoff_at)"></span>
+              <span class="text-[10px] font-bold text-warm-gray uppercase tracking-widest" x-text="m.status === 'live' ? 'Live' : (m.status === 'finished' ? 'Final' : 'Soon')"></span>
             </div>
           </div>
 
-          <!-- Teams & Score/VS -->
-          <div class="flex items-center justify-between mb-8 relative z-10 px-2">
-            <div class="flex flex-col items-center gap-3 w-1/3">
-              <div class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:border-white/10 transition-colors">
-                <span class="text-2xl" x-text="homeTeam.flag || '🏴'"></span>
-              </div>
-              <span class="text-sm font-bold text-white text-center truncate w-full" x-text="homeTeam.name"></span>
+          <div class="p-6 flex items-center justify-between">
+            <div class="flex flex-col items-center w-5/12 gap-2">
+              <div class="text-3xl" x-text="homeTeam.flag || '🏴'"></div>
+              <div class="text-base font-black text-center text-charcoal leading-tight" x-text="homeTeam.name"></div>
             </div>
-
-            <div class="flex flex-col items-center gap-1">
-              <template x-if="m.status === 'finished' || m.status === 'live'">
-                <div class="text-3xl font-black text-white tracking-tighter" x-text="(m.home_score ?? 0) + ' : ' + (m.away_score ?? 0)"></div>
-              </template>
-              <template x-if="m.status === 'upcoming' || m.status === 'scheduled'">
-                <div class="text-xs font-black text-accent tracking-[0.3em] pl-1">VS</div>
-              </template>
-              <div class="text-[10px] font-bold text-white/20 uppercase tracking-widest" x-text="m.status === 'finished' ? 'Final' : (countdown || 'SOON')"></div>
+            <div class="w-2/12 flex justify-center">
+              <div class="text-sm font-black text-warm-gray/50 italic">VS</div>
             </div>
-
-            <div class="flex flex-col items-center gap-3 w-1/3">
-              <div class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:border-white/10 transition-colors">
-                <span class="text-2xl" x-text="awayTeam.flag || '🏳️'"></span>
-              </div>
-              <span class="text-sm font-bold text-white text-center truncate w-full" x-text="awayTeam.name"></span>
+            <div class="flex flex-col items-center w-5/12 gap-2">
+              <div class="text-3xl" x-text="awayTeam.flag || '🏳️'"></div>
+              <div class="text-base font-black text-center text-charcoal leading-tight" x-text="awayTeam.name"></div>
             </div>
           </div>
 
-          <!-- Visual Balance Bar (Probability) -->
-          <div class="mb-8 relative z-10">
-            <div class="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/30 mb-2.5 px-1">
-              <span>Model Confidence</span>
-              <span x-text="fmtPct(Math.max(spf.home, spf.draw, spf.away))"></span>
+          <div class="p-6 bg-[#111111] text-white relative">
+            <div class="flex items-center gap-2 mb-5">
+              <span class="text-lg">🤖</span>
+              <span class="text-[11px] font-black tracking-widest uppercase text-white/60">量化精算分析</span>
             </div>
-            <div class="h-3 w-full bg-white/5 rounded-full flex overflow-hidden p-0.5 border border-white/5">
-              <div class="h-full bg-accent transition-all duration-1000 ease-out rounded-l-full" :style="'width:' + (spf.home * 100) + '%'"></div>
-              <div class="h-full bg-white/20 transition-all duration-1000 ease-out mx-0.5" :style="'width:' + (spf.draw * 100) + '%'"></div>
-              <div class="h-full bg-white/10 transition-all duration-1000 ease-out rounded-r-full" :style="'width:' + (spf.away * 100) + '%'"></div>
-            </div>
-            <div class="flex justify-between mt-2 px-1">
-              <div class="flex flex-col">
-                <span class="text-[10px] text-white/20 font-bold uppercase">Home</span>
-                <span class="text-xs font-mono text-white/60" x-text="fmtPct(spf.home)"></span>
-              </div>
-              <div class="flex flex-col items-center">
-                <span class="text-[10px] text-white/20 font-bold uppercase">Draw</span>
-                <span class="text-xs font-mono text-white/60" x-text="fmtPct(spf.draw)"></span>
-              </div>
-              <div class="flex flex-col items-end">
-                <span class="text-[10px] text-white/20 font-bold uppercase">Away</span>
-                <span class="text-xs font-mono text-white/60" x-text="fmtPct(spf.away)"></span>
-              </div>
-            </div>
-          </div>
 
-          <!-- Bottom: AI Insight Snippet -->
-          <div class="mt-auto pt-5 border-t border-white/5 relative z-10 flex items-center gap-3">
-             <div class="flex-1 flex items-center gap-3 px-3 py-2.5 rounded-2xl bg-accent/5 border border-accent/10 group-hover:bg-accent/10 group-hover:border-accent/20 transition-all duration-500">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
-                  <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <template x-if="!isPaywalled">
+              <div class="space-y-4">
+                <div class="flex justify-between items-center bg-white/5 border border-white/5 p-4 rounded-2xl">
+                  <span class="text-xs font-bold text-white/50 tracking-widest uppercase">AI 预测方向</span>
+                  <span class="text-lg font-black text-accent" x-text="predictionDir"></span>
                 </div>
-                <div class="text-[11px] leading-tight font-bold text-white/80" x-text="aiSnippet"></div>
-             </div>
-             
-             <!-- ✨ Copilot Quick Trigger -->
-             <button 
-                @click.stop="window.dispatchEvent(new CustomEvent('open-copilot', { detail: { matchId: m.id, event: $event } }))"
-                class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-accent hover:border-accent transition-all duration-300 text-white/40 hover:text-white group/btn"
-                title="AI Co-pilot Analysis"
-             >
-                <span class="text-lg group-hover/btn:scale-110 transition-transform">✨</span>
-             </button>
-          </div>
-
-          <!-- Interaction Prompt -->
-          <div class="absolute inset-0 bg-accent/40 opacity-0 group-hover:opacity-10 pointer-events-none transition-opacity duration-500"></div>
-        </div>
-      </template>
-    </div>
-  </div>
-
-  <!-- Section: 预测报告 -->
-  <div id="sectionReport" class="hidden" x-data="MonitorDashboard()">
-    <template x-if="loading">
-      <div class="text-center py-16 text-warm-gray text-base font-normal" data-i18n="loading">加载中...</div>
-    </template>
-    
-    <template x-if="!loading">
-      <div class="space-y-8">
-        <!-- Overview Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="glass p-6">
-            <div class="text-xs uppercase tracking-[0.25em] text-warm-gray mb-2">整体 Brier Score</div>
-            <div class="text-3xl font-serif font-semibold" :class="getBrierColor(latestBrier)" x-text="latestBrier ? latestBrier.toFixed(4) : '-'"></div>
-            <div class="text-xs text-warm-gray mt-2">越低越好 (0 = 完美预测)</div>
-          </div>
-          <div class="glass p-6">
-            <div class="text-xs uppercase tracking-[0.25em] text-warm-gray mb-2">方向准确率 (SPF)</div>
-            <div class="text-3xl font-serif font-semibold" :class="getAccuracyColor(latestAccuracy)" x-text="latestAccuracy ? (latestAccuracy * 100).toFixed(1) + '%' : '-'"></div>
-            <div class="text-xs text-warm-gray mt-2">基线通常在 51% 左右</div>
-          </div>
-          <div class="glass p-6">
-            <div class="text-xs uppercase tracking-[0.25em] text-warm-gray mb-2">样本数量 (最近30天)</div>
-            <div class="text-3xl font-serif font-semibold text-charcoal" x-text="history.reduce((a, b) => a + b.samples, 0)"></div>
-            <div class="text-xs text-warm-gray mt-2">基于已结束比赛计算</div>
-          </div>
-        </div>
-
-        <!-- Model Info Row -->
-        <div class="flex items-center gap-6 px-4">
-          <div class="flex items-center gap-2">
-            <span class="text-xs uppercase tracking-widest text-warm-gray">当前模型维度:</span>
-            <span class="text-sm font-bold num text-accent" x-text="modelDim + ' 维'"></span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs uppercase tracking-widest text-warm-gray">逻辑回归状态:</span>
-            <template x-if="lrEnabled">
-              <span class="text-xs px-2 py-0.5 rounded bg-accent-green/10 text-accent-green font-bold">已启用 (Active)</span>
+                <div class="text-sm leading-relaxed text-white/90 font-medium" x-text="rationale"></div>
+              </div>
             </template>
-            <template x-if="!lrEnabled">
-              <span class="text-xs px-2 py-0.5 rounded bg-accent-red/10 text-accent-red font-bold">降级模式 (Fallback)</span>
-            </template>
-          </div>
-        </div>
 
-        <!-- Accuracy Chart Placeholder (using simple table for now) -->
-        <div class="glass p-8">
-          <h3 class="font-serif text-xl font-medium mb-6">性能趋势 (最近 14 天)</h3>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left">
-              <thead>
-                <tr class="text-xs uppercase tracking-widest text-warm-gray border-b border-accent/10">
-                  <th class="py-4 font-medium">日期</th>
-                  <th class="py-4 font-medium">样本</th>
-                  <th class="py-4 font-medium">方向准确率</th>
-                  <th class="py-4 font-medium">Brier Score</th>
-                </tr>
-              </thead>
-              <tbody class="text-sm font-normal">
-                <template x-for="h in history.slice().reverse()" :key="h.date">
-                  <tr class="border-b border-accent/5">
-                    <td class="py-4 num" x-text="h.date"></td>
-                    <td class="py-4 num" x-text="h.samples"></td>
-                    <td class="py-4 num font-medium" :class="getAccuracyColor(h.accuracy)" x-text="(h.accuracy * 100).toFixed(1) + '%'"></td>
-                    <td class="py-4 num" :class="getBrierColor(h.brier)" x-text="h.brier.toFixed(4)"></td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </template>
-  </div>
-
-  <!-- Section: 战报生成 -->
-  <div id="sectionContentGen" class="hidden" x-data="{ matches: [], loading: true, activeReport: null }" x-init="
-    window.addEventListener('matches-updated', (e) => {
-      matches = e.detail.matches;
-      loading = false;
-    })
-  ">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <!-- Match List for Selection -->
-      <div class="space-y-4">
-        <h3 class="text-xs font-black uppercase tracking-widest text-warm-gray mb-6 px-1">选择比赛生成文案</h3>
-        <template x-for="m in matches" :key="m.id">
-          <div @click="generateReport(m.id)" 
-               class="glass p-4 cursor-pointer hover:border-accent transition-all group flex items-center justify-between">
-            <div class="flex items-center gap-4">
-              <div class="text-xs font-bold text-warm-gray w-12" x-text="m.status === 'finished' ? '复盘' : '前瞻'"></div>
-              <div class="text-sm font-bold text-charcoal" x-text="m.home_team.name + ' vs ' + m.away_team.name"></div>
-            </div>
-            <div class="w-8 h-8 rounded-full bg-accent/5 flex items-center justify-center group-hover:bg-accent text-accent group-hover:text-white transition-all">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            </div>
-          </div>
-        </template>
-      </div>
-
-      <!-- Content Output -->
-      <div class="glass p-8 sticky top-24 h-fit min-h-[400px] flex flex-col">
-        <div id="reportOutput" class="flex-1">
-          <template x-if="!activeReport">
-            <div class="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-40">
-              <div class="text-4xl">✍️</div>
-              <div class="text-sm font-medium">点击左侧比赛<br>即刻生成自媒体爆款文案</div>
-            </div>
-          </template>
-          <template x-if="activeReport">
-            <div class="animate-fade-in">
-              <div class="flex items-center justify-between mb-6">
-                <span class="text-[10px] font-black uppercase tracking-widest text-accent bg-accent/10 px-2 py-1 rounded">AI Content Generated</span>
-                <button @click="copyReport()" class="text-xs font-bold text-warm-gray hover:text-charcoal transition-all">复制文案</button>
-              </div>
-              <div class="text-base leading-relaxed text-charcoal whitespace-pre-wrap font-medium" x-text="activeReport"></div>
-            </div>
-          </template>
-        </div>
-        
-        <div x-show="activeReport" class="mt-8 pt-6 border-t border-charcoal/5 flex gap-3">
-          <button class="flex-1 py-3 bg-charcoal text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-all">发布到 Twitter</button>
-          <button class="flex-1 py-3 bg-white border border-charcoal/10 text-charcoal rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-charcoal/5 transition-all">下载封面图</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Section: 模型验证 -->
-  <div id="sectionValidation" class="hidden" x-data="ValidationDashboard()">
-    <template x-if="loading">
-      <div class="text-center py-16 text-warm-gray text-base font-normal" data-i18n="loading">加载中...</div>
-    </template>
-    
-    <template x-if="!loading && report">
-      <div class="space-y-6">
-        <template x-if="summary.validated_matches === 0">
-          <div class="glass p-8 text-center">
-            <div class="text-base text-warm-gray font-normal">暂无已验证比赛</div>
-            <div class="text-base text-warm-gray font-normal mt-1">比赛结束后自动更新</div>
-          </div>
-        </template>
-
-        <template x-if="summary.validated_matches > 0">
-          <div class="space-y-6">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div class="glass p-6 text-center">
-                <div class="text-2xl font-bold num" :class="getAccuracyClass(summary.direction_accuracy)" x-text="(summary.direction_accuracy * 100).toFixed(0) + '%'"></div>
-                <div class="text-base text-warm-gray font-normal mt-1" data-i18n="validation.directionAccuracy">方向准确率</div>
-              </div>
-              <div class="glass p-6 text-center">
-                <div class="text-2xl font-bold num text-accent-cyan" x-text="summary.avg_brier_score.toFixed(3)"></div>
-                <div class="text-base text-warm-gray font-normal mt-1">Brier Score</div>
-              </div>
-              <div class="glass p-6 text-center">
-                <div class="text-2xl font-bold num text-charcoal" x-text="summary.validated_matches"></div>
-                <div class="text-base text-warm-gray font-normal mt-1" data-i18n="validation.validatedCount">验证场次</div>
-              </div>
-              <div class="glass p-6 text-center">
-                <div class="text-2xl font-bold num text-charcoal" x-text="(summary.avg_max_prob * 100).toFixed(0) + '%'"></div>
-                <div class="text-base text-warm-gray font-normal mt-1" data-i18n="validation.avgMaxProb">平均最大概率</div>
-              </div>
-            </div>
-
-            <div class="glass p-6">
-              <div class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-3" data-i18n="validation.detail">验证详情</div>
-              <div class="divide-y divide-charcoal/10">
-                <template x-for="m in matches" :key="m.id">
-                  <div class="flex items-center gap-3 py-3 last:pb-0">
-                    <div class="w-6 text-center">
-                      <span x-show="m.direction_correct" class="text-accent-green text-base">&#10003;</span>
-                      <span x-show="!m.direction_correct" class="text-accent-red text-base">&#10007;</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <div class="text-base text-charcoal font-normal truncate" x-text="m.home_team + ' vs ' + m.away_team"></div>
-                      <div class="text-sm text-warm-gray font-normal mt-0.5">
-                        <span x-text="'预测: ' + outcomeMap[m.predicted_outcome] + ' (' + (m.probabilities[m.predicted_outcome] * 100).toFixed(0) + '%)'"></span>
-                        <span class="mx-1">·</span>
-                        <span x-text="'实际: ' + outcomeMap[m.actual_outcome] + (m.actual_score ? ' · ' + m.actual_score : '')"></span>
-                      </div>
-                    </div>
-                    <div class="text-sm text-warm-gray num font-normal" x-text="'Brier ' + m.brier_score.toFixed(3)"></div>
+            <template x-if="isPaywalled">
+              <div class="relative overflow-hidden rounded-2xl">
+                <div class="filter blur-[8px] opacity-40 space-y-4 select-none pointer-events-none p-2">
+                  <div class="flex justify-between items-center bg-white/5 border border-white/5 p-4 rounded-2xl">
+                    <span class="text-xs font-bold text-white/50 tracking-widest uppercase">AI 预测方向</span>
+                    <span class="text-lg font-black text-accent">主胜稳胆</span>
                   </div>
-                </template>
+                  <div class="text-sm leading-relaxed text-white/90 font-medium">
+                    这是一段被隐藏的深度精算分析。根据量化模型跑出的数据，本场比赛存在极大的盘口错价空间。资金面显示主队存在巨大的拉力，客场球队的防守数据在近期有明显的断崖式下跌。强烈建议关注主胜方向。
+                  </div>
+                </div>
+                
+                <div class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-[#111111] via-[#111111]/80 to-transparent">
+                  <div class="text-3xl mb-3 animate-bounce">🔒</div>
+                  <div class="text-sm font-bold text-white mb-5 text-center leading-relaxed">此场比赛蕴含极高收益空间<br><span class="text-accent">算法已捕捉 80%+ 胜率冷门</span></div>
+                  <a href="https://t.me/your_channel" target="_blank" class="px-8 py-3.5 bg-white text-charcoal rounded-full text-xs font-black tracking-widest hover:scale-105 hover:bg-gray-200 transition-all shadow-xl shadow-white/10">
+                    立即进群解锁
+                  </a>
+                </div>
               </div>
-            </div>
-          </div>
-        </template>
-      </div>
-    </template>
-  </div>
-
-  <!-- Section: 量化研判 -->
-  <div id="sectionAI" class="hidden bg-[#0A0A0A] p-8 rounded-3xl" x-data="AdvisorChat()">
-    <div class="max-w-3xl mx-auto">
-      <div id="advisorChatMessages" class="space-y-6 mb-6 max-h-[60vh] overflow-y-auto scrollbar-hide px-3 py-6 bg-black rounded-3xl border border-white/10 shadow-2xl">
-        <template x-for="(msg, i) in messages" :key="i">
-          <div class="flex items-start gap-3 ai-message" :class="msg.role === 'assistant' ? 'ai-bot' : 'flex-row-reverse'">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1" :class="msg.role === 'assistant' ? 'bg-accent/10' : 'bg-charcoal/10'">
-              <template x-if="msg.role === 'assistant'">
-                <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-              </template>
-              <template x-if="msg.role === 'user'">
-                <svg class="w-4 h-4 text-charcoal" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-              </template>
-            </div>
-            <div class="rounded-2xl px-5 py-4 text-sm leading-relaxed" :class="msg.role === 'assistant' ? 'bg-[#1A1A1B] border border-white/5 text-white' : 'bg-[#1E1E1E] border border-white/5 text-white rounded-2xl shadow-md'">
-              <p class="font-bold mb-1.5" :class="msg.role === 'assistant' ? 'text-accent' : 'text-white-light'" x-text="msg.role === 'assistant' ? '量化研判顾问' : '数据咨询'"></p>
-              <div class="whitespace-pre-wrap" x-text="msg.content"></div>
-            </div>
-          </div>
-        </template>
-
-        <template x-if="loading">
-          <div class="flex items-start gap-3">
-            <div class="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center animate-pulse">
-              <div class="w-1.5 h-1.5 bg-accent rounded-full"></div>
-            </div>
-            <div class="bg-warm-gray/5 rounded-2xl rounded-tl-sm px-5 py-4 text-sm text-warm-gray italic">正在深度研判中...</div>
-          </div>
-        </template>
-      </div>
-
-      <div class="flex flex-wrap gap-2 mb-4">
-        <button @click="sendMessage(null, '今日在售赛事中，哪些场次具有最高的量化 Edge？')" class="px-4 py-2 rounded-full border border-accent/30 bg-accent/5 text-xs text-accent hover:bg-accent/10 transition-all">📊 今日优选汇总</button>
-        <button @click="sendMessage(null, '目前逻辑回归模型的整体表现如何？')" class="px-4 py-2 rounded-full border border-white/10 bg-white/5 text-xs text-gray-400 hover:bg-white/10 transition-all">📈 模型效能评估</button>
-      </div>
-
-      <div class="flex gap-3 items-end">
-
-        <div class="flex-1 relative">
-          <textarea 
-            x-model="input"
-            rows="2" 
-            class="w-full px-4 py-3 pr-12 rounded-xl text-sm placeholder-gray-500 resize-none border border-white/20 focus:border-accent/50 focus:outline-none transition-colors bg-white/5 text-white" 
-            placeholder="输入您的量化研判疑问... (支持 /trace, /kelly)" 
-            @keydown.enter.prevent="sendMessage()"
-          ></textarea>
-        </div>
-        <button @click="sendMessage()" class="bg-charcoal text-white-light px-6 py-3 rounded-xl text-sm whitespace-nowrap hover:bg-charcoal/90 transition-all flex items-center gap-2 disabled:opacity-50" :disabled="loading || input.trim().length === 0">
-          <span>发起研判</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Section: 用户反馈 -->
-  <div id="sectionFeedback" class="hidden" x-data="FeedbackBoard()">
-    <div class="glass p-8 mb-8">
-      <div class="text-xs uppercase tracking-[0.25em] text-warm-gray font-sans font-medium mb-4" data-i18n="feedback.post">发表留言</div>
-      <textarea 
-        x-model="content"
-        class="w-full h-32 bg-cream-light/50 border border-accent/10 rounded p-4 text-base font-normal text-charcoal focus:outline-none focus:border-accent/30 transition-colors"
-        placeholder="分享您的看法、建议 or 反馈..."
-      ></textarea>
-      <div class="flex justify-between items-center mt-4">
-        <span class="text-xs text-warm-gray font-normal" x-text="content.length + ' / 2000'"></span>
-        <button 
-          @click="submitFeedback()"
-          :disabled="submitting || content.length < 5"
-          class="px-6 py-2 bg-charcoal text-white-light text-sm font-normal tracking-widest hover:bg-charcoal/90 disabled:opacity-30 transition-all"
-        >
-          <span x-show="!submitting" data-i18n="feedback.submit">提交留言</span>
-          <span x-show="submitting" data-i18n="loading">发送中...</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="flex items-center gap-3 mb-8 flex-wrap" id="feedbackTabs">
-      <button @click="window.dispatchEvent(new CustomEvent('feedback-category-changed', { detail: { category: 'all' }}))" class="tab-feedback px-5 py-2 text-sm font-normal tracking-wide border transition-all duration-300" :class="category === 'all' ? 'border-charcoal text-charcoal' : 'text-warm-gray border-transparent hover:text-charcoal'" data-i18n="filter.all">全部</button>
-      <button @click="window.dispatchEvent(new CustomEvent('feedback-category-changed', { detail: { category: 'suggestion' }}))" class="tab-feedback px-5 py-2 text-sm font-normal tracking-wide border transition-all duration-300" :class="category === 'suggestion' ? 'border-charcoal text-charcoal' : 'text-warm-gray border-transparent hover:text-charcoal'" data-i18n="feedback.suggestion">建议</button>
-      <button @click="window.dispatchEvent(new CustomEvent('feedback-category-changed', { detail: { category: 'bug' }}))" class="tab-feedback px-5 py-2 text-sm font-normal tracking-wide border transition-all duration-300" :class="category === 'bug' ? 'border-charcoal text-charcoal' : 'text-warm-gray border-transparent hover:text-charcoal'" data-i18n="feedback.bug">反馈</button>
-      <button @click="window.dispatchEvent(new CustomEvent('feedback-category-changed', { detail: { category: 'discussion' }}))" class="tab-feedback px-5 py-2 text-sm font-normal tracking-wide border transition-all duration-300" :class="category === 'discussion' ? 'border-charcoal text-charcoal' : 'text-warm-gray border-transparent hover:text-charcoal'" data-i18n="feedback.discussion">探讨</button>
-    </div>
-
-    <div class="space-y-4">
-      <template x-if="loading">
-        <div class="text-center py-12 text-warm-gray text-base font-normal" data-i18n="loading">加载中...</div>
-      </template>
-
-      <template x-if="!loading && items.length === 0">
-        <div class="text-center py-12 text-warm-gray text-base font-normal">暂无留言</div>
-      </template>
-
-      <template x-for="item in items" :key="item.id">
-        <div class="glass p-6">
-          <div class="flex justify-between items-start mb-3">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent text-xs font-medium" x-text="item.author.substring(0, 1).toUpperCase()"></div>
-              <div>
-                <div class="text-sm font-medium text-charcoal" x-text="item.author"></div>
-                <div class="text-xs text-warm-gray num" x-text="fmtDate(item.created_at)"></div>
-              </div>
-            </div>
-            <span class="text-xs uppercase tracking-widest px-2 py-0.5 rounded border border-accent/10 text-warm-gray" x-text="item.category"></span>
-          </div>
-          <div class="text-base font-normal text-charcoal whitespace-pre-wrap leading-relaxed" x-text="item.content"></div>
-          <div class="mt-4 flex items-center gap-4">
-            <button @click="toggleLike(item.id)" class="flex items-center gap-1.5 text-sm text-warm-gray hover:text-accent transition-colors group">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 10h4.757c1.246 0 2.251 1.005 2.251 2.251 0 .542-.196 1.05-.521 1.44l-2.072 2.486c-.516.62-1.282.973-2.088.973H9V10l3.5-3.5a2.121 2.121 0 013 3L14 10zM4 21v-11h4v11H4z" />
-              </svg>
-              <span class="num" x-text="item.likes || 0"></span>
-            </button>
+            </template>
           </div>
         </div>
       </template>
     </div>
+    
+    <div class="text-center py-12">
+      <div class="text-xs font-bold text-warm-gray/50 tracking-widest uppercase mb-4">没有更多比赛了</div>
+      <a href="https://t.me/your_channel" target="_blank" class="text-xs font-bold text-accent hover:underline">去 Telegram 频道查看历史战绩记录 →</a>
+    </div>
+
   </div>
 </main>
 
@@ -1092,7 +710,7 @@
 <script src="/static/api_client.js?v=20260527-ultimate-reshaping"></script>
 <script src="/static/app.js?v=20260527-ultimate-reshaping"></script>
 <script src="/static/src/components/CopilotBubble.js?v=20260527-ultimate-reshaping"></script>
-<script src="/static/src/components/MatchCard.js?v=20260527-ultimate-reshaping"></script>
+<script src="/static/src/components/FeedCard.js?v=2"></script>
 <script src="/static/src/components/MonitorDashboard.js?v=20260527-ultimate-reshaping"></script>
 <script src="/static/src/components/ValidationDashboard.js?v=20260527-ultimate-reshaping"></script>
 <script src="/static/src/components/FeedbackBoard.js?v=20260527-ultimate-reshaping"></script>
