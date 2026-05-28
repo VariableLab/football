@@ -235,9 +235,12 @@ def get_strategy(
 
     return StrategyResponse(
         match_id=match_id,
+        status=match.status,
+        confidence=match.confidence or "medium",
+        odds_degraded=match.odds_degraded,
         risk_tier=risk_tier,
         strategies=strategies,
-        updated_at=datetime.now(timezone.utc)
+        predictions=predictions,
     )
 
 @router.get("/{match_id}/odds-movement", response_model=OddsMovementResponse)
