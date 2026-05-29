@@ -25,8 +25,8 @@ function FeedCard(match, index) {
       
       this.quant.eloDiff = (this.homeTeam.elo || 1500) - (this.awayTeam.elo || 1500);
 
-      // Paywall: 前 2 场免费
-      this.isPaywalled = this.index >= 2;
+      // Testing Phase: Disable Paywall to view all truth
+      this.isPaywalled = false;
 
       // 计算庄家概率 (Implied Probabilities)
       if (this.match.odds_home && this.match.odds_draw && this.match.odds_away) {
