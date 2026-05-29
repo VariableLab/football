@@ -19,31 +19,32 @@
 <body class="bg-cream-light text-charcoal selection:bg-accent/20">
 
 <!-- Nav -->
-<nav class="fixed top-0 left-0 right-0 z-50 bg-cream/80 backdrop-blur-md border-b border-charcoal/5 px-4 sm:px-6 py-4 flex items-center justify-center">
-  <a href="/static/index.html" class="flex items-center gap-2.5 group">
-    <span class="text-2xl">⚽</span>
-    <span class="font-serif text-xl font-bold tracking-tight">AI Quant Picks<span class="text-accent">.</span></span>
-  </a>
+<nav class="fixed top-0 left-0 right-0 z-[110] px-8 py-8 flex items-center justify-between pointer-events-none">
+  <div class="pointer-events-auto">
+    <a href="/static/index.html" class="text-xl font-serif italic font-bold text-ink">f.</a>
+  </div>
+  <div class="flex items-center gap-8 pointer-events-auto">
+     <button onclick="openLoginModal()" class="text-[10px] font-black uppercase tracking-widest text-ink/40 hover:text-ink transition-colors">Auth</button>
+  </div>
 </nav>
 
 <!-- Main -->
-<main class="pt-24 pb-24 max-w-xl mx-auto px-4 sm:px-6">
+<main class="section-gap max-w-2xl mx-auto px-6 sm:px-8">
 
-  <!-- Hero / CTA -->
-  <section class="mb-12 flex flex-col items-center">
-    <div class="w-16 h-16 bg-gradient-to-br from-accent-blue to-accent rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-accent/20">
-      <span class="text-3xl">🤖</span>
+  <!-- Header -->
+  <section class="mb-24 text-center">
+    <div class="inline-block mb-8">
+      <span class="text-3xl grayscale opacity-80">⚪️</span>
     </div>
-    <div class="text-center mb-8">
-      <h1 class="font-serif text-3xl sm:text-4xl font-black tracking-tight mb-3 hero-title">AI 足彩精算师每日推介</h1>
-      <p class="text-sm text-warm-gray font-medium leading-relaxed">基于欧洲五大联赛量化模型<br>实时盘口异动监测 · 每日自动推送</p>
-    </div>
+    <h1 class="text-5xl sm:text-6xl font-serif hero-text mb-6">AI Quant<br>Daily Truth.</h1>
+    <p class="text-sm font-medium tracking-[0.2em] text-ink-faded uppercase mb-12">基于第一性原理的足球量化研判</p>
     
-    <a href="https://t.me/your_channel" target="_blank" class="flex items-center justify-center gap-3 w-full bg-[#24A1DE] text-white py-4 px-6 rounded-2xl font-bold shadow-xl shadow-[#24A1DE]/20 hover:scale-[1.02] transition-all border border-white/10 relative overflow-hidden group">
-      <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
-      <span class="text-xl relative z-10">✈️</span>
-      <span class="tracking-wide relative z-10 text-[15px]">加入 Telegram 解锁 80% 胜率专栏</span>
-    </a>
+    <div class="flex justify-center">
+      <a href="https://t.me/your_channel" target="_blank" class="btn-zen">
+        <span>加入 Telegram VIP 频道</span>
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
+    </div>
   </section>
 
   <!-- Feed -->
@@ -56,85 +57,77 @@
   ">
     
     <template x-if="loading">
-      <div class="text-center py-20">
-        <div class="w-12 h-12 rounded-full border-4 border-accent/20 border-t-accent animate-spin mx-auto mb-6"></div>
-        <div class="text-xs font-black tracking-[0.2em] text-warm-gray uppercase">正在萃取今日焦点赛事...</div>
+      <div class="text-center py-20 opacity-30">
+        <div class="text-xs font-bold tracking-[0.3em] uppercase">正在萃取真理...</div>
       </div>
     </template>
 
-    <div class="space-y-8">
+    <div class="space-y-32">
       <template x-for="(m, index) in matches" :key="m.id">
-        <div x-data="FeedCard(m, index)" class="glass border border-white/5 rounded-3xl overflow-hidden card-stagger">
+        <div x-data="FeedCard(m, index)" class="fade-in">
           
-          <!-- Match Header -->
-          <div class="px-6 py-4 border-b border-white/5 bg-white/5 flex justify-between items-center backdrop-blur-md">
-            <div class="flex items-center gap-3">
-              <span class="text-[10px] font-black uppercase tracking-widest text-accent-cyan bg-accent-cyan/10 px-2.5 py-1 rounded-md" x-text="m.competition || '赛事'"></span>
-              <span class="text-xs font-bold text-warm-gray" x-text="fmtBJ(m.kickoff_at)"></span>
+          <!-- Match Identity -->
+          <div class="mb-12 flex flex-col items-center">
+            <div class="text-[10px] font-black tracking-[0.4em] text-ink-faded uppercase mb-6" x-text="m.competition || 'MATCH'"></div>
+            <div class="flex items-center justify-center gap-12 sm:gap-20">
+              <div class="text-2xl sm:text-3xl font-serif text-ink italic" x-text="homeTeam.name"></div>
+              <div class="text-xs font-black text-ink-faded/20 italic">VS</div>
+              <div class="text-2xl sm:text-3xl font-serif text-ink italic" x-text="awayTeam.name"></div>
             </div>
-            <div class="flex items-center gap-2">
-              <div class="w-2 h-2 rounded-full bg-accent-red animate-pulse" x-show="m.status === 'live'"></div>
-              <span class="text-[10px] font-black text-warm-gray uppercase tracking-widest" x-text="m.status === 'live' ? 'LIVE' : (m.status === 'finished' ? 'FINAL' : 'SOON')"></span>
-            </div>
+            <div class="mt-8 text-[11px] font-mono font-bold text-ink/40 tracking-widest" x-text="fmtBJ(m.kickoff_at)"></div>
           </div>
 
-          <!-- Teams -->
-          <div class="p-8 flex items-center justify-between relative overflow-hidden">
-            <!-- decorative blur -->
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-accent/10 rounded-full blur-3xl pointer-events-none"></div>
-            
-            <div class="flex flex-col items-center w-5/12 gap-3 z-10">
-              <div class="text-5xl drop-shadow-2xl" x-text="homeTeam.flag || '🏴'"></div>
-              <div class="text-lg font-black text-center text-charcoal leading-tight" x-text="homeTeam.name"></div>
-            </div>
-            <div class="w-2/12 flex justify-center z-10">
-              <div class="text-sm font-black text-warm-gray/30 italic">VS</div>
-            </div>
-            <div class="flex flex-col items-center w-5/12 gap-3 z-10">
-              <div class="text-5xl drop-shadow-2xl" x-text="awayTeam.flag || '🏳️'"></div>
-              <div class="text-lg font-black text-center text-charcoal leading-tight" x-text="awayTeam.name"></div>
-            </div>
-          </div>
-
-          <!-- AI Analysis / Paywall -->
-          <div class="p-6 bg-cream-dark/80 border-t border-white/5 relative">
-            <div class="flex items-center gap-2 mb-6">
-              <span class="text-lg">🤖</span>
-              <span class="text-[11px] font-black tracking-widest uppercase text-accent">AI 量化精算分析</span>
+          <!-- The Truth Sheet -->
+          <div class="paper-sheet p-10 sm:p-16 relative overflow-hidden rounded-[2px]">
+            <div class="flex items-center gap-3 mb-10 opacity-30">
+               <span class="text-xs font-black tracking-[0.2em] uppercase">Quant Verification</span>
+               <div class="flex-1 h-px bg-ink/10"></div>
             </div>
 
             <!-- Free View -->
             <template x-if="!isPaywalled">
-              <div class="space-y-5 animate-fade-in-up">
-                <div class="flex justify-between items-center bg-white/5 border border-white/5 p-5 rounded-2xl">
-                  <span class="text-xs font-bold text-warm-gray tracking-widest uppercase">预测方向</span>
-                  <span class="text-xl font-black text-accent-cyan" x-text="predictionDir"></span>
+              <div class="space-y-12">
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                  <div class="space-y-2">
+                    <span class="text-[10px] font-black text-ink-faded uppercase tracking-widest">研判方向</span>
+                    <div class="relative">
+                       <span class="stamp text-3xl" x-text="predictionDir"></span>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-[10px] font-black text-ink-faded uppercase tracking-widest block mb-1">模型置信度</span>
+                    <span class="text-2xl font-serif text-ink italic">High Confidence</span>
+                  </div>
                 </div>
-                <div class="text-sm leading-relaxed text-charcoal font-normal opacity-90 p-2 whitespace-pre-wrap" x-text="rationale"></div>
+                
+                <div class="pt-8 border-t border-ink/5">
+                  <p class="text-base sm:text-lg leading-relaxed text-ink/80 font-serif italic whitespace-pre-wrap" x-text="rationale"></p>
+                </div>
               </div>
             </template>
 
             <!-- Paywalled View -->
             <template x-if="isPaywalled">
-              <div class="relative overflow-hidden rounded-2xl group">
-                <div class="filter blur-[10px] opacity-30 space-y-5 select-none pointer-events-none p-2 transition-all duration-500 group-hover:blur-[12px]">
-                  <div class="flex justify-between items-center bg-white/5 border border-white/5 p-5 rounded-2xl">
-                    <span class="text-xs font-bold text-warm-gray tracking-widest uppercase">预测方向</span>
-                    <span class="text-xl font-black text-accent-cyan">主胜稳胆</span>
+              <div class="relative">
+                <div class="paper-blur space-y-12">
+                  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                    <div class="space-y-2">
+                      <span class="text-[10px] font-black text-ink-faded uppercase tracking-widest">研判方向</span>
+                      <div class="stamp text-3xl">主胜</div>
+                    </div>
                   </div>
-                  <div class="text-sm leading-relaxed text-charcoal font-normal whitespace-pre-wrap">
-这是一段被隐藏的深度精算分析。根据量化模型跑出的数据，本场比赛存在极大的盘口错价空间。资金面显示主队存在巨大的拉力，客场球队的防守数据在近期有明显的断崖式下跌。强烈建议关注主胜方向。
+                  <div class="pt-8 border-t border-ink/5">
+                    <p class="text-lg leading-relaxed text-ink/80 font-serif italic">本场比赛通过48维量化特征交叉扫描，发现主队在主力中场回归后，其进攻转化率较盘口预设值高出12.4%。这是一次极佳的Edge捕捉机会...</p>
                   </div>
                 </div>
                 
-                <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 bg-gradient-to-t from-cream-dark via-cream-dark/90 to-transparent">
-                  <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-4 backdrop-blur-md border border-white/10">
-                    <span class="text-2xl">🔒</span>
-                  </div>
-                  <div class="text-[15px] font-bold text-charcoal mb-2 leading-relaxed">此场比赛蕴含极高收益空间</div>
-                  <div class="text-xs font-medium text-accent-cyan mb-6">算法已捕捉 80%+ 胜率冷门</div>
-                  <a href="https://t.me/your_channel" target="_blank" class="px-8 py-3.5 bg-charcoal text-cream-dark rounded-full text-xs font-black tracking-widest hover:scale-105 transition-all shadow-xl shadow-white/10 inline-block w-full sm:w-auto">
-                    立即进群解锁
+                <!-- CTA Overlay (Minimalist) -->
+                <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                  <div class="w-px h-12 bg-accent mb-6"></div>
+                  <div class="text-xl font-serif text-ink mb-2 italic">Truth is hidden.</div>
+                  <div class="text-[11px] font-black text-ink-faded uppercase tracking-[0.3em] mb-8">算法已捕捉到 80% 胜率机会</div>
+                  <a href="https://t.me/your_channel" target="_blank" class="text-xs font-black text-accent uppercase tracking-widest border-b-2 border-accent pb-1 hover:text-ink hover:border-ink transition-colors">
+                    立即进群解锁本场精算
                   </a>
                 </div>
               </div>
@@ -144,13 +137,10 @@
       </template>
     </div>
     
-    <!-- Bottom Filler -->
-    <div class="text-center py-16">
-      <div class="text-xs font-bold text-warm-gray/30 tracking-[0.2em] uppercase mb-4">没有更多比赛了</div>
-      <a href="https://t.me/your_channel" target="_blank" class="inline-flex items-center gap-2 text-xs font-bold text-accent-cyan hover:text-white transition-colors">
-        <span>去 Telegram 频道查看历史战绩记录</span>
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-      </a>
+    <!-- Footer -->
+    <div class="text-center section-gap opacity-40">
+      <div class="text-[10px] font-black tracking-[0.4em] uppercase mb-4">No more truth to reveal.</div>
+      <a href="https://t.me/your_channel" target="_blank" class="text-xs font-serif italic border-b border-ink/20">Follow the path on Telegram →</a>
     </div>
 
   </div>
