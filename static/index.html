@@ -31,41 +31,18 @@
 <!-- Main -->
 <main class="section-gap max-w-4xl mx-auto px-6 sm:px-10">
 
-  <!-- Header: The Quant Moat -->
+  <!-- Header -->
   <section class="mb-32 text-center">
     <div class="mb-12">
       <span class="text-4xl grayscale opacity-90">⚪️</span>
     </div>
     <h1 class="text-5xl sm:text-7xl font-serif hero-text mb-8 tracking-tighter">AI Intelligence<br>Dossier.</h1>
-    <div class="flex flex-col items-center gap-6">
-      <p class="text-[11px] font-black tracking-[0.3em] text-ink-faded uppercase max-w-md leading-loose">
-        48-维度特征融合 · 神经网络残差修正 · 7x24 实时盘口侦测
-      </p>
-      <div class="h-px w-24 bg-accent/20"></div>
-    </div>
+    <p class="text-[11px] font-black tracking-[0.4em] text-ink-faded uppercase max-w-md mx-auto leading-loose">
+      48-维度特征融合 · 神经网络残差修正 · 7x24 实时盘口侦测
+    </p>
   </section>
 
-  <!-- Global Performance Tracker -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-ink/5 border border-ink/5 rounded-sm mb-40 overflow-hidden">
-    <div class="bg-paper p-8 text-center">
-      <div class="text-[9px] font-black text-ink-faded uppercase tracking-widest mb-2">Algorithm</div>
-      <div class="text-xl font-serif italic text-ink">StackingNet v4.5</div>
-    </div>
-    <div class="bg-paper p-8 text-center">
-      <div class="text-[9px] font-black text-ink-faded uppercase tracking-widest mb-2">Accuracy</div>
-      <div class="text-xl font-serif italic text-ink">52.4%</div>
-    </div>
-    <div class="bg-paper p-8 text-center">
-      <div class="text-[9px] font-black text-ink-faded uppercase tracking-widest mb-2">Processed</div>
-      <div class="text-xl font-serif italic text-ink">31,500+</div>
-    </div>
-    <div class="bg-paper p-8 text-center">
-      <div class="text-[9px] font-black text-ink-faded uppercase tracking-widest mb-2">Status</div>
-      <div class="text-[10px] font-bold text-accent tracking-[0.2em]">OPERATIONAL</div>
-    </div>
-  </div>
-
-  <!-- Feed: The Dossiers -->
+  <!-- Feed -->
   <div id="sectionMatches" x-data="{ matches: [], loading: true }" x-init="
     window.addEventListener('matches-updated', (e) => {
       matches = e.detail.matches.filter(m => ['scheduled', 'upcoming', 'live'].includes(m.status));
@@ -85,98 +62,160 @@
         <div x-data="FeedCard(m, index)" class="fade-in">
           
           <!-- Dossier Container -->
-          <div class="paper-sheet relative grid grid-cols-1 lg:grid-cols-12 min-h-[400px]">
+          <div @click="toggle()" 
+               class="paper-sheet relative overflow-hidden rounded-[2px] transition-all duration-500 cursor-pointer group"
+               :class="expanded ? 'shadow-2xl -translate-y-1' : ''">
             
-            <!-- Sidebar: The Algorithmic Moat (护城河展示) -->
-            <div class="lg:col-span-4 p-10 bg-paper-dark/10 border-b lg:border-b-0 lg:border-r border-ink/5 flex flex-col justify-between">
-              <div>
-                <div class="text-[9px] font-black tracking-[0.3em] text-ink-faded uppercase mb-12">Match Fingerprint</div>
-                <div class="space-y-6 mb-12">
-                   <div class="text-2xl font-serif text-ink italic leading-tight" x-text="homeTeam.name"></div>
-                   <div class="w-8 h-px bg-ink/10"></div>
-                   <div class="text-2xl font-serif text-ink italic leading-tight" x-text="awayTeam.name"></div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 min-h-[360px]">
+              
+              <!-- Left Sidebar: Quant Seal (护城河展示) -->
+              <div class="lg:col-span-4 p-10 bg-paper-dark/10 border-b lg:border-b-0 lg:border-r border-ink/5 flex flex-col justify-between transition-colors duration-500"
+                   :class="expanded ? 'bg-paper-dark/30' : ''">
+                <div>
+                  <div class="text-[9px] font-black tracking-[0.3em] text-ink-faded uppercase mb-12">Intelligence Seal</div>
+                  <div class="space-y-6 mb-12">
+                     <div class="text-2xl font-serif text-ink italic leading-tight" x-text="homeTeam.name"></div>
+                     <div class="w-8 h-px bg-ink/10"></div>
+                     <div class="text-2xl font-serif text-ink italic leading-tight" x-text="awayTeam.name"></div>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Quant Checklist (显性护城河) -->
-              <div class="pt-8 border-t border-ink/10">
-                <div class="space-y-4">
-                  <div class="flex items-center gap-3 opacity-60">
-                    <svg class="w-3 h-3 text-accent" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-                    <span class="text-[10px] font-bold text-ink tracking-widest uppercase">48 Features Scanned</span>
-                  </div>
-                  <div class="flex items-center gap-3" :class="quantData.edge > 0.05 ? 'opacity-100' : 'opacity-60'">
-                    <svg class="w-3 h-3 text-accent" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-                    <span class="text-[10px] font-bold text-ink tracking-widest uppercase">Anomaly Detected</span>
-                  </div>
-                  <div class="flex items-center gap-3 opacity-60">
-                    <svg class="w-3 h-3 text-accent" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
-                    <span class="text-[10px] font-bold text-ink tracking-widest uppercase">Kelly Optimized</span>
-                  </div>
-                </div>
-                
-                <div class="mt-8 flex justify-between items-end">
-                  <div class="text-[10px] font-mono text-ink/30" x-text="'ID: #' + m.id"></div>
-                  <div class="text-right">
-                    <div class="text-[8px] font-black text-ink-faded uppercase mb-1">Market Edge</div>
-                    <div class="text-sm font-mono text-accent" x-text="fmtPct(quantData.edge)"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Main: The Intelligence (结论直观化) -->
-            <div class="lg:col-span-8 p-10 sm:p-16 flex flex-col">
-              <div class="flex justify-between items-center mb-16">
-                <div class="flex items-center gap-3">
-                  <span class="text-[10px] font-black tracking-[0.4em] text-accent uppercase">Top Secret</span>
-                  <div class="w-2 h-2 rounded-full bg-accent animate-pulse" x-show="m.status === 'live'"></div>
-                </div>
-                <span class="text-[10px] font-mono text-ink/40 tracking-widest" x-text="fmtBJ(m.kickoff_at)"></span>
-              </div>
-
-              <!-- Free Report -->
-              <template x-if="!isPaywalled">
-                <div class="flex-1 flex flex-col animate-fade-in">
-                  <div class="mb-16 flex items-center gap-8">
-                    <span class="stamp text-4xl sm:text-6xl" x-text="predictionDir"></span>
-                    <div class="h-px flex-1 bg-ink/5"></div>
-                  </div>
-                  <div class="pt-10 border-t border-ink/5">
-                    <h4 class="text-[10px] font-black text-ink-faded uppercase tracking-[0.2em] mb-6">AI 精算研判报告</h4>
-                    <p class="text-lg sm:text-xl leading-relaxed text-ink/90 font-serif italic whitespace-pre-wrap" x-text="rationale"></p>
-                  </div>
-                </div>
-              </template>
-
-              <!-- Locked Report (引流直接加群) -->
-              <template x-if="isPaywalled">
-                <div class="flex-1 relative flex flex-col">
-                  <div class="paper-blur flex-1 flex flex-col">
-                    <div class="mb-16 flex items-center gap-8">
-                      <span class="stamp text-4xl sm:text-6xl opacity-20">主胜</span>
-                      <div class="h-px flex-1 bg-ink/5"></div>
+                <div class="pt-8 border-t border-ink/10">
+                  <div class="space-y-3">
+                    <div class="flex items-center gap-2.5 opacity-60">
+                      <div class="w-1.5 h-1.5 rounded-full bg-accent"></div>
+                      <span class="text-[9px] font-bold text-ink tracking-widest uppercase">Verified by NN</span>
                     </div>
-                    <div class="pt-10 border-t border-ink/5">
-                       <p class="text-lg leading-relaxed text-ink/20 font-serif italic">本场比赛通过48维量化特征交叉扫描，发现主队在主力中场回归后，其进攻转化率较盘口预设值高出12.4%...</p>
+                    <div class="flex items-center gap-2.5" :class="quant.edge > 0.05 ? 'opacity-100' : 'opacity-60'">
+                      <div class="w-1.5 h-1.5 rounded-full bg-accent"></div>
+                      <span class="text-[9px] font-bold text-ink tracking-widest uppercase">Anomaly Lock</span>
                     </div>
                   </div>
                   
-                  <!-- CTA: Direct Join Group -->
-                  <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-paper-light/40 backdrop-blur-[2px]">
-                    <div class="w-16 h-16 rounded-full border border-accent/20 flex items-center justify-center mb-8">
-                      <span class="text-2xl text-accent italic font-serif">!</span>
+                  <div class="mt-8 flex justify-between items-end">
+                    <div class="text-[10px] font-mono text-ink/30" x-text="'#' + m.id"></div>
+                    <div class="text-right">
+                      <div class="text-[8px] font-black text-ink-faded uppercase mb-1">Market Edge</div>
+                      <div class="text-sm font-mono text-accent" x-text="fmtPct(quant.edge)"></div>
                     </div>
-                    <div class="text-2xl font-serif text-ink mb-3 italic">结论已锁定</div>
-                    <div class="text-[10px] font-black text-ink-faded uppercase tracking-[0.4em] mb-12">本场模型显示 80%+ 极高获利概率</div>
-                    
-                    <a href="https://t.me/vpsgogogo_bot" target="_blank" class="btn-zen group">
-                      <span>加入私域群组直接查看</span>
-                      <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                    </a>
                   </div>
                 </div>
-              </template>
+              </div>
+
+              <!-- Right Content: Verdict Flow -->
+              <div class="lg:col-span-8 p-10 sm:p-14 bg-paper-light flex flex-col">
+                <div class="flex justify-between items-center mb-12">
+                  <span class="text-[9px] font-black tracking-[0.4em] text-accent uppercase">Verifiable Truth</span>
+                  <span class="text-[9px] font-mono text-ink/40 tracking-widest" x-text="fmtBJ(m.kickoff_at)"></span>
+                </div>
+
+                <!-- Free View -->
+                <template x-if="!isPaywalled">
+                  <div class="flex-1 flex flex-col">
+                    <div class="mb-14">
+                       <span class="stamp text-4xl sm:text-5xl" x-text="predictionDir"></span>
+                    </div>
+                    <div class="pt-8 border-t border-ink/5">
+                       <p class="text-lg leading-relaxed text-ink/80 font-serif italic" x-text="rationale"></p>
+                    </div>
+                    
+                    <div class="mt-8 text-center" x-show="!expanded">
+                       <span class="text-[9px] font-black text-ink-faded uppercase tracking-widest animate-pulse">点击展开博弈详情 ↓</span>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- Paywalled View -->
+                <template x-if="isPaywalled">
+                  <div class="flex-1 relative flex flex-col">
+                    <div class="paper-blur flex-1 flex flex-col">
+                      <div class="mb-12"><span class="stamp text-4xl opacity-20">主胜</span></div>
+                      <div class="pt-8 border-t border-ink/5"><p class="text-lg text-ink/10 font-serif italic">...</p></div>
+                    </div>
+                    
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                      <div class="w-px h-12 bg-accent/30 mb-8"></div>
+                      <div class="text-xl font-serif text-ink mb-2 italic">Truth is hidden.</div>
+                      <div class="text-[9px] font-black text-ink-faded uppercase tracking-[0.3em] mb-10">算法捕捉 80% 获利点</div>
+                      <a href="https://t.me/vpsgogogo_bot" target="_blank" class="btn-zen scale-90">
+                        <span>加入私域群组直接查看</span>
+                      </a>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- In-place Expansion Area (博弈战场) -->
+            <div x-show="expanded" x-collapse x-cloak class="border-t border-ink/5 bg-paper-dark/5 p-10 sm:p-16">
+               <div class="max-w-2xl mx-auto space-y-16">
+                  
+                  <!-- AI vs Bookie: The Battleground -->
+                  <div>
+                    <h5 class="text-[10px] font-black text-ink-faded uppercase tracking-[0.4em] text-center mb-12">Market vs Algorithm Battleground</h5>
+                    
+                    <div class="grid grid-cols-3 gap-8">
+                       <!-- Home Row -->
+                       <div class="flex flex-col items-center gap-4">
+                          <span class="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Home</span>
+                          <div class="w-full space-y-2">
+                             <div class="flex justify-between text-[10px] num text-ink/60"><span>Market</span><span x-text="quant.bookieProb.home + '%'"></span></div>
+                             <div class="h-1.5 bar-bg"><div class="h-full bg-ink/20" :style="'width:' + quant.bookieProb.home + '%'"></div></div>
+                             <div class="flex justify-between text-[10px] num font-black" :class="quant.aiProb.home > quant.bookieProb.home ? 'text-accent' : 'text-ink'"><span>AI Truth</span><span x-text="quant.aiProb.home + '%'"></span></div>
+                             <div class="h-2 bar-bg"><div class="h-full transition-all duration-1000" :class="quant.aiProb.home > quant.bookieProb.home ? 'bg-accent' : 'bg-ink'" :style="expanded ? 'width:' + quant.aiProb.home + '%' : 'width:0%'"></div></div>
+                          </div>
+                       </div>
+                       <!-- Draw Row -->
+                       <div class="flex flex-col items-center gap-4">
+                          <span class="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Draw</span>
+                          <div class="w-full space-y-2">
+                             <div class="flex justify-between text-[10px] num text-ink/60"><span>Market</span><span x-text="quant.bookieProb.draw + '%'"></span></div>
+                             <div class="h-1.5 bar-bg"><div class="h-full bg-ink/20" :style="'width:' + quant.bookieProb.draw + '%'"></div></div>
+                             <div class="flex justify-between text-[10px] num font-black" :class="quant.aiProb.draw > quant.bookieProb.draw ? 'text-accent' : 'text-ink'"><span>AI Truth</span><span x-text="quant.aiProb.draw + '%'"></span></div>
+                             <div class="h-2 bar-bg"><div class="h-full transition-all duration-1000" :class="quant.aiProb.draw > quant.bookieProb.draw ? 'bg-accent' : 'bg-ink'" :style="expanded ? 'width:' + quant.aiProb.draw + '%' : 'width:0%'"></div></div>
+                          </div>
+                       </div>
+                       <!-- Away Row -->
+                       <div class="flex flex-col items-center gap-4">
+                          <span class="text-[10px] font-bold text-ink/40 uppercase tracking-widest">Away</span>
+                          <div class="w-full space-y-2">
+                             <div class="flex justify-between text-[10px] num text-ink/60"><span>Market</span><span x-text="quant.bookieProb.away + '%'"></span></div>
+                             <div class="h-1.5 bar-bg"><div class="h-full bg-ink/20" :style="'width:' + quant.bookieProb.away + '%'"></div></div>
+                             <div class="flex justify-between text-[10px] num font-black" :class="quant.aiProb.away > quant.bookieProb.away ? 'text-accent' : 'text-ink'"><span>AI Truth</span><span x-text="quant.aiProb.away + '%'"></span></div>
+                             <div class="h-2 bar-bg"><div class="h-full transition-all duration-1000" :class="quant.aiProb.away > quant.bookieProb.away ? 'bg-accent' : 'bg-ink'" :style="expanded ? 'width:' + quant.aiProb.away + '%' : 'width:0%'"></div></div>
+                          </div>
+                       </div>
+                    </div>
+
+                    <!-- Highlight Anomaly -->
+                    <div class="mt-12 p-6 bg-accent-subtle border border-accent/10 rounded-sm text-center">
+                       <p class="text-xs font-serif italic text-accent leading-relaxed">
+                          ⚠️ 监测到市场异常：AI 测算 <span class="font-black" x-text="predictionDir"></span> 概率较庄家赔率溢价 <span class="font-black" x-text="fmtPct(quant.edge)"></span>。此为核心 Edge 捕捉点。
+                       </p>
+                    </div>
+                  </div>
+
+                  <!-- Technical Footprint -->
+                  <div class="pt-12 border-t border-ink/5 grid grid-cols-2 gap-12">
+                     <div class="space-y-4">
+                        <div class="text-[9px] font-black text-ink-faded uppercase tracking-widest">Neural Network Log</div>
+                        <div class="text-[10px] font-mono text-ink/70 leading-relaxed">
+                           > Loading 48-feature vector... DONE<br>
+                           > Correcting residual bias... DONE<br>
+                           > Calibration complete: Brier 0.18
+                        </div>
+                     </div>
+                     <div class="space-y-4">
+                        <div class="text-[9px] font-black text-ink-faded uppercase tracking-widest">Risk Management</div>
+                        <div class="text-[10px] font-mono text-ink/70 leading-relaxed">
+                           > Kelly Criterion: Optimized<br>
+                           > Volatility Filter: Active<br>
+                           > Recommended Stake: 1.5% - 2.0%
+                        </div>
+                     </div>
+                  </div>
+
+               </div>
             </div>
 
           </div>
@@ -186,11 +225,7 @@
     
     <!-- Footer -->
     <div class="text-center py-40 opacity-30">
-      <div class="text-[9px] font-black tracking-[0.5em] uppercase mb-8">Transmission End // Verified Truth Only</div>
-      <div class="flex justify-center gap-12">
-         <a href="https://t.me/vpsgogogo_bot" target="_blank" class="text-[10px] font-bold text-ink uppercase tracking-widest border-b border-ink/20 pb-1">Private Group</a>
-         <a href="#" class="text-[10px] font-bold text-ink uppercase tracking-widest border-b border-ink/20 pb-1">Algorithmic Audit</a>
-      </div>
+      <div class="text-[9px] font-black tracking-[0.5em] uppercase mb-8">End of Transmission // First Principles Only</div>
     </div>
 
   </div>
