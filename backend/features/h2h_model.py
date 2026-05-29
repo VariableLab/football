@@ -19,7 +19,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 
-from models import Match, MatchStatus
+from database.models import Match, MatchStatus
 
 
 @dataclass

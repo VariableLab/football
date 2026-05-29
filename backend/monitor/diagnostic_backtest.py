@@ -8,8 +8,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Match, Prediction, MatchStatus
-from config import get_settings
+from database.models import Match, Prediction, MatchStatus
+from database.config import get_settings
 
 def run_diagnostic():
     settings = get_settings()

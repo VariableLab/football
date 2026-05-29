@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-27T23:54:39.542995+00:00",
+  "timestamp": "2026-05-29T03:07:43.626448+00:00",
   "overall": "critical",
   "checks": [
     {
@@ -12,9 +12,9 @@
     {
       "name": "odds_freshness",
       "status": "fail",
-      "message": "51/51 场比赛赔率过期",
+      "message": "45/45 场比赛赔率过期",
       "repaired": true,
-      "repair_action": "triggered: tier1, zgzcw(7)"
+      "repair_action": "triggered: tier1, zgzcw(5)"
     },
     {
       "name": "scheduler_jobs",
@@ -25,29 +25,29 @@
     },
     {
       "name": "data_completeness",
-      "status": "warn",
-      "message": "共 42 场 | 缺赔率:1 | 缺球队数据:84",
-      "repaired": false,
-      "repair_action": ""
+      "status": "fail",
+      "message": "共 45 场 | 缺预测:35 | 缺球队数据:90",
+      "repaired": true,
+      "repair_action": "triggered_prediction_lock"
     },
     {
       "name": "zgzcw_sync",
       "status": "ok",
-      "message": "同步 7 场, 关联期号 7 场",
+      "message": "同步 5 场, 关联期号 5 场",
       "repaired": false,
       "repair_action": ""
     },
     {
       "name": "jingcai_issues",
       "status": "ok",
-      "message": "共 19 期: drawn=6, on_sale=1, verified=12",
+      "message": "共 20 期: drawn=6, on_sale=2, verified=12",
       "repaired": false,
       "repair_action": ""
     },
     {
       "name": "model_drift",
       "status": "fail",
-      "message": "方向准确率 35.9% < 48% 阈值 (155/432)",
+      "message": "方向准确率 36.6% < 48% 阈值 (30/82)",
       "repaired": false,
       "repair_action": "self_heal_cycle_status=skipped"
     },
@@ -61,7 +61,7 @@
     {
       "name": "backup_freshness",
       "status": "ok",
-      "message": "最新备份 4.9 小时前 (35 个)",
+      "message": "最新备份 32.3 小时前 (35 个)",
       "repaired": false,
       "repair_action": ""
     }

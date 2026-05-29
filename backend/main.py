@@ -23,9 +23,9 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import text
 from contextlib import asynccontextmanager
 
-from logger import get_logger
-from config import get_settings
-from models import init_db, get_db, User, Team, Match, MatchStatus, Prediction, JingcaiIssue, JingcaiIssueMatch, OddsHistory
+from utils.logger import get_logger
+from database.config import get_settings
+from database.models import init_db, get_db, User, Team, Match, MatchStatus, Prediction, JingcaiIssue, JingcaiIssueMatch, OddsHistory
 from schemas import (
     UserRegister, UserLogin, UserOut, Token,
     LicenseRedeem, LicenseRedeemOut,
@@ -409,7 +409,7 @@ def start_live_feed(_: bool = Depends(_verify_admin_key)):
     if os.getenv("WC_ENV", "").lower() in ("production", "prod") and os.getenv("WORKERS", "1") != "1":
         logger.warning("LiveOdds global state is not safe with multiple workers. Set WORKERS=1 or migrate to Redis.")
 
-    from config import get_settings
+    from database.config import get_settings
     settings = get_settings()
 
     _live_feed = LiveOddsFeed(
@@ -699,7 +699,7 @@ def _issue_to_dict(issue: JingcaiIssue) -> dict:
 def _auto_close_expired_issues(db: Session) -> int:
     """关闭已过sale_end或所有比赛已完结的期号。由scheduler调用。"""
     from datetime import datetime, timedelta
-    from models import Match, MatchStatus
+    from database.models import Match, MatchStatus
     from sqlalchemy import func
     # SQLite 存储的是 naive datetime，使用 now 进行比较
     now = datetime.utcnow()
@@ -1144,7 +1144,7 @@ def health(db: Session = Depends(get_db)):
 
     #赔率新鲜度
     try:
-        from models import MatchBookmakerOdds
+        from database.models import MatchBookmakerOdds
         from datetime import datetime, timezone as _tz2
         latest = db.query(MatchBookmakerOdds).order_by(MatchBookmakerOdds.id.desc()).first()
         if latest:
@@ -1196,7 +1196,7 @@ def get_user_settings(
     user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    from models import UserSettings
+    from database.models import UserSettings
     s = db.query(UserSettings).filter(UserSettings.user_id == user.id).first()
     if not s:
         s = UserSettings(user_id=user.id)
@@ -1224,7 +1224,7 @@ def update_user_settings(
     user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    from models import UserSettings
+    from database.models import UserSettings
     valid_tiers = {"conservative", "balanced", "aggressive", "speculative"}
     valid_plays = {"spf", "rq", "score", "goals", "half"}
 

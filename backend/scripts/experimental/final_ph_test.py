@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from prediction_engine import PredictionEngine, build_context_from_match
-from models import SessionLocal, Match, MatchStatus
+from database.models import SessionLocal, Match, MatchStatus
 
 def run_final_stats():
     # Use Session to get full ORM objects including team info

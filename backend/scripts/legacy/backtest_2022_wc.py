@@ -20,7 +20,7 @@ from typing import List, Tuple, Dict, Any
 
 from sqlalchemy.orm import Session
 
-from models import Team, Match, MatchStatus, Prediction, SessionLocal, get_db
+from database.models import Team, Match, MatchStatus, Prediction, SessionLocal, get_db
 from prediction_engine import (
     PredictionEngine,
     Backtester,

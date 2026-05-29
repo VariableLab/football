@@ -15,7 +15,7 @@ from datetime import datetime
 
 from sqlalchemy import inspect, text
 
-from models import init_db, get_db, Match, engine
+from database.models import init_db, get_db, Match, engine
 from odds_collector import OddsCollector
 
 

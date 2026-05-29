@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from residual_nn import ResidualNet, ResidualDataset, extract_residual_features, MODEL_DIR, RESIDUAL_MODEL_PATH
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("profit_nn")
 

@@ -1,8 +1,8 @@
 """Auto-Learner: 结果同步→验证→NN增量训练→自愈闭环"""
 import os, glob
 from datetime import datetime, timezone, timedelta
-from models import SessionLocal, Match, MatchStatus
-from logger import get_logger
+from database.models import SessionLocal, Match, MatchStatus
+from utils.logger import get_logger
 logger = get_logger("auto_learner")
 MIN_NEW = 5
 
@@ -38,7 +38,7 @@ def auto_learn_trigger():
     return result
 
 def auto_verify_jingcai():
-    from models import SessionLocal, JingcaiIssue, JingcaiIssueMatch
+    from database.models import SessionLocal, JingcaiIssue, JingcaiIssueMatch
     from jingcai_predictor import record_draw_result, verify_issue
     s = SessionLocal()
     try:

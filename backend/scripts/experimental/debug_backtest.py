@@ -1,7 +1,7 @@
 """Debug: 检查单场比赛特征构建"""
 import traceback
 from sqlalchemy.orm import joinedload
-from models import SessionLocal, Match, MatchStatus, Team
+from database.models import SessionLocal, Match, MatchStatus, Team
 from prediction_engine import build_team_context_from_orm, build_context_from_match
 
 session = SessionLocal()

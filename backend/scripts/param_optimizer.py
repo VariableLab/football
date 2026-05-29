@@ -21,7 +21,7 @@ from tiered_strategy import (
     TIER_HIGH, TIER_MEDIUM, TIER_SKIP,
     classify_tier, analyze_match,
 )
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("param_optimizer")
 
@@ -131,7 +131,7 @@ def run_grid_search(
 def _load_backtest_data(limit: int = 0) -> List[Dict]:
     """从数据库加载回测数据（已结束比赛 + 预测 + 赔率 + 结果）"""
     import json
-    from models import SessionLocal, Match, MatchStatus, Prediction
+    from database.models import SessionLocal, Match, MatchStatus, Prediction
     # from bet_nn import BetNetPredictor, extract_features
 
     predictor = BetNetPredictor()

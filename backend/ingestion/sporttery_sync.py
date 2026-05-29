@@ -15,12 +15,12 @@ import hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple, Any
 
-from models import (
+from database.models import (
     SessionLocal, Team, Match, MatchStatus, MatchType,
     JingcaiIssue, JingcaiIssueMatch, OddsHistory,
 )
 from odds_collector import JingcaiSource
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("sporttery_sync")
 
@@ -366,7 +366,7 @@ def _generate_prediction(db, match: Match) -> None:
     engine = PredictionEngine(db_session=db)
     pred_result = engine.predict(ctx)
 
-    from models import Prediction, PlayType
+    from database.models import Prediction, PlayType
     for payload in pred_result.to_db_payload():
         existing = db.query(Prediction).filter(
             Prediction.match_id == match.id,

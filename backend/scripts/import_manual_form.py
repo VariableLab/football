@@ -8,7 +8,7 @@
 import json
 from pathlib import Path
 
-from models import SessionLocal, Team
+from database.models import SessionLocal, Team
 from prediction_engine import FormAdjustmentModel
 from form_collector import InternalFormSource
 

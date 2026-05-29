@@ -15,7 +15,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from torch.optim.lr_scheduler import OneCycleLR
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("residual_nn")
 

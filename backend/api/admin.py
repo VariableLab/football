@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Header, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from config import get_settings
-from models import (
+from database.config import get_settings
+from database.models import (
     get_db, Team, Match, MatchStatus, Prediction, AuditLog, User, LicenseKey
 )
 from schemas import (
@@ -258,7 +258,7 @@ def generate_licenses(
 ):
     """Generate batch license keys."""
     from license_manager import create_license_keys
-    from models import LicenseType
+    from database.models import LicenseType
     
     lt = LicenseType.MATCH if data.license_type == "match" else LicenseType.TOURNAMENT
     keys = create_license_keys(

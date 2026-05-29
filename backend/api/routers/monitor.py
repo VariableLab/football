@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 
-from models import get_db
+from database.models import get_db
 from model_audit import ModelAuditor, run_self_heal_cycle
 from auth import get_current_active_user, User
 

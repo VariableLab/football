@@ -44,7 +44,7 @@ from collections import defaultdict
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("live_odds_feed")
 
@@ -239,7 +239,7 @@ class SimulatedLiveSource(LiveOddsSource):
         match_ids: List[int],
         session: Session,
     ) -> List[LiveOddsUpdate]:
-        from models import Match
+        from database.models import Match
 
         updates: List[LiveOddsUpdate] = []
         now = datetime.now(timezone.utc)
@@ -341,7 +341,7 @@ class OddsApiLiveSource(LiveOddsSource):
         except ImportError:
             return []
 
-        from models import Match
+        from database.models import Match
 
         updates: List[LiveOddsUpdate] = []
         now = datetime.now(timezone.utc)
@@ -443,7 +443,7 @@ class JingcaiLiveSource(LiveOddsSource):
         match_ids: List[int],
         session: Session,
     ) -> List[LiveOddsUpdate]:
-        from models import Match, JingcaiIssue, JingcaiIssueMatch
+        from database.models import Match, JingcaiIssue, JingcaiIssueMatch
 
         updates: List[LiveOddsUpdate] = []
         now = datetime.now(timezone.utc)
@@ -525,7 +525,7 @@ class LiveOddsFeed:
     @staticmethod
     def _get_session() -> Session:
         """创建短期 DB session（线程安全，用完即关）。"""
-        from models import SessionLocal
+        from database.models import SessionLocal
         return SessionLocal()
 
     def add_source(self, source: LiveOddsSource) -> None:
@@ -604,7 +604,7 @@ class LiveOddsFeed:
     def _get_current_interval(self) -> float:
         """根据比赛状态决定采集间隔。"""
         now = datetime.now(timezone.utc)
-        from models import Match
+        from database.models import Match
 
         session = self._get_session()
         try:
@@ -627,7 +627,7 @@ class LiveOddsFeed:
 
     def _get_live_match_ids(self, session: Session) -> List[int]:
         """获取需要采集的比赛ID。"""
-        from models import Match
+        from database.models import Match
 
         matches = session.query(Match).filter(
             Match.status.in_(["scheduled", "upcoming", "live"])
@@ -637,7 +637,7 @@ class LiveOddsFeed:
 
     def _store_snapshot(self, update: LiveOddsUpdate, session: Session) -> None:
         """将赔率快照存入 DB。"""
-        from models import LiveOddsSnapshot
+        from database.models import LiveOddsSnapshot
 
         snapshot = LiveOddsSnapshot(
             match_id=update.match_id,

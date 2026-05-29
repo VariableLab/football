@@ -20,7 +20,7 @@ from xgboost import XGBClassifier
 from fusion.logistic_fusion import (
     LogisticFusionWeights, LogisticFusionTrainer, FEATURE_NAMES
 )
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("ensemble_fusion")
 

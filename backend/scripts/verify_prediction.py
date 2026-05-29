@@ -11,7 +11,7 @@
 from prediction_engine import (
     PredictionEngine, MatchContext, TeamContext, build_context_from_match,
 )
-from models import SessionLocal, Match
+from database.models import SessionLocal, Match
 
 
 def make_ctx_with_zero_xg(match):

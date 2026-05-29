@@ -2,7 +2,7 @@
 import sys, json, logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 from sqlalchemy import text
-from models import SessionLocal, JingcaiIssue
+from database.models import SessionLocal, JingcaiIssue
 
 s = SessionLocal()
 issues = s.query(JingcaiIssue).filter(

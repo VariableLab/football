@@ -471,7 +471,7 @@ def collect_500_odds(db: Session) -> Dict:
     从 500.com 采集百家欧赔并更新数据库。
     供 scheduler 定时调用。
     """
-    from models import Match as MatchModel, OddsHistory
+    from database.models import Match as MatchModel, OddsHistory
 
     now = datetime.now(timezone.utc)
     window_end = now + timedelta(hours=72)

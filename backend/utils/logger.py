@@ -9,7 +9,7 @@ WC Analytics — 统一日志系统
   - 按模块隔离日志文件
 
 用法：
-    from logger import get_logger
+    from utils.logger import get_logger
     logger = get_logger("prediction")
     logger.info("预测完成", extra={"match_id": 123, "confidence": 0.85})
 """

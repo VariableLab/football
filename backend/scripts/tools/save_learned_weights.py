@@ -8,7 +8,7 @@
 """
 
 from sqlalchemy.orm import Session
-from models import SessionLocal, FusionWeight
+from database.models import SessionLocal, FusionWeight
 from prediction_engine import DEFAULT_WEIGHTS
 
 

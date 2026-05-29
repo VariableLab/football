@@ -10,11 +10,11 @@ from datetime import datetime, timedelta, timezone
 import logging
 import os
 
-from config import get_settings
+from database.config import get_settings
 settings = get_settings()
-from models import SessionLocal, get_db, Match, MatchStatus, Prediction, Team
+from database.models import SessionLocal, get_db, Match, MatchStatus, Prediction, Team
 
-from logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger("scheduler")
 scheduler = BackgroundScheduler()
@@ -299,7 +299,8 @@ def match_monitor_job():
         ).all()
         
         for match in ended:
-            logger.warning(f"[monitor] Match {match.match_code} likely ended, awaiting result input")
+            # 调低日志级别，避免淹没控制台
+            logger.debug(f"[monitor] Match {match.match_code} likely ended, awaiting result input")
             # 不自动改状态，因为需要人工/自动确认比分
             # 可以发通知提醒管理员录入结果
 
@@ -377,7 +378,10 @@ def sync_results_job():
         if not live_matches:
             return
 
-        matcher = TeamMatcher(str(db.bind.url).replace("sqlite:///", "") or "database.sqlite")
+        # 修复：如果不是 sqlite，不要尝试传递路径
+        db_url = str(db.bind.url)
+        db_path = db_url.replace("sqlite:///", "") if "sqlite" in db_url else None
+        matcher = TeamMatcher(db_path or "database.sqlite")
         synced = 0
 
         for league_code, comp_name in _OPENFOOTBALL_LEAGUES.items():
@@ -665,7 +669,7 @@ def calculate_accuracy_job():
 # 足彩期号自动验证 — 检查已开奖但未验证的期号并执行verify
 # ────────────────────────────
 def jingcai_auto_verify_wrapper():
-    from models import get_db, JingcaiIssue
+    from database.models import get_db, JingcaiIssue
     from jingcai_predictor import verify_issue
     db = next(get_db())
     try:
@@ -1258,7 +1262,7 @@ def start_scheduler():
 
                 # 3. 检查刚关期的，立即验证
                 from jingcai_predictor import verify_issue
-                from models import JingcaiIssue
+                from database.models import JingcaiIssue
                 drawn = db.query(JingcaiIssue).filter(
                     JingcaiIssue.status == "drawn",
                     JingcaiIssue.verification == None,
@@ -1310,9 +1314,7 @@ def start_scheduler():
     # ── Zgzcw 竞彩比赛同步：每 30 分钟 ──
     def zgzcw_jc_sync_wrapper():
         from ingestion.zgzcw_jc_sync import sync_jc_matches
-        import os
-        db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "database.sqlite")
-        result = sync_jc_matches(db_path=db_path)
+        result = sync_jc_matches() # 移除 db_path 硬编码，使用默认配置
         if result.get("created") or result.get("updated"):
             logger.info(
                 f"[zgzcw-jc-sync] Synced {result.get('matches')} matches: "
@@ -1330,7 +1332,7 @@ def start_scheduler():
 
     # ── Fusion 逻辑回归训练：每周一 06:05（含 A/B 验证部署）──
     def data_quality_wrapper():
-        from models import get_db
+        from database.models import get_db
         from data_cleaner import DataCleaner
         db = next(get_db())
         try:

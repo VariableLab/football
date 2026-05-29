@@ -15,7 +15,7 @@ def test_raw_sqlite():
     cursor = conn.cursor()
     
     # 模拟简单的 PredictionEngine 调用环境
-    from config import get_settings
+    from database.config import get_settings
     settings = get_settings()
     
     engine = PredictionEngine()

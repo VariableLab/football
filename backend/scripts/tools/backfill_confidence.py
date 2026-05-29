@@ -1,7 +1,7 @@
 """回填已有预测的置信度（分批处理）"""
 import sys, logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
-from models import SessionLocal, Prediction, Match
+from database.models import SessionLocal, Prediction, Match
 from sqlalchemy import text
 
 def compute_confidence(spf: dict, match) -> str:

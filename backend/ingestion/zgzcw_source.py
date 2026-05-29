@@ -283,7 +283,7 @@ def collect_zgzcw_odds(db: Session) -> Dict:
     从 zgzcw.com 采集赔率并更新数据库。
     供 scheduler 定时调用。
     """
-    from models import Match as MatchModel, OddsHistory
+    from database.models import Match as MatchModel, OddsHistory
 
     now = datetime.now(timezone.utc)
     window_end = now + timedelta(hours=72)

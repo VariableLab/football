@@ -7,8 +7,8 @@ import random
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
-from models import SessionLocal, Match, MatchBookmakerOdds
-from logger import get_logger
+from database.models import SessionLocal, Match, MatchBookmakerOdds
+from utils.logger import get_logger
 
 logger = get_logger("seed_bookmaker_odds")
 random.seed(42)

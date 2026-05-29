@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from datetime import datetime, timezone, timedelta
 import os
 
-from models import get_db, Match, MatchStatus, Prediction
+from database.models import get_db, Match, MatchStatus, Prediction
 from schemas import (
     MatchListResponse, MatchOut, StrategyResponse, 
     OddsMovementResponse, StrategyPickOut
@@ -90,7 +90,7 @@ def list_matches(
     )
 
     if status == "jingcai":
-        from models import JingcaiIssueMatch
+        from database.models import JingcaiIssueMatch
         q = q.join(JingcaiIssueMatch, Match.id == JingcaiIssueMatch.match_id)
     elif status:
         q = q.filter(Match.status == status)
@@ -246,7 +246,7 @@ def get_strategy(
 @router.get("/{match_id}/odds-movement", response_model=OddsMovementResponse)
 def get_odds_movement(match_id: int, db: Session = Depends(get_db)):
     """Get historical odds movement for a match."""
-    from models import OddsHistory
+    from database.models import OddsHistory
     
     # 1. 基础开/收盘赔率
     match = db.query(Match).filter(Match.id == match_id).first()

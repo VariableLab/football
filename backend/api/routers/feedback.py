@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from models import get_db, Feedback, FeedbackLike, User
+from database.models import get_db, Feedback, FeedbackLike, User
 from schemas import FeedbackListResponse, FeedbackCreateResponse, FeedbackLikeResponse
 from auth import get_optional_user, get_current_active_user
 
