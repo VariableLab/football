@@ -106,7 +106,7 @@ async def generate_daily_report():
 """
                 
                 # 3. 核心 Prompt 设计
-                prompt = f"""你是一个精通欧洲五大联赛的专业足彩精算师。请根据以下数据，从进攻、防守、战意三个维度进行极简分析，并最终给出一个明确的预测方向（胜/平/负）和预测比分。要求：语言风格要犀利、专业，像懂球帝的资深专栏作家。不要废话。文末加上一句：“👇 更多每日 VIP 核心推介，请关注主页加入内部私域频道”。
+                prompt = f"""你是一个精通欧洲五大联赛的专业足彩精算师。请根据以下数据，从进攻、防守、战意三个维度进行极简分析，并最终给出一个明确的预测方向（胜/平/负）和预测比分。要求：语言风格要犀利、专业，像懂球帝的资深专栏作家。不要废话。
 
 {match_info}
 """
@@ -133,8 +133,8 @@ async def generate_daily_report():
                     print(analysis)
                     print("=" * 60 + "\n")
                     
-                    # 🚀 同步推送到 Telegram
-                    await send_to_telegram(client, analysis, f"{home.name} vs {away.name}")
+                    # 🚀 测试阶段暂停 Telegram 推送
+                    # await send_to_telegram(client, analysis, f"{home.name} vs {away.name}")
                     
                     await asyncio.sleep(5) # 增加延迟避免 API 速率限制
                     
