@@ -29,202 +29,192 @@
 </nav>
 
 <!-- Main -->
-<main class="section-gap max-w-4xl mx-auto px-6 sm:px-10">
+<main class="pt-24 pb-24 max-w-7xl mx-auto px-6 lg:px-12">
 
-  <!-- Header: Onboarding & Value Prop -->
-  <section class="mb-32 text-center">
-    <div class="mb-12">
-      <div class="w-16 h-16 rounded-full border border-ink/10 flex items-center justify-center bg-white/50 mx-auto">
-        <span class="text-3xl opacity-80">⚪️</span>
+  <!-- Header: Market Context -->
+  <section class="mb-12">
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+      <div>
+        <h1 class="text-3xl font-serif font-black text-ink mb-2">量化预测终端</h1>
+        <p class="text-sm text-ink-faded">对标在售赛事 · 神经网络多维推演 · 实时概率校准</p>
       </div>
-    </div>
-    <h1 class="text-5xl sm:text-7xl font-serif hero-text mb-8 tracking-tighter">Quant Intelligence.</h1>
-    <p class="text-[11px] font-black tracking-[0.4em] text-ink-faded uppercase max-w-md mx-auto leading-loose mb-12">
-      基于数学模型与 48 维特征的赛事研判系统
-    </p>
-    
-    <!-- User Guidance Steps -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-3xl mx-auto py-10 border-y border-ink/5 text-left">
-      <div class="space-y-3">
-        <div class="text-[10px] font-black text-accent uppercase tracking-widest">01. 数据捕获</div>
-        <div class="text-sm font-serif italic text-ink">实时同步全球 3.1 万场历史赛事及即时市场价格。</div>
-      </div>
-      <div class="space-y-3">
-        <div class="text-[10px] font-black text-accent uppercase tracking-widest">02. 神经网络扫描</div>
-        <div class="text-sm font-serif italic text-ink">通过 StackingNet v4.5 进行 48 个特征变量的深度交叉推演。</div>
-      </div>
-      <div class="space-y-3">
-        <div class="text-[10px] font-black text-accent uppercase tracking-widest">03. 量化估值输出</div>
-        <div class="text-sm font-serif italic text-ink">寻找市场价格与真实概率之间的数学偏差（Edge）。</div>
+      <div class="flex items-center gap-4">
+        <div class="px-4 py-2 bg-accent/5 border border-accent/10 rounded-lg">
+          <span class="text-[10px] font-black text-accent uppercase tracking-widest block">系统状态</span>
+          <span class="text-xs font-bold text-ink">48-特征扫描引擎运行中</span>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Feed: The Live Lab -->
+  <!-- Market Tabs -->
+  <div class="flex items-center gap-4 mb-10 border-b border-ink/5" id="sectionTabs">
+    <button onclick="setFilter('jingcai')" class="px-6 py-4 text-sm font-bold border-b-2 border-accent text-ink transition-all" data-filter="jingcai">🏆 在售赛事 (Jingcai)</button>
+    <button onclick="setFilter('today')" class="px-6 py-4 text-sm font-medium text-ink-faded hover:text-ink transition-all" data-filter="today">今日全部</button>
+    <button onclick="setFilter('tomorrow')" class="px-6 py-4 text-sm font-medium text-ink-faded hover:text-ink transition-all" data-filter="tomorrow">明日预告</button>
+  </div>
+
+  <!-- Match Feed: The Grid -->
   <div id="sectionMatches" x-data="{ matches: [], loading: true }" x-init="
+    window.addEventListener('matches-loading', () => { loading = true; matches = []; });
     window.addEventListener('matches-updated', (e) => {
-      matches = e.detail.matches.filter(m => ['scheduled', 'upcoming', 'live'].includes(m.status));
-      if (matches.length === 0) matches = e.detail.matches;
+      matches = e.detail.matches;
       loading = false;
-    })
+    });
   ">
     
     <template x-if="loading">
-      <div class="text-center py-32 opacity-20">
-        <div class="text-[10px] font-black tracking-[0.6em] uppercase animate-pulse">Initializing Lab Environment...</div>
+      <div class="col-span-full text-center py-24">
+        <div class="w-10 h-10 rounded-full border-2 border-accent/20 border-t-accent animate-spin mx-auto mb-4"></div>
+        <div class="text-xs font-bold tracking-widest text-ink-faded uppercase">正在同步在售赛事数据...</div>
       </div>
     </template>
 
-    <div class="space-y-48">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       <template x-for="(m, index) in matches" :key="m.id">
-        <div x-data="FeedCard(m, index)" class="fade-in">
+        <div x-data="ProMatchCard(m, index)" class="paper-sheet flex flex-col h-full fade-in">
           
-          <div class="paper-sheet relative overflow-hidden rounded-[2px] transition-all duration-500">
-            
-            <div class="grid grid-cols-1 lg:grid-cols-12 min-h-[420px]">
-              
-              <!-- Left Sidebar: The Lab Log (Lotus 风格实时计算反馈) -->
-              <div class="lg:col-span-4 p-10 bg-paper-dark/10 border-b lg:border-b-0 lg:border-r border-ink/5 flex flex-col justify-between">
-                <div>
-                  <div class="text-[9px] font-black tracking-[0.3em] text-ink-faded uppercase mb-12">Computing Intelligence</div>
-                  
-                  <!-- Lotus-style scrolling log -->
-                  <div class="space-y-4 font-mono text-[10px] text-ink/60 h-48 overflow-hidden relative">
-                    <template x-if="loadingAnalysis">
-                      <div class="space-y-2">
-                        <div class="animate-pulse">>> Init StackingNet v4.5...</div>
-                        <div class="animate-pulse" style="animation-delay: 0.2s">>> Pulling market prices...</div>
-                        <div class="animate-pulse" style="animation-delay: 0.4s">>> Analyzing 48 features...</div>
-                      </div>
-                    </template>
-                    <template x-if="!loadingAnalysis">
-                      <div class="animate-fade-in space-y-1 text-[9px] leading-tight">
-                        <div class="text-accent-green">>> [OK] StackingNet Load</div>
-                        <div class="text-accent-green">>> [OK] Elo Diff: <span x-text="quant.eloDiff"></span></div>
-                        <div class="text-accent-green">>> [OK] Market Edge: <span x-text="fmtPct(quant.edge)"></span></div>
-                        <div class="text-ink/40">---------------------</div>
-                        <div class="text-ink">>> Applying Kelly Formula...</div>
-                        <div class="text-ink">>> Calibration complete.</div>
-                        <div class="mt-4 text-[11px] font-black text-ink">LOGIC CHAIN VERIFIED.</div>
-                      </div>
-                    </template>
-                    <div class="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-paper-dark/10 to-transparent pointer-events-none"></div>
-                  </div>
-                </div>
-
-                <div class="pt-8 border-t border-ink/10">
-                   <div class="text-2xl font-serif text-ink italic leading-tight mb-2" x-text="homeTeam.name"></div>
-                   <div class="text-[9px] font-black text-ink-faded/30 tracking-[0.5em] mb-2">VS</div>
-                   <div class="text-2xl font-serif text-ink italic leading-tight" x-text="awayTeam.name"></div>
-                </div>
-              </div>
-
-              <!-- Right Content: Verdict & Truth -->
-              <div class="lg:col-span-8 p-10 sm:p-14 bg-paper-light flex flex-col">
-                <div class="flex justify-between items-center mb-12">
-                  <span class="text-[9px] font-black tracking-[0.4em] text-accent uppercase">Quantitative Prediction</span>
-                  <span class="text-[9px] font-mono text-ink/40 tracking-widest" x-text="fmtBJ(m.kickoff_at)"></span>
-                </div>
-
-                <div class="flex-1 flex flex-col justify-center">
-                  <template x-if="loadingAnalysis">
-                    <div class="text-center py-10 opacity-30">
-                       <span class="text-[10px] font-black tracking-widest animate-pulse">正在进行量化推演...</span>
-                    </div>
-                  </template>
-                  
-                  <template x-if="!loadingAnalysis">
-                    <div class="animate-fade-in-up">
-                      <div class="mb-14">
-                         <span class="stamp text-4xl sm:text-6xl" x-text="predictionDir"></span>
-                      </div>
-                      <div class="pt-10 border-t border-ink/5">
-                        <h4 class="text-[10px] font-black text-ink-faded uppercase tracking-[0.2em] mb-6">模型研判说明</h4>
-                        <p class="text-lg sm:text-xl leading-relaxed text-ink/90 font-serif italic" x-text="rationale"></p>
-                      </div>
-                      
-                      <!-- Direct Value Action -->
-                      <div class="mt-12 flex items-center gap-6">
-                        <button @click="toggle()" class="text-[10px] font-black text-ink-faded hover:text-ink uppercase tracking-widest border-b border-ink/10 pb-1 transition-all">
-                           <span x-text="expanded ? '收起博弈详情' : '展开博弈战场 ↓'"></span>
-                        </button>
-                      </div>
-                    </div>
-                  </template>
-                </div>
-              </div>
+          <!-- Card Header: Issue & League -->
+          <div class="p-5 border-b border-ink/5 bg-paper-dark/10 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <span class="text-[10px] font-black bg-ink text-paper px-2 py-0.5 rounded" x-text="m.match_code ? m.match_code.split('-')[0] : '赛事'"></span>
+              <span class="text-[10px] font-bold text-accent uppercase tracking-widest" x-text="m.competition"></span>
             </div>
-
-            <!-- Expansion Area: The Market Battleground -->
-            <div x-show="expanded" x-collapse x-cloak class="border-t border-ink/5 bg-paper-dark/5 p-10 sm:p-16">
-               <div class="max-w-2xl mx-auto">
-                  <h5 class="text-[10px] font-black text-ink-faded uppercase tracking-[0.4em] text-center mb-16">Market vs Model Battleground</h5>
-                  
-                  <div class="space-y-12">
-                    <!-- Home Comparison -->
-                    <div class="grid grid-cols-12 items-center gap-6">
-                      <div class="col-span-3 text-[10px] font-bold text-ink/40 uppercase tracking-widest text-right">Home Win</div>
-                      <div class="col-span-6 space-y-2">
-                         <div class="h-1.5 w-full bg-ink/5 rounded-full overflow-hidden flex">
-                            <div class="h-full bg-ink/20 border-r border-paper" :style="'width:' + quant.bookieProb.home + '%'"></div>
-                            <div class="h-full bg-accent transition-all duration-1000" :style="'width:' + (quant.aiProb.home - quant.bookieProb.home) + '%'" x-show="quant.aiProb.home > quant.bookieProb.home"></div>
-                         </div>
-                      </div>
-                      <div class="col-span-3 text-[11px] font-mono text-ink">
-                        AI <span class="font-black" x-text="quant.aiProb.home + '%'"></span>
-                      </div>
-                    </div>
-                    
-                    <!-- Draw Comparison -->
-                    <div class="grid grid-cols-12 items-center gap-6">
-                      <div class="col-span-3 text-[10px] font-bold text-ink/40 uppercase tracking-widest text-right">Draw</div>
-                      <div class="col-span-6 space-y-2">
-                         <div class="h-1.5 w-full bg-ink/5 rounded-full overflow-hidden flex">
-                            <div class="h-full bg-ink/20 border-r border-paper" :style="'width:' + quant.bookieProb.draw + '%'"></div>
-                            <div class="h-full bg-accent transition-all duration-1000" :style="'width:' + (quant.aiProb.draw - quant.bookieProb.draw) + '%'" x-show="quant.aiProb.draw > quant.bookieProb.draw"></div>
-                         </div>
-                      </div>
-                      <div class="col-span-3 text-[11px] font-mono text-ink">
-                        AI <span class="font-black" x-text="quant.aiProb.draw + '%'"></span>
-                      </div>
-                    </div>
-                    
-                    <!-- Away Comparison -->
-                    <div class="grid grid-cols-12 items-center gap-6">
-                      <div class="col-span-3 text-[10px] font-bold text-ink/40 uppercase tracking-widest text-right">Away Win</div>
-                      <div class="col-span-6 space-y-2">
-                         <div class="h-1.5 w-full bg-ink/5 rounded-full overflow-hidden flex">
-                            <div class="h-full bg-ink/20 border-r border-paper" :style="'width:' + quant.bookieProb.away + '%'"></div>
-                            <div class="h-full bg-accent transition-all duration-1000" :style="'width:' + (quant.aiProb.away - quant.bookieProb.away) + '%'" x-show="quant.aiProb.away > quant.bookieProb.away"></div>
-                         </div>
-                      </div>
-                      <div class="col-span-3 text-[11px] font-mono text-ink">
-                        AI <span class="font-black" x-text="quant.aiProb.away + '%'"></span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="mt-16 p-8 bg-accent-subtle border border-accent/10 text-center">
-                     <p class="text-[11px] font-serif italic text-accent leading-loose">
-                        💡 核心发现：数学模型测算结果显示，当前市场价格（赔率）低估了 <span class="font-black" x-text="predictionDir"></span> 的真实发生概率约 <span class="font-black" x-text="fmtPct(quant.edge)"></span>。此为核心量化预测偏差点。
-                     </p>
-                  </div>
-               </div>
-            </div>
-
+            <span class="text-[10px] font-mono text-ink/40" x-text="fmtBJ(m.kickoff_at)"></span>
           </div>
+
+          <!-- Teams Area -->
+          <div class="p-6 flex items-center justify-between border-b border-ink/5">
+            <div class="w-2/5 text-center">
+               <div class="text-lg font-black text-ink leading-tight truncate" x-text="homeTeam.name"></div>
+               <div class="text-[9px] font-mono text-ink-faded mt-1" x-text="'Elo: ' + (homeTeam.elo || 1500)"></div>
+            </div>
+            <div class="w-1/5 text-center text-xs font-black text-ink/10 italic">VS</div>
+            <div class="w-2/5 text-center">
+               <div class="text-lg font-black text-ink leading-tight truncate" x-text="awayTeam.name"></div>
+               <div class="text-[9px] font-mono text-ink-faded mt-1" x-text="'Elo: ' + (awayTeam.elo || 1500)"></div>
+            </div>
+          </div>
+
+          <!-- Multi-Dimension Probabilities -->
+          <div class="p-6 flex-1 space-y-6">
+            <!-- SPF Bar -->
+            <div class="space-y-2">
+              <div class="flex justify-between text-[9px] font-black text-ink-faded uppercase tracking-widest">
+                <span>胜平负概率 (SPF)</span>
+                <span class="text-accent" x-text="'Edge: ' + fmtPct(quant.edge)"></span>
+              </div>
+              <div class="h-1.5 w-full bg-ink/5 rounded-full flex overflow-hidden">
+                <div class="h-full bg-accent transition-all duration-1000" :style="'width:' + quant.aiProb.home + '%'"></div>
+                <div class="h-full bg-ink/20 mx-px" :style="'width:' + quant.aiProb.draw + '%'"></div>
+                <div class="h-full bg-ink/10" :style="'width:' + quant.aiProb.away + '%'"></div>
+              </div>
+              <div class="flex justify-between text-[10px] font-mono text-ink/60">
+                <span x-text="quant.aiProb.home + '%'"></span>
+                <span x-text="quant.aiProb.draw + '%'"></span>
+                <span x-text="quant.aiProb.away + '%'"></span>
+              </div>
+            </div>
+
+            <!-- Score & Goals Snapshot -->
+            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-ink/5">
+              <div>
+                <div class="text-[8px] font-black text-ink-faded uppercase mb-2">高概率比分</div>
+                <div class="space-y-1">
+                  <template x-for="s in topScores" :key="s.score">
+                    <div class="flex justify-between text-[10px] font-mono">
+                      <span class="text-ink font-bold" x-text="s.score"></span>
+                      <span class="text-ink-faded" x-text="fmtPct(s.prob)"></span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <div>
+                <div class="text-[8px] font-black text-ink-faded uppercase mb-2">总进球趋势</div>
+                <div class="space-y-1">
+                   <div class="flex justify-between text-[10px] font-mono">
+                     <span class="text-ink font-bold">2/3球</span>
+                     <span class="text-ink-faded" x-text="fmtPct(goalsProb.mid)"></span>
+                   </div>
+                   <div class="flex justify-between text-[10px] font-mono">
+                     <span class="text-ink font-bold">大球(>2.5)</span>
+                     <span class="text-ink-faded" x-text="fmtPct(goalsProb.over)"></span>
+                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Report Trigger -->
+          <div class="p-5 mt-auto bg-paper-dark/5 border-t border-ink/5">
+            <button @click="openReport(m.id)" class="w-full py-3 bg-ink text-paper text-[10px] font-black uppercase tracking-[0.2em] hover:bg-black transition-all flex items-center justify-center gap-2">
+              <span>阅读 AI 深度量化报告</span>
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+
         </div>
       </template>
     </div>
-    
-    <!-- Footer -->
-    <div class="text-center py-40 opacity-20">
-      <div class="text-[9px] font-black tracking-[0.5em] uppercase mb-4">Internal Quantitative Testing Phase</div>
-      <div class="text-[10px] font-serif italic">Verified Truth through Mathematical Precision.</div>
-    </div>
-
   </div>
 </main>
+
+<!-- Detailed Report Modal (New Focus) -->
+<div id="reportModal" class="fixed inset-0 z-[120] hidden overflow-hidden" x-data="ReportModal()">
+  <div class="absolute inset-0 bg-paper/95 backdrop-blur-md" @click="close()"></div>
+  <div class="absolute inset-y-0 right-0 w-full max-w-2xl bg-paper-light shadow-2xl border-l border-ink/5 flex flex-col fade-in-right">
+    
+    <div class="p-8 border-b border-ink/5 flex justify-between items-center">
+       <div>
+          <div class="text-[10px] font-black text-accent uppercase tracking-widest mb-1">Intelligence Briefing</div>
+          <h2 class="text-2xl font-serif text-ink italic" x-text="matchName"></h2>
+       </div>
+       <button @click="close()" class="text-2xl text-ink-faded hover:text-ink">&times;</button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-10 sm:p-16 space-y-12 scrollbar-hide">
+       <template x-if="loading">
+          <div class="py-20 text-center opacity-30">
+             <div class="text-xs font-bold tracking-widest uppercase animate-pulse">正在生成精算报告...</div>
+          </div>
+       </template>
+       
+       <template x-if="!loading">
+          <div class="animate-fade-in-up">
+             <!-- Quant Verification Block -->
+             <div class="mb-16 grid grid-cols-3 gap-8 py-6 border-y border-ink/5">
+                <div>
+                   <div class="text-[9px] font-black text-ink-faded uppercase mb-1">Elo 分差</div>
+                   <div class="text-lg font-serif italic text-ink" x-text="eloDiff"></div>
+                </div>
+                <div>
+                   <div class="text-[9px] font-black text-ink-faded uppercase mb-1">量化边际</div>
+                   <div class="text-lg font-serif italic text-accent" x-text="edge"></div>
+                </div>
+                <div>
+                   <div class="text-[9px] font-black text-ink-faded uppercase mb-1">置信度</div>
+                   <div class="text-lg font-serif italic text-ink" x-text="confidence"></div>
+                </div>
+             </div>
+
+             <!-- The AI Analysis -->
+             <div class="prose prose-ink max-w-none">
+                <div class="text-base sm:text-lg leading-relaxed text-ink/90 font-serif italic whitespace-pre-wrap" x-text="reportContent"></div>
+             </div>
+             
+             <!-- Warning -->
+             <div class="mt-20 p-6 bg-paper-dark/20 text-[10px] text-ink-faded leading-loose">
+                ⚠️ 模型声明：本报告由 StackingNet v4.5 神经网络自动生成，基于 48 个历史特征变量及实时赔率偏差。评估结果仅供数学参考，不作为最终投注依据。
+             </div>
+          </div>
+       </template>
+    </div>
+    
+    <div class="p-8 border-t border-ink/5 bg-paper-dark/5 flex justify-center">
+       <a href="https://t.me/vpsgogogo_bot" target="_blank" class="btn-zen">加入私域群组获取每日完整推介</a>
+    </div>
+  </div>
+</div>
 
 <!-- Match Detail Modal -->
 <div id="detailModal" class="fixed inset-0 z-[60] hidden">
@@ -797,7 +787,8 @@
 <script src="/static/api_client.js?v=20260527-ultimate-reshaping"></script>
 <script src="/static/app.js?v=20260527-ultimate-reshaping"></script>
 <script src="/static/src/components/CopilotBubble.js?v=20260527-ultimate-reshaping"></script>
-<script src="/static/src/components/FeedCard.js?v=2"></script>
+<script src="/static/src/components/ProMatchCard.js?v=4"></script>
+<script src="/static/src/components/CopilotBubble.js?v=20260527-ultimate-reshaping"></script>
 <script src="/static/src/components/MonitorDashboard.js?v=20260527-ultimate-reshaping"></script>
 <script src="/static/src/components/ValidationDashboard.js?v=20260527-ultimate-reshaping"></script>
 <script src="/static/src/components/FeedbackBoard.js?v=20260527-ultimate-reshaping"></script>

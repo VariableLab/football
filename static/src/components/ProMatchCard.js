@@ -1,0 +1,102 @@
+function ProMatchCard(match, index) {
+  return {
+    match: match,
+    homeTeam: null,
+    awayTeam: null,
+    topScores: [],
+    goalsProb: { mid: 0, over: 0 },
+    quant: {
+      aiProb: { home: 33, draw: 33, away: 33 },
+      edge: 0
+    },
+
+    async init() {
+      this.homeTeam = AppState.teams.find(t => t.id === this.match.home_team_id) || { name: this.match.home_team?.name || '主队', elo: 1500 };
+      this.awayTeam = AppState.teams.find(t => t.id === this.match.away_team_id) || { name: this.match.away_team?.name || '客队', elo: 1500 };
+      
+      const spf = this.match.predictions?.find(p => p.play_type === 'SPF');
+      if (spf) {
+        this.quant.aiProb = {
+          home: (spf.probabilities.home * 100).toFixed(0),
+          draw: (spf.probabilities.draw * 100).toFixed(0),
+          away: (spf.probabilities.away * 100).toFixed(0)
+        };
+      }
+
+      const score = this.match.predictions?.find(p => p.play_type === 'SCORE');
+      if (score) {
+        this.topScores = Object.entries(score.probabilities)
+          .sort((a,b) => b[1]-a[1])
+          .slice(0, 3)
+          .map(([score, prob]) => ({ score, prob }));
+      }
+
+      const goals = this.match.predictions?.find(p => p.play_type === 'GOALS');
+      if (goals) {
+        const p2 = goals.probabilities['2'] || 0;
+        const p3 = goals.probabilities['3'] || 0;
+        this.goalsProb.mid = p2 + p3;
+        
+        let over25 = 0;
+        for (let key in goals.probabilities) {
+          if (parseInt(key) >= 3 || key === '7+') over25 += goals.probabilities[key];
+        }
+        this.goalsProb.over = over25;
+      }
+
+      // Calculate Edge if odds exist
+      if (spf && this.match.odds_home) {
+        const impH = 1 / this.match.odds_home;
+        this.quant.edge = spf.probabilities.home - impH;
+      }
+    }
+  };
+}
+
+function ReportModal() {
+  return {
+    show: false,
+    loading: true,
+    matchName: '',
+    reportContent: '',
+    eloDiff: '-',
+    edge: '-',
+    confidence: '-',
+
+    init() {
+      window.addEventListener('open-report-modal', async (e) => {
+        const { matchId } = e.detail;
+        this.show = true;
+        this.loading = true;
+        document.getElementById('reportModal').classList.remove('hidden');
+        
+        try {
+          const resp = await fetch(`/api/advisor/report/${matchId}`, { method: 'POST' });
+          const data = await resp.json();
+          this.reportContent = data.content;
+          
+          // Fetch additional quant data for the header
+          const stratResp = await fetch(`/api/matches/${matchId}/strategy`);
+          const stratData = await stratResp.json();
+          this.matchName = stratData.strategies[0]?.strategy_name || '比赛研判';
+          this.edge = (stratData.strategies[0]?.edge * 100).toFixed(1) + '%';
+          this.confidence = stratData.confidence || 'Normal';
+          this.eloDiff = e.detail.eloDiff || '-';
+        } catch (e) {
+          this.reportContent = "报告生成失败，请检查系统状态。";
+        } finally {
+          this.loading = false;
+        }
+      });
+    },
+
+    close() {
+      document.getElementById('reportModal').classList.add('hidden');
+    }
+  };
+}
+
+// 全局触发函数
+function openReport(matchId) {
+  window.dispatchEvent(new CustomEvent('open-report-modal', { detail: { matchId } }));
+}

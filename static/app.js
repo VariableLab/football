@@ -1,58 +1,55 @@
 /**
- * WC Analytics — 主应用逻辑 (v3.0 Lightweight Feed 版)
+ * WC Analytics — 专业量化终端版 (v4.0)
  */
 
 const AppState = {
   matches: [],
   teams: [],
-  page: 1,
-  pageSize: 20, // Load more matches at once for the feed
+  filter: 'jingcai',
   user: null,
 };
 
-// ─── 核心启动 ───
 async function initApp() {
   await I18n.init();
   try {
-    // 1. 获取基础数据
     const [teams, me] = await Promise.all([
       WCApi.Data.getTeams(),
       WCApi.Auth.me().catch(() => null)
     ]);
     AppState.teams = teams.items || [];
     AppState.user = me;
-    
-    // 2. 加载赛事 Feed
-    loadMatchFeed();
-    
+    loadMatchView();
   } catch (e) {
     console.error('App init failed', e);
   }
 }
 
-// ─── 比赛数据加载 ───
-async function loadMatchFeed() {
+async function loadMatchView() {
+  // Trigger loading state via event
+  window.dispatchEvent(new CustomEvent('matches-loading'));
   try {
-    // 获取竞彩在售/即将开始的比赛
-    const matches = await WCApi.Data.getMatches('jingcai');
+    const matches = await WCApi.Data.getMatches(AppState.filter);
     AppState.matches = matches || [];
-    
-    // 触发渲染
-    renderFeed();
+    window.dispatchEvent(new CustomEvent('matches-updated', { detail: { matches: AppState.matches } }));
   } catch (e) {
     console.error('Load matches failed', e);
     window.dispatchEvent(new CustomEvent('matches-updated', { detail: { matches: [] } }));
   }
 }
 
-function renderFeed() {
-  const matches = AppState.matches;
-  window.dispatchEvent(new CustomEvent('matches-updated', { 
-    detail: { matches: matches } 
-  }));
+function setFilter(filter) {
+  AppState.filter = filter;
+  document.querySelectorAll('[data-filter]').forEach(btn => {
+    const isActive = btn.dataset.filter === filter;
+    btn.classList.toggle('border-b-2', isActive);
+    btn.classList.toggle('border-accent', isActive);
+    btn.classList.toggle('text-ink', isActive);
+    btn.classList.toggle('font-bold', isActive);
+    btn.classList.toggle('text-ink-faded', !isActive);
+  });
+  loadMatchView();
 }
 
-// ─── 工具函数 ───
 function fmtBJ(iso) {
   if (!iso) return '-';
   const d = new Date(iso);
@@ -61,7 +58,11 @@ function fmtBJ(iso) {
   return `${bj.getMonth()+1}/${bj.getDate()} ${bj.getHours().toString().padStart(2, '0')}:${bj.getMinutes().toString().padStart(2, '0')}`;
 }
 
-function fmtPct(v) { return v ? (v * 100).toFixed(1) + '%' : '-'; }
+function fmtPct(v) { 
+  if (v === undefined || v === null) return '0%';
+  return (v * 100).toFixed(1) + '%'; 
+}
 
-// 启动
+function openLoginModal() { window.dispatchEvent(new CustomEvent('open-login-modal')); }
+
 document.addEventListener('DOMContentLoaded', initApp);
