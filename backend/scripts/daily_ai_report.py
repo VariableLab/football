@@ -132,6 +132,23 @@ async def generate_daily_report():
                     print("=" * 60)
                     print(analysis)
                     print("=" * 60 + "\n")
+
+                    # 🚀 同步到数据库持久化缓存 (Pre-warm Cache)
+                    from database.models import MatchAIReport
+                    import hashlib
+                    
+                    odds_str = f"{match.odds_home}-{match.odds_draw}-{match.odds_away}"
+                    checksum = hashlib.sha256(odds_str.encode()).hexdigest()
+                    
+                    cached = db.query(MatchAIReport).filter(MatchAIReport.match_id == match.id).first()
+                    if cached:
+                        cached.content = analysis
+                        cached.input_checksum = checksum
+                    else:
+                        new_rep = MatchAIReport(match_id=match.id, content=analysis, input_checksum=checksum)
+                        db.add(new_rep)
+                    db.commit()
+                    print(f"📦 已预填充数据库缓存 (Concurrent-Safe)")
                     
                     # 🚀 测试阶段暂停 Telegram 推送
                     # await send_to_telegram(client, analysis, f"{home.name} vs {away.name}")

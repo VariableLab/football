@@ -603,3 +603,14 @@ def get_db():
         yield db
     finally:
         db.close()
+
+# ────────────────────────────
+# AI Report Cache（AI 精算师报告持久化缓存，解决并发性能瓶颈）
+# ────────────────────────────
+class MatchAIReport(Base):
+    __tablename__ = "match_ai_reports"
+    id = Column(Integer, primary_key=True)
+    match_id = Column(Integer, ForeignKey("matches.id", ondelete="CASCADE"), unique=True, index=True)
+    content = Column(Text, nullable=False)
+    input_checksum = Column(String(64), nullable=True) # 用于感知赔率变化以更新报告
+    generated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

@@ -45,14 +45,28 @@ async def generate_match_report(
     db: Session = Depends(get_db),
     user = Depends(get_optional_user)
 ):
-    """一键生成 AI 足球战报/前瞻 (小红书/Twitter 风格)"""
+    """一键生成 AI 足球战报/前瞻 (带持久化缓存)"""
     from anyio.to_thread import run_sync
-    
+    from database.models import MatchAIReport
+    import hashlib
+
     match = db.query(Match).filter(Match.id == match_id).first()
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
 
-    # 1. 准备深度上下文
+    # 1. 计算当前数据指纹 (基于赔率)
+    odds_str = f"{match.odds_home}-{match.odds_draw}-{match.odds_away}"
+    current_checksum = hashlib.sha256(odds_str.encode()).hexdigest()
+
+    # 2. 检查缓存
+    cached_report = db.query(MatchAIReport).filter(MatchAIReport.match_id == match_id).first()
+    if cached_report and cached_report.input_checksum == current_checksum:
+        logger.info(f"[report-cache] HIT for match {match_id}")
+        return ReportResponse(content=cached_report.content, match_code=match.match_code)
+
+    # 3. 缓存未命中或过期，执行实时推理
+    logger.info(f"[report-cache] MISS for match {match_id}, generating...")
+    
     def _get_context(m):
         engine = PredictionEngine(db_session=db)
         res = engine.predict(build_context_from_match(m))
@@ -68,7 +82,7 @@ async def generate_match_report(
 
     ctx_data = await run_sync(_get_context, match)
     
-    # 2. 构造提示词 (网感增强，与 daily_ai_report 脚本对齐)
+    # 构造提示词 (保持精算师人设)
     def format_team_data(t):
         return f"""
   - 近期战绩: {t.recent_results if t.recent_results else '暂无数据'}
@@ -107,7 +121,22 @@ async def generate_match_report(
             )
             resp.raise_for_status()
             content = resp.json()["choices"][0]["message"]["content"]
+            
+            # 4. 更新数据库缓存
+            if cached_report:
+                cached_report.content = content
+                cached_report.input_checksum = current_checksum
+            else:
+                new_report = MatchAIReport(
+                    match_id=match_id,
+                    content=content,
+                    input_checksum=current_checksum
+                )
+                db.add(new_report)
+            
+            db.commit()
             return ReportResponse(content=content, match_code=match.match_code)
+            
         except Exception as e:
             logger.error(f"Report generation failed: {e}")
             raise HTTPException(status_code=502, detail="内容生成失败，请稍后重试。")
