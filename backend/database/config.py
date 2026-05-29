@@ -57,6 +57,10 @@ class Settings(BaseSettings):
     ADVISOR_API_KEY: str = "sk-F9fKBTHbEJE4AEY9aOy5IwwUdxOPrZ3NilvAnohOO1ODm1KT"
     ADVISOR_MODEL: str = "z-ai/glm-5.1"
 
+    # Telegram Bot
+    TELEGRAM_BOT_TOKEN: str = "8815524049:AAEoShNB5hRVHLQOVYGf8hzP05PNQ4ibb9I"
+    TELEGRAM_CHAT_ID: str = "8815524049" # Default to the ID provided, usually this is a channel or user ID
+
     class Config:
         env_file = ".env" if not _PRODUCTION else ""
         env_file_encoding = "utf-8"

@@ -38,6 +38,28 @@ def get_hot_matches(db, limit=3):
     
     return matches
 
+async def send_to_telegram(client, text, match_title):
+    """发送报告到 Telegram Bot"""
+    if not settings.TELEGRAM_BOT_TOKEN or not settings.TELEGRAM_CHAT_ID:
+        print("⚠️ 未配置 Telegram Token 或 Chat ID，跳过推送。")
+        return
+    
+    url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
+    message = f"🔥 *【{match_title}】 深度精算报告*\n\n{text}"
+    
+    try:
+        resp = await client.post(url, json={
+            "chat_id": settings.TELEGRAM_CHAT_ID,
+            "text": message,
+            "parse_mode": "Markdown"
+        })
+        if resp.status_code == 200:
+            print(f"📡 已成功推送到 Telegram Bot")
+        else:
+            print(f"❌ Telegram 推送失败: {resp.status_code} {resp.text}")
+    except Exception as e:
+        print(f"❌ Telegram 推送异常: {e}")
+
 async def generate_daily_report():
     print("=" * 60)
     print("🤖 启动 AI 足彩精算师自动化分析流...")
@@ -110,6 +132,9 @@ async def generate_daily_report():
                     print("=" * 60)
                     print(analysis)
                     print("=" * 60 + "\n")
+                    
+                    # 🚀 同步推送到 Telegram
+                    await send_to_telegram(client, analysis, f"{home.name} vs {away.name}")
                     
                     await asyncio.sleep(5) # 增加延迟避免 API 速率限制
                     
