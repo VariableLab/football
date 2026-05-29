@@ -59,7 +59,7 @@ class Settings(BaseSettings):
 
     # Telegram Bot
     TELEGRAM_BOT_TOKEN: str = "8815524049:AAEoShNB5hRVHLQOVYGf8hzP05PNQ4ibb9I"
-    TELEGRAM_CHAT_ID: str = "-5176302899" 
+    TELEGRAM_CHAT_ID: str = "-1003976732739" 
 
     class Config:
         env_file = ".env" if not _PRODUCTION else ""
