@@ -27,100 +27,113 @@
 </nav>
 
 <!-- Main -->
-<main class="pt-20 pb-24 max-w-2xl mx-auto px-4 sm:px-6">
+<main class="pt-24 pb-24 max-w-xl mx-auto px-4 sm:px-6">
+
   <!-- Hero / CTA -->
-  <section class="mb-10">
-    <div class="text-center mb-8 mt-4">
-      <h1 class="font-serif text-3xl sm:text-4xl font-black tracking-tight mb-3 text-charcoal">AI 足彩精算师每日推介</h1>
-      <p class="text-sm text-warm-gray font-medium">基于欧洲五大联赛量化模型 · 每日自动更新</p>
+  <section class="mb-12 flex flex-col items-center">
+    <div class="w-16 h-16 bg-gradient-to-br from-accent-blue to-accent rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-accent/20">
+      <span class="text-3xl">🤖</span>
+    </div>
+    <div class="text-center mb-8">
+      <h1 class="font-serif text-3xl sm:text-4xl font-black tracking-tight mb-3 hero-title">AI 足彩精算师每日推介</h1>
+      <p class="text-sm text-warm-gray font-medium leading-relaxed">基于欧洲五大联赛量化模型<br>实时盘口异动监测 · 每日自动推送</p>
     </div>
     
-    <a href="https://t.me/your_channel" target="_blank" class="flex items-center justify-center gap-3 w-full bg-[#24A1DE] text-white text-center py-4 rounded-2xl font-bold shadow-xl shadow-[#24A1DE]/20 hover:scale-[1.02] hover:bg-[#2092c9] transition-all">
-      <span class="text-xl">🚀</span>
-      <span class="tracking-wide">加入 Telegram 内部社群解锁 80% 胜率推介</span>
+    <a href="https://t.me/your_channel" target="_blank" class="flex items-center justify-center gap-3 w-full bg-[#24A1DE] text-white py-4 px-6 rounded-2xl font-bold shadow-xl shadow-[#24A1DE]/20 hover:scale-[1.02] transition-all border border-white/10 relative overflow-hidden group">
+      <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+      <span class="text-xl relative z-10">✈️</span>
+      <span class="tracking-wide relative z-10 text-[15px]">加入 Telegram 解锁 80% 胜率专栏</span>
     </a>
   </section>
 
   <!-- Feed -->
   <div id="sectionMatches" x-data="{ matches: [], loading: true }" x-init="
     window.addEventListener('matches-updated', (e) => {
-      // 过滤出有赔率的未结束比赛
       matches = e.detail.matches.filter(m => ['scheduled', 'upcoming', 'live'].includes(m.status));
-      if (matches.length === 0) {
-        matches = e.detail.matches;
-      }
+      if (matches.length === 0) matches = e.detail.matches;
       loading = false;
     })
   ">
     
     <template x-if="loading">
-      <div class="text-center py-16 text-warm-gray">
-        <div class="w-10 h-10 rounded-full border-4 border-accent/20 border-t-accent animate-spin mx-auto mb-4"></div>
-        <div class="text-sm font-bold tracking-widest uppercase">正在萃取今日焦点赛事...</div>
+      <div class="text-center py-20">
+        <div class="w-12 h-12 rounded-full border-4 border-accent/20 border-t-accent animate-spin mx-auto mb-6"></div>
+        <div class="text-xs font-black tracking-[0.2em] text-warm-gray uppercase">正在萃取今日焦点赛事...</div>
       </div>
     </template>
 
     <div class="space-y-8">
       <template x-for="(m, index) in matches" :key="m.id">
-        <div x-data="FeedCard(m, index)" class="bg-white border border-charcoal/5 rounded-[2rem] overflow-hidden shadow-2xl shadow-charcoal/5">
+        <div x-data="FeedCard(m, index)" class="glass border border-white/5 rounded-3xl overflow-hidden card-stagger">
           
-          <div class="p-4 border-b border-charcoal/5 bg-gray-50/50 flex justify-between items-center">
+          <!-- Match Header -->
+          <div class="px-6 py-4 border-b border-white/5 bg-white/5 flex justify-between items-center backdrop-blur-md">
             <div class="flex items-center gap-3">
-              <span class="text-[10px] font-black uppercase tracking-widest text-accent bg-accent/10 px-2 py-1 rounded" x-text="m.competition || '赛事'"></span>
+              <span class="text-[10px] font-black uppercase tracking-widest text-accent-cyan bg-accent-cyan/10 px-2.5 py-1 rounded-md" x-text="m.competition || '赛事'"></span>
               <span class="text-xs font-bold text-warm-gray" x-text="fmtBJ(m.kickoff_at)"></span>
             </div>
             <div class="flex items-center gap-2">
-              <div class="w-2 h-2 rounded-full bg-accent animate-pulse" x-show="m.status === 'live'"></div>
-              <span class="text-[10px] font-bold text-warm-gray uppercase tracking-widest" x-text="m.status === 'live' ? 'Live' : (m.status === 'finished' ? 'Final' : 'Soon')"></span>
+              <div class="w-2 h-2 rounded-full bg-accent-red animate-pulse" x-show="m.status === 'live'"></div>
+              <span class="text-[10px] font-black text-warm-gray uppercase tracking-widest" x-text="m.status === 'live' ? 'LIVE' : (m.status === 'finished' ? 'FINAL' : 'SOON')"></span>
             </div>
           </div>
 
-          <div class="p-6 flex items-center justify-between">
-            <div class="flex flex-col items-center w-5/12 gap-2">
-              <div class="text-3xl" x-text="homeTeam.flag || '🏴'"></div>
-              <div class="text-base font-black text-center text-charcoal leading-tight" x-text="homeTeam.name"></div>
+          <!-- Teams -->
+          <div class="p-8 flex items-center justify-between relative overflow-hidden">
+            <!-- decorative blur -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-accent/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="flex flex-col items-center w-5/12 gap-3 z-10">
+              <div class="text-5xl drop-shadow-2xl" x-text="homeTeam.flag || '🏴'"></div>
+              <div class="text-lg font-black text-center text-charcoal leading-tight" x-text="homeTeam.name"></div>
             </div>
-            <div class="w-2/12 flex justify-center">
-              <div class="text-sm font-black text-warm-gray/50 italic">VS</div>
+            <div class="w-2/12 flex justify-center z-10">
+              <div class="text-sm font-black text-warm-gray/30 italic">VS</div>
             </div>
-            <div class="flex flex-col items-center w-5/12 gap-2">
-              <div class="text-3xl" x-text="awayTeam.flag || '🏳️'"></div>
-              <div class="text-base font-black text-center text-charcoal leading-tight" x-text="awayTeam.name"></div>
+            <div class="flex flex-col items-center w-5/12 gap-3 z-10">
+              <div class="text-5xl drop-shadow-2xl" x-text="awayTeam.flag || '🏳️'"></div>
+              <div class="text-lg font-black text-center text-charcoal leading-tight" x-text="awayTeam.name"></div>
             </div>
           </div>
 
-          <div class="p-6 bg-[#111111] text-white relative">
-            <div class="flex items-center gap-2 mb-5">
+          <!-- AI Analysis / Paywall -->
+          <div class="p-6 bg-cream-dark/80 border-t border-white/5 relative">
+            <div class="flex items-center gap-2 mb-6">
               <span class="text-lg">🤖</span>
-              <span class="text-[11px] font-black tracking-widest uppercase text-white/60">量化精算分析</span>
+              <span class="text-[11px] font-black tracking-widest uppercase text-accent">AI 量化精算分析</span>
             </div>
 
+            <!-- Free View -->
             <template x-if="!isPaywalled">
-              <div class="space-y-4">
-                <div class="flex justify-between items-center bg-white/5 border border-white/5 p-4 rounded-2xl">
-                  <span class="text-xs font-bold text-white/50 tracking-widest uppercase">AI 预测方向</span>
-                  <span class="text-lg font-black text-accent" x-text="predictionDir"></span>
+              <div class="space-y-5 animate-fade-in-up">
+                <div class="flex justify-between items-center bg-white/5 border border-white/5 p-5 rounded-2xl">
+                  <span class="text-xs font-bold text-warm-gray tracking-widest uppercase">预测方向</span>
+                  <span class="text-xl font-black text-accent-cyan" x-text="predictionDir"></span>
                 </div>
-                <div class="text-sm leading-relaxed text-white/90 font-medium" x-text="rationale"></div>
+                <div class="text-sm leading-relaxed text-charcoal font-normal opacity-90 p-2 whitespace-pre-wrap" x-text="rationale"></div>
               </div>
             </template>
 
+            <!-- Paywalled View -->
             <template x-if="isPaywalled">
-              <div class="relative overflow-hidden rounded-2xl">
-                <div class="filter blur-[8px] opacity-40 space-y-4 select-none pointer-events-none p-2">
-                  <div class="flex justify-between items-center bg-white/5 border border-white/5 p-4 rounded-2xl">
-                    <span class="text-xs font-bold text-white/50 tracking-widest uppercase">AI 预测方向</span>
-                    <span class="text-lg font-black text-accent">主胜稳胆</span>
+              <div class="relative overflow-hidden rounded-2xl group">
+                <div class="filter blur-[10px] opacity-30 space-y-5 select-none pointer-events-none p-2 transition-all duration-500 group-hover:blur-[12px]">
+                  <div class="flex justify-between items-center bg-white/5 border border-white/5 p-5 rounded-2xl">
+                    <span class="text-xs font-bold text-warm-gray tracking-widest uppercase">预测方向</span>
+                    <span class="text-xl font-black text-accent-cyan">主胜稳胆</span>
                   </div>
-                  <div class="text-sm leading-relaxed text-white/90 font-medium">
-                    这是一段被隐藏的深度精算分析。根据量化模型跑出的数据，本场比赛存在极大的盘口错价空间。资金面显示主队存在巨大的拉力，客场球队的防守数据在近期有明显的断崖式下跌。强烈建议关注主胜方向。
+                  <div class="text-sm leading-relaxed text-charcoal font-normal whitespace-pre-wrap">
+这是一段被隐藏的深度精算分析。根据量化模型跑出的数据，本场比赛存在极大的盘口错价空间。资金面显示主队存在巨大的拉力，客场球队的防守数据在近期有明显的断崖式下跌。强烈建议关注主胜方向。
                   </div>
                 </div>
                 
-                <div class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-[#111111] via-[#111111]/80 to-transparent">
-                  <div class="text-3xl mb-3 animate-bounce">🔒</div>
-                  <div class="text-sm font-bold text-white mb-5 text-center leading-relaxed">此场比赛蕴含极高收益空间<br><span class="text-accent">算法已捕捉 80%+ 胜率冷门</span></div>
-                  <a href="https://t.me/your_channel" target="_blank" class="px-8 py-3.5 bg-white text-charcoal rounded-full text-xs font-black tracking-widest hover:scale-105 hover:bg-gray-200 transition-all shadow-xl shadow-white/10">
+                <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 bg-gradient-to-t from-cream-dark via-cream-dark/90 to-transparent">
+                  <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-4 backdrop-blur-md border border-white/10">
+                    <span class="text-2xl">🔒</span>
+                  </div>
+                  <div class="text-[15px] font-bold text-charcoal mb-2 leading-relaxed">此场比赛蕴含极高收益空间</div>
+                  <div class="text-xs font-medium text-accent-cyan mb-6">算法已捕捉 80%+ 胜率冷门</div>
+                  <a href="https://t.me/your_channel" target="_blank" class="px-8 py-3.5 bg-charcoal text-cream-dark rounded-full text-xs font-black tracking-widest hover:scale-105 transition-all shadow-xl shadow-white/10 inline-block w-full sm:w-auto">
                     立即进群解锁
                   </a>
                 </div>
@@ -131,9 +144,13 @@
       </template>
     </div>
     
-    <div class="text-center py-12">
-      <div class="text-xs font-bold text-warm-gray/50 tracking-widest uppercase mb-4">没有更多比赛了</div>
-      <a href="https://t.me/your_channel" target="_blank" class="text-xs font-bold text-accent hover:underline">去 Telegram 频道查看历史战绩记录 →</a>
+    <!-- Bottom Filler -->
+    <div class="text-center py-16">
+      <div class="text-xs font-bold text-warm-gray/30 tracking-[0.2em] uppercase mb-4">没有更多比赛了</div>
+      <a href="https://t.me/your_channel" target="_blank" class="inline-flex items-center gap-2 text-xs font-bold text-accent-cyan hover:text-white transition-colors">
+        <span>去 Telegram 频道查看历史战绩记录</span>
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
     </div>
 
   </div>
