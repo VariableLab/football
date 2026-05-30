@@ -36,17 +36,17 @@
   <section class="mb-12">
     <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
       <div>
-        <h1 class="text-3xl font-serif font-black text-ink mb-2">量化预测终端</h1>
+        <h1 class="text-3xl font-serif font-black text-ink mb-2"><span data-i18n="terminal.title">量化预测终端</span></h1>
         <div class="flex items-center gap-3">
-          <p class="text-sm text-ink-faded">对标在售赛事 · 神经网络多维推演 · 实时概率校准</p>
+          <p class="text-sm text-ink-faded"><span data-i18n="terminal.subtitle">对标在售赛事 · 神经网络多维推演 · 实时概率校准</span></p>
           <span class="text-ink/10">|</span>
           <a href="/static/LogicExplainer.html" class="text-[10px] font-black uppercase tracking-widest text-accent border-b border-accent/20 hover:border-accent transition-all pb-0.5">了解算法逻辑 →</a>
         </div>
       </div>
       <div class="flex items-center gap-4">
         <div class="px-4 py-2 bg-accent/5 border border-accent/10 rounded-lg">
-          <span class="text-[10px] font-black text-accent uppercase tracking-widest block">系统状态</span>
-          <span class="text-xs font-bold text-ink">48-特征扫描引擎运行中</span>
+          <span class="text-[10px] font-black text-accent uppercase tracking-widest block"><span data-i18n="terminal.status">系统状态</span></span>
+          <span class="text-xs font-bold text-ink"><span data-i18n="terminal.engine_active">48-特征扫描引擎运行中</span></span>
         </div>
       </div>
     </div>
@@ -54,9 +54,9 @@
 
   <!-- Market Tabs -->
   <div class="flex items-center gap-4 mb-10 border-b border-ink/5" id="sectionTabs">
-    <button onclick="setFilter('jingcai')" class="px-6 py-4 text-sm font-bold border-b-2 border-accent text-ink transition-all" data-filter="jingcai">🏆 在售赛事 (Jingcai)</button>
-    <button onclick="setFilter('today')" class="px-6 py-4 text-sm font-medium text-ink-faded hover:text-ink transition-all" data-filter="today">今日全部</button>
-    <button onclick="setFilter('tomorrow')" class="px-6 py-4 text-sm font-medium text-ink-faded hover:text-ink transition-all" data-filter="tomorrow">明日预告</button>
+    <button onclick="setFilter('jingcai')" class="px-6 py-4 text-sm font-bold border-b-2 border-accent text-ink transition-all" data-filter="jingcai"><span data-i18n="tab.jingcai">🏆 在售赛事 (Jingcai)</span></button>
+    <button onclick="setFilter('today')" class="px-6 py-4 text-sm font-medium text-ink-faded hover:text-ink transition-all" data-filter="today"><span data-i18n="tab.today">今日全部</span></button>
+    <button onclick="setFilter('tomorrow')" class="px-6 py-4 text-sm font-medium text-ink-faded hover:text-ink transition-all" data-filter="tomorrow"><span data-i18n="tab.tomorrow">明日预告</span></button>
   </div>
 
   <!-- Match Feed: The Grid -->
@@ -71,7 +71,7 @@
     <template x-if="loading">
       <div class="col-span-full text-center py-24">
         <div class="w-10 h-10 rounded-full border-2 border-accent/20 border-t-accent animate-spin mx-auto mb-4"></div>
-        <div class="text-xs font-bold tracking-widest text-ink-faded uppercase">正在同步在售赛事数据...</div>
+        <div class="text-xs font-bold tracking-widest text-ink-faded uppercase"><span data-i18n="loading.sync">正在同步在售赛事数据...</span></div>
       </div>
     </template>
 
@@ -106,7 +106,7 @@
             <!-- SPF Bar -->
             <div class="space-y-2">
               <div class="flex justify-between text-[9px] font-black text-ink-faded uppercase tracking-widest">
-                <span>胜平负概率 (SPF)</span>
+                <span><span data-i18n="match.spf_prob">胜平负概率 (SPF)</span></span>
                 <span class="text-accent" x-text="'Edge: ' + fmtPct(quant.edge)"></span>
               </div>
               <div class="h-1.5 w-full bg-ink/5 rounded-full flex overflow-hidden">
@@ -124,7 +124,7 @@
             <!-- Score & Goals Snapshot -->
             <div class="grid grid-cols-2 gap-4 pt-4 border-t border-ink/5">
               <div>
-                <div class="text-[8px] font-black text-ink-faded uppercase mb-2">高概率比分</div>
+                <div class="text-[8px] font-black text-ink-faded uppercase mb-2"><span data-i18n="match.top_scores">高概率比分</span></div>
                 <div class="space-y-1">
                   <template x-for="s in topScores" :key="s.score">
                     <div class="flex justify-between text-[10px] font-mono">
@@ -135,7 +135,7 @@
                 </div>
               </div>
               <div>
-                <div class="text-[8px] font-black text-ink-faded uppercase mb-2">总进球趋势</div>
+                <div class="text-[8px] font-black text-ink-faded uppercase mb-2"><span data-i18n="match.goals_trend">总进球趋势</span></div>
                 <div class="space-y-1">
                    <div class="flex justify-between text-[10px] font-mono">
                      <span class="text-ink font-bold">2/3球</span>
@@ -153,7 +153,7 @@
           <!-- AI Report Trigger -->
           <div class="p-5 mt-auto bg-paper-dark/5 border-t border-ink/5">
             <button @click="openReport(m.id)" class="w-full py-4 bg-ink text-paper text-[10px] font-black uppercase tracking-[0.2em] hover:bg-black transition-all flex items-center justify-center gap-3">
-              <span>阅读 AI 深度量化报告</span>
+              <span><span data-i18n="match.read_report">阅读 AI 深度量化报告</span></span>
               <svg style="width: 12px; height: 12px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
             </button>
           </div>
@@ -171,7 +171,7 @@
     
     <div class="p-8 border-b border-ink/5 flex justify-between items-center">
        <div>
-          <div class="text-[10px] font-black text-accent uppercase tracking-widest mb-1">Intelligence Briefing</div>
+          <div class="text-[10px] font-black text-accent uppercase tracking-widest mb-1"><span data-i18n="report.briefing">Intelligence Briefing</span></div>
           <h2 class="text-2xl font-serif text-ink italic" x-text="matchName"></h2>
        </div>
        <button @click="close()" class="text-2xl text-ink-faded hover:text-ink">&times;</button>
@@ -180,7 +180,7 @@
     <div class="flex-1 overflow-y-auto p-10 sm:p-16 space-y-12 scrollbar-hide">
        <template x-if="loading">
           <div class="py-20 text-center opacity-30">
-             <div class="text-xs font-bold tracking-widest uppercase animate-pulse">正在生成精算报告...</div>
+             <div class="text-xs font-bold tracking-widest uppercase animate-pulse"><span data-i18n="report.generating">正在生成精算报告...</span></div>
           </div>
        </template>
        
@@ -189,15 +189,15 @@
              <!-- Quant Verification Block -->
              <div class="mb-16 grid grid-cols-3 gap-8 py-6 border-y border-ink/5">
                 <div>
-                   <div class="text-[9px] font-black text-ink-faded uppercase mb-1">Elo 分差</div>
+                   <div class="text-[9px] font-black text-ink-faded uppercase mb-1"><span data-i18n="report.elo_diff">Elo 分差</span></div>
                    <div class="text-lg font-serif italic text-ink" x-text="eloDiff"></div>
                 </div>
                 <div>
-                   <div class="text-[9px] font-black text-ink-faded uppercase mb-1">量化边际</div>
+                   <div class="text-[9px] font-black text-ink-faded uppercase mb-1"><span data-i18n="report.edge">量化边际</span></div>
                    <div class="text-lg font-serif italic text-accent" x-text="edge"></div>
                 </div>
                 <div>
-                   <div class="text-[9px] font-black text-ink-faded uppercase mb-1">置信度</div>
+                   <div class="text-[9px] font-black text-ink-faded uppercase mb-1"><span data-i18n="report.confidence">置信度</span></div>
                    <div class="text-lg font-serif italic text-ink" x-text="confidence"></div>
                 </div>
              </div>
@@ -221,7 +221,7 @@
     </div>
     
     <div class="p-8 border-t border-ink/5 bg-paper-dark/5 flex justify-center">
-       <button @click="close()" class="btn-zen">关闭报告</button>
+       <button @click="close()" class="btn-zen"><span data-i18n="report.close">关闭报告</span></button>
     </div>
   </div>
 </div>
@@ -552,7 +552,7 @@
                               <div class="text-base font-bold num text-accent" x-text="pick.stake_pct.toFixed(1) + '%'"></div>
                             </div>
                             <div class="text-right">
-                              <div class="text-[10px] uppercase font-bold text-gray-400 mb-1">置信度</div>
+                              <div class="text-[10px] uppercase font-bold text-gray-400 mb-1"><span data-i18n="report.confidence">置信度</span></div>
                               <div class="text-xs font-bold uppercase tracking-widest" :class="pick.confidence === 'high' ? 'text-accent-green' : 'text-gray-600'" x-text="pick.confidence"></div>
                             </div>
                           </div>
