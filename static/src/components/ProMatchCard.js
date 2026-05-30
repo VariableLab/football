@@ -83,7 +83,7 @@ function ReportModal() {
           const verdictMatch = data.content.match(/预测方向[：:]\s*(胜|平|负)/);
           this.verdict = verdictMatch ? verdictMatch[1] : '待定';
 
-          // Fetch additional quant data for the header
+          // Fetch additional quant data
           const stratResp = await fetch(`/api/matches/${matchId}/strategy`);
           const stratData = await stratResp.json();
           this.matchName = stratData.strategies[0]?.strategy_name || '比赛研判';
@@ -91,7 +91,6 @@ function ReportModal() {
           this.confidence = stratData.confidence || 'Normal';
           this.eloDiff = e.detail.eloDiff || '-';
 
-          // 获取联赛名
           const matchData = AppState.matches.find(m => m.id === matchId);
           this.league = matchData?.competition || 'QUANT LAB';
 
@@ -104,18 +103,31 @@ function ReportModal() {
     },
 
     openPoster() {
+      // 提取一段精华文案作为海报摘要
+      let cleanRationale = this.reportContent.replace(/\*/g, '');
+      const sections = cleanRationale.split(/【|\[/);
+      let summary = "";
+      for (const section of sections) {
+        if (section.includes('精算结论') || section.includes('最终预测') || section.includes('结论')) {
+           summary = section.split(/】|\]/)[1]?.trim();
+           break;
+        }
+      }
+      if (!summary) summary = cleanRationale.substring(0, 140) + "...";
+
       window.dispatchEvent(new CustomEvent('open-poster-modal', { 
         detail: { 
           matchId: this.matchId,
           matchName: this.matchName,
           verdict: this.verdict,
-          rationale: this.reportContent.split('【')[1]?.split('】')[1]?.substring(0, 150) + '...',
+          rationale: summary,
           league: this.league
         } 
       }));
     },
 
     close() {
+      this.show = false;
       document.getElementById('reportModal').classList.add('hidden');
     }
   };
@@ -123,6 +135,7 @@ function ReportModal() {
 
 function PosterModal() {
   return {
+    show: false,
     matchId: '',
     matchName: '',
     verdict: '',
@@ -137,27 +150,29 @@ function PosterModal() {
         this.verdict = d.verdict;
         this.rationale = d.rationale;
         this.league = d.league;
+        this.show = true;
         document.getElementById('posterModal').classList.remove('hidden');
       });
     },
 
     async downloadPoster() {
       const canvas = await html2canvas(document.getElementById('posterCanvas'), {
-        backgroundColor: '#F9F8F3',
-        scale: 2
+        backgroundColor: '#FFFFFF',
+        scale: 3, // 高清导出
+        useCORS: true
       });
       const link = document.createElement('a');
-      link.download = `ProQuant-${this.matchId}.png`;
-      link.href = canvas.toDataURL();
+      link.download = `ProQuant-Dossier-${this.matchId}.png`;
+      link.href = canvas.toDataURL('image/png', 1.0);
       link.click();
     },
 
     close() {
+      this.show = false;
       document.getElementById('posterModal').classList.add('hidden');
     }
   };
 }
-
 
 // 全局触发函数
 function openReport(matchId) {

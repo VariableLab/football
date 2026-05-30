@@ -208,9 +208,7 @@
              </div>
              
              <!-- Warning -->
-             <div class="mt-20 p-6 bg-paper-dark/20 text-[10px] text-ink-faded leading-loose">
-                ⚠️ 模型声明：本报告由 StackingNet v4.5 神经网络自动生成，基于 48 个历史特征变量及实时赔率偏差。评估结果仅供数学参考，不作为最终投注依据。
-             </div>
+             
              
              <div class="mt-12">
                 <button @click="openPoster()" class="w-full py-4 border-2 border-accent text-accent text-[10px] font-black uppercase tracking-widest hover:bg-accent hover:text-paper transition-all">生成分享推文海报</button>
@@ -229,65 +227,82 @@
 </div>
 
 
+
 <!-- Share Poster Modal -->
-<div id="posterModal" class="fixed inset-0 z-[150] hidden overflow-y-auto" x-data="PosterModal()">
-  <div class="absolute inset-0 bg-paper/98 backdrop-blur-xl" @click="close()"></div>
-  <div class="relative min-h-screen flex items-center justify-center p-6">
-    <div class="w-full max-w-lg">
-      <!-- The Poster Paper -->
-      <div id="posterCanvas" class="paper-sheet p-12 sm:p-16 border-2 border-ink/5 bg-white relative overflow-hidden shadow-2xl">
-         <div class="absolute -top-10 -right-10 w-40 h-40 bg-accent/5 rounded-full blur-3xl opacity-50"></div>
-         
-         <div class="flex justify-between items-center mb-16 border-b border-ink/5 pb-8">
-            <div>
-               <div class="text-[9px] font-black text-accent uppercase tracking-[0.4em]">Official Verdict</div>
-               <div class="font-serif italic text-ink text-sm">ProQuant Intelligence</div>
+<div id="posterModal" class="fixed inset-0 z-[150] hidden overflow-y-auto" x-data="PosterModal()" x-show="show" x-cloak>
+  <div class="fixed inset-0 bg-paper/98 backdrop-blur-xl transition-opacity" @click="close()"></div>
+  
+  <!-- Close Button (Fixed Top Right) -->
+  <button @click="close()" class="fixed top-8 right-8 z-[160] w-12 h-12 rounded-full bg-ink/5 hover:bg-ink/10 flex items-center justify-center transition-all text-ink/40 hover:text-ink">
+    <svg style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+  </button>
+
+  <div class="relative min-h-screen flex flex-col items-center justify-center p-6 py-20">
+    <div class="w-full max-w-[440px]">
+      <!-- The Poster Paper (Design V2: Intelligence Dossier Style) -->
+      <div id="posterCanvas" class="paper-sheet p-12 sm:p-14 border border-ink/10 bg-white relative overflow-hidden shadow-2xl flex flex-col min-h-[640px]">
+         <!-- Top Banner -->
+         <div class="flex justify-between items-start mb-16">
+            <div class="space-y-1">
+               <div class="text-[10px] font-black text-accent uppercase tracking-[0.4em] leading-none">Intelligence Dossier</div>
+               <div class="font-serif italic text-ink/60 text-[11px]">Source: StackingNet v4.5.2</div>
             </div>
             <div class="text-right">
-               <div class="text-[9px] font-black text-ink-faded uppercase tracking-widest">Serial #</div>
-               <div class="font-mono text-ink text-[10px]" x-text="matchId"></div>
+               <div class="text-[8px] font-black text-ink-faded uppercase tracking-widest mb-0.5">Verification #</div>
+               <div class="font-mono text-ink text-[9px] opacity-40" x-text="'PQ-' + matchId + '-TX'"></div>
             </div>
          </div>
 
-         <div class="mb-16 text-center">
-            <div class="text-xs font-black tracking-[0.3em] text-ink-faded uppercase mb-6" x-text="league"></div>
-            <div class="text-4xl font-serif italic text-ink leading-tight" x-text="matchName"></div>
-         </div>
+         <!-- Body: Match Identity -->
+         <div class="flex-1 flex flex-col items-center justify-center text-center space-y-10">
+            <div class="space-y-4">
+               <div class="text-[9px] font-black tracking-[0.4em] text-ink-faded uppercase" x-text="league"></div>
+               <div class="text-3xl font-serif italic text-ink leading-tight tracking-tight px-4" x-text="matchName"></div>
+            </div>
 
-         <div class="mb-20 text-center relative">
-            <span class="stamp text-6xl" x-text="verdict"></span>
-         </div>
+            <!-- The Stamp (The Truth) -->
+            <div class="relative py-8">
+               <div class="stamp text-7xl sm:text-8xl px-8 py-2 border-[3.5px] rounded-lg" x-text="verdict"></div>
+               <div class="absolute -top-4 -right-4 w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-[10px] font-black italic shadow-lg">!</div>
+            </div>
 
-         <div class="space-y-12 mb-20 relative z-10">
-            <div class="pt-8 border-t border-ink/5">
-               <h4 class="text-[10px] font-black text-accent uppercase tracking-[0.2em] mb-4">精算师核心研判</h4>
-               <p class="text-sm leading-relaxed text-ink font-serif italic" x-text="rationale"></p>
+            <div class="w-12 h-px bg-ink/5"></div>
+
+            <!-- Rationale Snippet -->
+            <div class="max-w-xs space-y-4">
+               <h4 class="text-[9px] font-black text-accent uppercase tracking-[0.3em]">Core Logic Capture</h4>
+               <p class="text-[13px] leading-relaxed text-ink/80 font-serif italic" x-text="rationale"></p>
             </div>
          </div>
 
-         <div class="pt-12 border-t border-ink/5 flex justify-between items-end">
-            <div>
-               <div class="text-[9px] font-black text-ink-faded uppercase tracking-widest mb-2">Scan Integrity</div>
-               <div class="flex gap-1">
+         <!-- Footer -->
+         <div class="mt-20 pt-8 border-t border-ink/5 flex justify-between items-end">
+            <div class="space-y-2">
+               <div class="text-[8px] font-black text-ink-faded uppercase tracking-widest">Model Integrity</div>
+               <div class="flex gap-1.5">
                   <div class="w-1.5 h-1.5 rounded-full bg-accent"></div>
                   <div class="w-1.5 h-1.5 rounded-full bg-accent"></div>
                   <div class="w-1.5 h-1.5 rounded-full bg-accent"></div>
-                  <div class="w-1.5 h-1.5 rounded-full bg-accent/20"></div>
+                  <div class="w-1.5 h-1.5 rounded-full bg-accent"></div>
                </div>
             </div>
-            <div class="text-right">
-               <div class="text-[14px] font-serif font-black text-ink italic leading-none">football.nett.to</div>
-               <div class="text-[8px] font-black text-ink-faded uppercase tracking-[0.2em] mt-1">First Principles Lab</div>
+            <div class="text-right space-y-1">
+               <div class="text-lg font-serif font-black text-ink italic leading-none tracking-tighter">football.nett.to</div>
+               <div class="text-[8px] font-black text-ink-faded uppercase tracking-[0.3em]">First Principles Lab</div>
             </div>
          </div>
+         
+         <!-- Background Texture/Mark -->
+         <div class="absolute inset-0 pointer-events-none opacity-[0.03] grayscale bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]"></div>
       </div>
 
-      <!-- Action -->
-      <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style="animation-delay: 0.5s">
-         <button @click="downloadPoster()" class="btn-zen">
-           <span>保存为图片分发</span>
+      <!-- Actions -->
+      <div class="mt-10 flex flex-col gap-4 items-center">
+         <button @click="downloadPoster()" class="btn-zen w-full justify-center">
+           <span>下载情报海报</span>
+           <svg style="width: 14px; height: 14px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
          </button>
-         <button @click="close()" class="text-[10px] font-black uppercase tracking-widest text-ink/40 hover:text-ink transition-all">取消</button>
+         <button @click="close()" class="text-[10px] font-black uppercase tracking-widest text-ink/40 hover:text-ink transition-all border-b border-transparent hover:border-ink/20 pb-0.5">返回研判报告</button>
       </div>
     </div>
   </div>
