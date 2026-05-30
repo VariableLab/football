@@ -23,14 +23,38 @@
     .font-serif { font-family: 'Newsreader', serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
     
-    @keyframes pulse-ring {
-      0% { transform: scale(0.8); opacity: 0.5; }
-      100% { transform: scale(2); opacity: 0; }
+    .paper-texture {
+      position: fixed;
+      inset: 0;
+      background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+      opacity: 0.3;
+      pointer-events: none;
+      z-index: 100;
     }
-    .pulse-ring {
-      animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+    /* 数据流动粒子动画 */
+    @keyframes flow-particle {
+      0% { transform: translateY(0); opacity: 0; }
+      20% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { transform: translateY(400px); opacity: 0; }
     }
-    
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: flow-particle 3s linear infinite;
+    }
+
+    /* 矩阵网格背景 */
+    .grid-bg {
+      background-image: radial-gradient(var(--ink) 0.5px, transparent 0.5px);
+      background-size: 20px 20px;
+      opacity: 0.05;
+    }
+
     .step-card {
       background: white;
       border: 1px solid rgba(0,0,0,0.05);
@@ -40,22 +64,6 @@
       border-color: var(--accent);
       box-shadow: 0 20px 50px rgba(192, 74, 26, 0.1);
     }
-    
-    .paper-texture {
-      position: fixed;
-      inset: 0;
-      background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
-      opacity: 0.3;
-      pointer-events: none;
-      z-index: 100;
-    }
-    @keyframes loading-bar {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
-    }
-    .animate-loading {
-      animation: loading-bar 2s ease-in-out infinite;
-    }
   </style>
 </head>
 <body>
@@ -63,134 +71,154 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useRef } = React;
 
-    const LogicStep = ({ id, title, subtitle, description, active, completed }) => (
-      <div className={`relative pl-12 mb-20 transition-all duration-700 ${active ? 'opacity-100 translate-x-0' : 'opacity-30 -translate-x-4'}`}>
-        <div className="absolute left-0 top-0 w-8 h-8 flex items-center justify-center">
-          {active && <div className="absolute inset-0 bg-accent/20 rounded-full pulse-ring"></div>}
-          <div className={`w-3 h-3 rounded-full z-10 transition-colors duration-500 ${active ? 'bg-accent' : completed ? 'bg-ink' : 'bg-ink/10'}`}></div>
-          <div className="absolute top-8 bottom-[-80px] left-[15px] w-px bg-ink/5"></div>
-        </div>
-        
-        <div className={`step-card p-8 rounded-sm ${active ? 'active' : ''}`}>
-          <div className="flex justify-between items-start mb-4">
-            <span className="text-[10px] font-black tracking-[0.3em] text-accent uppercase">Phase 0{id}</span>
-            <span className="font-mono text-[9px] opacity-40">Verified by QuantEngine</span>
-          </div>
-          <h3 className="text-2xl font-serif italic mb-2">{title}</h3>
-          <div className="text-[11px] font-bold text-ink/40 uppercase tracking-widest mb-6">{subtitle}</div>
-          <p className="text-sm leading-relaxed text-ink/70 font-serif italic max-w-md">{description}</p>
-          
-          {active && (
-            <div className="mt-8 pt-6 border-t border-ink/5 overflow-hidden">
-              <div className="flex gap-4 items-center">
-                <div className="h-1 flex-1 bg-ink/5 rounded-full overflow-hidden relative">
-                  <div className="absolute inset-0 bg-accent animate-loading" style={{width: '30%'}}></div>
-                </div>
-                <span className="text-[9px] font-mono animate-pulse">PROCESSING...</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-
-    const NNVisualization = ({ step }) => {
-      const layers = [6, 10, 4];
+    // ─── 核心动效：量化流水线 ───
+    const QuantPipeline = ({ phase }) => {
       return (
-        <div className="relative w-full h-full flex flex-col justify-center items-center">
-          <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none">
-            {/* Draw connection lines between layers */}
-            {layers.map((count, layerIdx) => (
-              layers[layerIdx + 1] && Array.from({length: count}).map((_, i) => (
-                Array.from({length: layers[layerIdx+1]}).map((_, j) => {
-                  const x1 = 20 + (layerIdx * 40);
-                  const y1 = 50 + (i - (count-1)/2) * 8;
-                  const x2 = 20 + ((layerIdx + 1) * 40);
-                  const y2 = 50 + (j - (layers[layerIdx+1]-1)/2) * 8;
-                  return <line key={`${layerIdx}-${i}-${j}`} x1={`${x1}%`} y1={`${y1}%`} x2={`${x2}%`} y2={`${y2}%`} stroke="currentColor" strokeWidth="0.2" />;
-                })
-              ))
-            ))}
-          </svg>
+        <div className="relative w-full h-full flex flex-col items-center">
+          {/* 流动背景 */}
+          <div className="absolute inset-0 grid-bg"></div>
           
-          <div className="flex gap-20 sm:gap-32 relative z-10">
-            {layers.map((count, i) => (
-              <div key={i} className="flex flex-col gap-4 justify-center">
-                {Array.from({length: count}).map((_, j) => (
-                  <div 
-                    key={j} 
-                    className={`w-2 h-2 rounded-full border border-ink/20 transition-all duration-1000 ${step >= i ? 'bg-accent shadow-[0_0_8px_rgba(192,74,26,0.4)] scale-125' : ''}`}
-                    style={{ transitionDelay: `${j * 50}ms` }}
-                  ></div>
+          <div className="relative z-10 w-full flex flex-col items-center gap-12 mt-10">
+            
+            {/* 1. Raw Data Input */}
+            <div className={`w-40 h-24 border-2 border-ink/10 flex flex-col items-center justify-center p-4 transition-all duration-700 ${phase >= 0 ? 'bg-white' : 'opacity-10'}`}>
+              <div className="text-[8px] font-black text-ink-faded uppercase tracking-widest mb-2">RAW_DATA_INPUT</div>
+              <div className="flex gap-1 overflow-hidden h-4 items-end">
+                {[1,2,3,4,5].map(i => (
+                  <div key={i} className={`w-1.5 bg-ink/20 animate-pulse`} style={{height: `${Math.random()*100}%`, animationDelay: `${i*0.2}s`}}></div>
                 ))}
               </div>
-            ))}
-          </div>
-          
-          <div className="mt-20 text-center space-y-2">
-            <div className="text-[10px] font-mono text-ink/40 uppercase tracking-widest">
-              Engine Status: <span className={step === 3 ? 'text-accent font-black' : ''}>{step === 3 ? 'CALIBRATION COMPLETE' : 'COMPUTING...'}</span>
             </div>
-            {step >= 1 && <div className="text-[9px] font-mono text-accent/60 animate-pulse">>> Feature Tensor Detected</div>}
+
+            {/* 流动箭头 1 */}
+            <div className="h-12 w-px bg-ink/10 relative">
+               {phase >= 0 && <div className="particle" style={{left: '-2px'}}></div>}
+            </div>
+
+            {/* 2. Formula / Matrix Processor */}
+            <div className={`w-56 h-32 paper-sheet flex flex-col items-center justify-center p-6 relative transition-all duration-700 ${phase >= 1 ? 'border-accent border-2' : 'opacity-10'}`}>
+               <div className="absolute -top-3 left-4 bg-paper px-2 text-[9px] font-black">48-FEATURE_SCANNER</div>
+               <div className="font-mono text-[10px] leading-tight text-center">
+                 {phase >= 1 ? (
+                   <div className="animate-fade-in">
+                     <div className="text-accent">Σ(ω_i * x_i) + b</div>
+                     <div className="text-ink/40 mt-1">StackingNet v4.5 Active</div>
+                   </div>
+                 ) : 'AWAITING_VECTOR'}
+               </div>
+            </div>
+
+            {/* 流动箭头 2 */}
+            <div className="h-12 w-px bg-ink/10 relative">
+               {phase >= 1 && <div className="particle" style={{left: '-2px'}}></div>}
+            </div>
+
+            {/* 3. Market Calibrator (对冲天平) */}
+            <div className={`w-64 h-32 border-2 border-ink/5 flex items-center justify-around transition-all duration-700 ${phase >= 2 ? 'bg-white' : 'opacity-10'}`}>
+               <div className="flex flex-col items-center gap-2">
+                 <div className="text-[7px] font-black opacity-40">MARKET</div>
+                 <div className="w-8 h-12 bg-ink/10 rounded-sm overflow-hidden flex items-end">
+                   <div className="w-full bg-ink/20" style={{height: '60%'}}></div>
+                 </div>
+               </div>
+               
+               <div className="text-xl font-serif italic text-accent">vs</div>
+
+               <div className="flex flex-col items-center gap-2">
+                 <div className="text-[7px] font-black text-accent">MODEL</div>
+                 <div className="w-8 h-12 bg-accent/10 rounded-sm overflow-hidden flex items-end">
+                   <div className={`w-full bg-accent transition-all duration-1000`} style={{height: phase >= 2 ? '85%' : '0%'}}></div>
+                 </div>
+               </div>
+            </div>
+
+            {/* 流动箭头 3 */}
+            <div className="h-12 w-px bg-ink/10 relative">
+               {phase >= 2 && <div className="particle" style={{left: '-2px'}}></div>}
+            </div>
+
+            {/* 4. Final Verdict Seal */}
+            <div className={`w-40 h-24 flex items-center justify-center transition-all duration-1000 ${phase >= 3 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
+               <div className="stamp text-3xl">VERIFIED</div>
+            </div>
+
+          </div>
+
+          {/* 实时参数仪表盘 */}
+          <div className="mt-20 w-full grid grid-cols-2 gap-4">
+             <div className="p-4 bg-ink/5 rounded-sm">
+                <div className="text-[8px] font-black opacity-30 uppercase mb-1">Inference Power</div>
+                <div className="text-xs font-mono">1.2 TFLOPS</div>
+             </div>
+             <div className="p-4 bg-ink/5 rounded-sm">
+                <div className="text-[8px] font-black opacity-30 uppercase mb-1">Market Drift</div>
+                <div className="text-xs font-mono text-accent" x-text="phase >= 2 ? 'ANOMALY LOCK' : 'SCANNING'">{phase >= 2 ? 'ANOMALY LOCK' : 'SCANNING'}</div>
+             </div>
           </div>
         </div>
       );
     };
+
+    const LogicStep = ({ id, title, description, active, completed }) => (
+      <div className={`relative pl-12 mb-20 transition-all duration-700 ${active ? 'opacity-100' : 'opacity-20'}`}>
+        <div className={`absolute left-0 top-1 w-3 h-3 rounded-full ${active ? 'bg-accent' : completed ? 'bg-ink' : 'bg-ink/10'}`}></div>
+        <div className="absolute top-6 bottom-[-60px] left-[5.5px] w-px bg-ink/10"></div>
+        
+        <div className={`p-8 rounded-sm ${active ? 'bg-white border border-ink/5 shadow-xl' : ''}`}>
+          <span className="text-[10px] font-black text-accent uppercase tracking-widest block mb-4">Step 0{id}</span>
+          <h3 className="text-2xl font-serif italic mb-4">{title}</h3>
+          <p className="text-sm leading-relaxed text-ink/70 font-serif italic">{description}</p>
+        </div>
+      </div>
+    );
 
     const App = () => {
       const [currentStep, setCurrentStep] = useState(0);
       const steps = [
         {
           title: "海量原始数据摄取",
-          subtitle: "Data Ingestion & Normalization",
-          description: "从全球 200+ 级联赛数据源实时抓取包括 Elo 战力、历史对阵、近期战绩在内的 3.1 万场赛事底稿。通过第一性原理，将非结构化资讯压缩为标准量化向量。"
+          description: "同步全球 200+ 级联赛数据源，抓取 Elo 战力、历史对阵等 3.1 万场赛事底稿。"
         },
         {
-          title: "48-维度特征交叉扫描",
-          subtitle: "High-Dimensional Feature Analysis",
-          description: "利用 StackingNet 4.5 神经网络，对进攻转化率、防守抗压系数、伤病权重等 48 个动态变量进行推演。剥离市场噪音，还原比赛纯粹概率。"
+          title: "48-维度特征交叉推演",
+          description: "利用 StackingNet 4.5 神经网络，对进攻转化率、防守抗压等 48 个动态变量进行求和与非线性激活运算。"
         },
         {
           title: "市场定价与真实概率博弈",
-          subtitle: "Expected Value (EV) Calibration",
-          description: "将模型预测值与全球主流机构实时赔率进行对冲，计算数学意义上的‘概率溢价 (Edge)’。只有当 AI 测算的概率显著高于市场标价时，才会生成结论。"
+          description: "计算模型测算的‘概率溢价 (Edge)’。当 AI 估值显著偏离机构定价时，捕捉获利机会点。"
         },
         {
           title: "终极量化研判输出",
-          subtitle: "Final Verdict & Rationale",
-          description: "由 AI 精算师将硬核数据转化为可读的情报档案。输出包含胜平负方向、精确比分推演及凯利优化后的建议，确保每一个字符都有数学依据。"
+          description: "由 AI 将硬核数学数据转化为高置信度的情报档案，输出最终预测方向。"
         }
       ];
 
       useEffect(() => {
         const timer = setInterval(() => {
           setCurrentStep(prev => (prev + 1) % steps.length);
-        }, 6000);
+        }, 5000);
         return () => clearInterval(timer);
       }, []);
 
       return (
-        <div className="min-h-screen py-16 sm:py-24 px-6 sm:px-8">
+        <div className="min-h-screen py-24 px-8">
           <div className="max-w-6xl mx-auto">
-            <header className="mb-24 sm:mb-32">
-              <div className="text-[10px] font-black tracking-[0.5em] text-ink/40 uppercase mb-8">System Architecture // logic.v4</div>
-              <h1 className="text-5xl sm:text-8xl font-serif hero-text tracking-tighter mb-12" style={{color: 'var(--ink)'}}>How we find<br />the truth.</h1>
-              <div className="h-px w-32 bg-accent/30 mb-12"></div>
-              <p className="text-base sm:text-lg text-ink/60 font-serif italic max-w-xl leading-relaxed">
-                这不是基于灵感的猜测，而是一场关于数学、算力与博弈逻辑的精确实验。欢迎来到 ProQuant 的量化核心实验室。
+            <header className="mb-32">
+              <h1 className="text-6xl sm:text-8xl font-serif hero-text tracking-tighter mb-8" style={{color: 'var(--ink)'}}>How it works.</h1>
+              <p className="text-lg text-ink/60 font-serif italic max-w-xl">
+                这不是文字游戏，这是一场基于物理规则的数据流动。
               </p>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-12 sm:gap-20">
-              <div className="md:col-span-7 lg:col-span-6 relative">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-20">
+              <div className="md:col-span-6">
                 {steps.map((step, idx) => (
                   <LogicStep 
                     key={idx}
                     id={idx + 1}
                     title={step.title}
-                    subtitle={step.subtitle}
                     description={step.description}
                     active={currentStep === idx}
                     completed={currentStep > idx}
@@ -198,21 +226,17 @@
                 ))}
               </div>
 
-              <div className="md:col-span-5 lg:col-span-6">
-                <div className="sticky top-24 h-[400px] sm:h-[600px] border border-ink/5 rounded-sm bg-[#EBEAE4]/40 p-8 sm:p-12 overflow-hidden shadow-inner">
-                  <div className="text-[9px] font-black tracking-[0.3em] text-ink/40 uppercase mb-10">Real-time Visualization</div>
-                  <NNVisualization step={currentStep} />
+              <div className="md:col-span-6 relative">
+                <div className="sticky top-24 border border-ink/5 rounded-sm bg-[#EBEAE4]/40 p-12 overflow-hidden shadow-inner h-[800px]">
+                  <div className="text-[9px] font-black tracking-[0.3em] text-ink/40 uppercase mb-10 text-center">Inference Pipeline Stream</div>
+                  <QuantPipeline phase={currentStep} />
                 </div>
               </div>
             </div>
             
-            <div className="mt-32 sm:mt-40 text-center">
-               <a href="/static/index.html" className="text-[10px] font-black uppercase tracking-widest text-accent border-b-2 border-accent pb-2 hover:text-ink hover:border-ink transition-all">返回量化终端</a>
+            <div className="mt-40 text-center">
+               <a href="/static/index.html" className="text-xs font-black uppercase tracking-widest text-accent border-b-2 border-accent pb-2 hover:text-ink hover:border-ink transition-all">返回量化终端</a>
             </div>
-
-            <footer className="mt-32 sm:mt-40 pt-12 border-t border-ink/5 opacity-30 text-center">
-              <div className="text-[9px] font-black tracking-[0.5em] uppercase">End of Documentation // First Principles Only</div>
-            </footer>
           </div>
         </div>
       );
