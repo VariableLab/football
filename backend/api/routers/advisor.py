@@ -39,16 +39,20 @@ class ReportResponse(BaseModel):
     content: str
     match_code: str
 
+# 全局锁，防止多用户并发触发同一场比赛的 LLM 生成
+_generating_locks = {}
+
 @router.post("/report/{match_id}")
 async def generate_match_report(
     match_id: int,
     db: Session = Depends(get_db),
     user = Depends(get_optional_user)
 ):
-    """一键生成 AI 足球战报/前瞻 (带持久化缓存)"""
+    """一键生成 AI 足球战报/前瞻 (支持高并发排队与持久化缓存)"""
     from anyio.to_thread import run_sync
     from database.models import MatchAIReport
     import hashlib
+    import asyncio
 
     match = db.query(Match).filter(Match.id == match_id).first()
     if not match:
@@ -61,36 +65,48 @@ async def generate_match_report(
     # 2. 检查缓存
     cached_report = db.query(MatchAIReport).filter(MatchAIReport.match_id == match_id).first()
     if cached_report and cached_report.input_checksum == current_checksum:
-        logger.info(f"[report-cache] HIT for match {match_id}")
         return ReportResponse(content=cached_report.content, match_code=match.match_code)
 
-    # 3. 缓存未命中或过期，执行实时推理
-    logger.info(f"[report-cache] MISS for match {match_id}, generating...")
-    
-    def _get_context(m):
-        engine = PredictionEngine(db_session=db)
-        res = engine.predict(build_context_from_match(m))
-        return {
-            "home": m.home_team.name,
-            "away": m.away_team.name,
-            "kickoff": m.kickoff_at.strftime("%Y-%m-%d %H:%M") if m.kickoff_at else "TBD",
-            "odds": {"h": m.odds_home, "d": m.odds_draw, "a": m.odds_away},
-            "prob": res.spf,
-            "status": m.status,
-            "score": f"{m.actual_home_goals}:{m.actual_away_goals}" if m.status == "finished" else "vs"
-        }
+    # 3. 高并发排队逻辑：如果已经在生成中，则等待
+    if match_id in _generating_locks:
+        logger.info(f"[report-queue] Match {match_id} is being calculated, waiting...")
+        for _ in range(30): # 最多等 30 秒
+            await asyncio.sleep(1)
+            db.expire_all() # 刷新 session 状态
+            cached_report = db.query(MatchAIReport).filter(MatchAIReport.match_id == match_id).first()
+            if cached_report and cached_report.input_checksum == current_checksum:
+                return ReportResponse(content=cached_report.content, match_code=match.match_code)
+        raise HTTPException(status_code=503, detail="系统正在全力精算该场次，请 10 秒后刷新。")
 
-    ctx_data = await run_sync(_get_context, match)
-    
-    # 构造提示词 (保持精算师人设)
-    def format_team_data(t):
-        return f"""
+    # 4. 获得生成权
+    _generating_locks[match_id] = True
+    try:
+        logger.info(f"[report-gen] MISS for match {match_id}, initiating real-time inference...")
+        
+        def _get_context(m):
+            engine = PredictionEngine(db_session=db)
+            res = engine.predict(build_context_from_match(m))
+            return {
+                "home": m.home_team.name,
+                "away": m.away_team.name,
+                "kickoff": m.kickoff_at.strftime("%Y-%m-%d %H:%M") if m.kickoff_at else "TBD",
+                "odds": {"h": m.odds_home, "d": m.odds_draw, "a": m.odds_away},
+                "prob": res.spf,
+                "status": m.status,
+                "score": f"{m.actual_home_goals}:{m.actual_away_goals}" if m.status == "finished" else "vs"
+            }
+
+        ctx_data = await run_sync(_get_context, match)
+        
+        # 构造 Prompt
+        def format_team_data(t):
+            return f"""
   - 近期战绩: {t.recent_results if t.recent_results else '暂无数据'}
   - 场均进球/失球: {t.avg_goals_scored or 0}/{t.avg_goals_conceded or 0}
   - 伤病情况: {t.key_injuries if t.key_injuries else '全员健康'}
   - 实力评分 (Elo): {t.elo or '未知'}"""
 
-    match_info = f"""
+        match_info = f"""
 [赛事基本面]
 对阵: {ctx_data['home']} (主) vs {ctx_data['away']} (客)
 时间: {ctx_data['kickoff']}
@@ -102,13 +118,12 @@ async def generate_match_report(
 [客队概况 - {ctx_data['away']}]{format_team_data(match.away_team)}
 """
 
-    prompt = f"""你是一个精通欧洲五大联赛的专业足彩精算师。请根据以下数据，从进攻、防守、战意三个维度进行极简分析，并最终给出一个明确的预测方向（胜/平/负）和预测比分。要求：语言风格要犀利、专业，像懂球帝的资深专栏作家。不要废话。
+        prompt = f"""你是一个精通欧洲五大联赛的专业足彩精算师。请根据以下数据，从进攻、防守、战意三个维度进行极简分析，并最终给出一个明确的预测方向（胜/平/负）和预测比分。要求：语言风格要犀利、专业，像懂球帝的资深专栏作家。不要废话。
 
 {match_info}
 """
 
-    async with httpx.AsyncClient() as client:
-        try:
+        async with httpx.AsyncClient() as client:
             resp = await client.post(
                 settings.ADVISOR_API_URL,
                 headers={"Authorization": f"Bearer {settings.ADVISOR_API_KEY}"},
@@ -122,7 +137,7 @@ async def generate_match_report(
             resp.raise_for_status()
             content = resp.json()["choices"][0]["message"]["content"]
             
-            # 4. 更新数据库缓存
+            # 5. 原子化存库
             if cached_report:
                 cached_report.content = content
                 cached_report.input_checksum = current_checksum
@@ -136,10 +151,14 @@ async def generate_match_report(
             
             db.commit()
             return ReportResponse(content=content, match_code=match.match_code)
-            
-        except Exception as e:
-            logger.error(f"Report generation failed: {e}")
-            raise HTTPException(status_code=502, detail="内容生成失败，请稍后重试。")
+
+    except Exception as e:
+        logger.error(f"Report generation failed: {e}")
+        db.rollback()
+        raise HTTPException(status_code=502, detail="内容生成失败，请稍后重试。")
+    finally:
+        # 释放锁
+        _generating_locks.pop(match_id, None)
 
 def get_model_stats(db: Session):
     """获取模型真实效能指标快照"""
