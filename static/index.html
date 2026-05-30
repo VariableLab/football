@@ -23,9 +23,13 @@
   <div class="pointer-events-auto">
     <a href="/static/index.html" class="text-xl font-serif italic font-bold text-ink">f.</a>
   </div>
-  <div class="flex items-center gap-8 pointer-events-auto">
-     <a href="/static/LogicExplainer.html" class="text-[10px] font-black uppercase tracking-widest text-ink/40 hover:text-accent transition-colors">Logic</a>
-     <button onclick="openLoginModal()" class="text-[10px] font-black uppercase tracking-widest text-ink/40 hover:text-ink transition-colors">Auth</button>
+  <div class="flex items-center gap-6 pointer-events-auto">
+     <div class="flex items-center gap-3 border-r border-ink/5 pr-6">
+        <button onclick="I18n.setLang('zh')" class="text-[9px] font-black uppercase tracking-widest hover:text-accent transition-colors">ZH</button>
+        <button onclick="I18n.setLang('en')" class="text-[9px] font-black uppercase tracking-widest hover:text-accent transition-colors">EN</button>
+     </div>
+     <a href="/static/LogicExplainer.html" class="text-[10px] font-black uppercase tracking-widest text-ink/40 hover:text-accent transition-colors" data-i18n="nav.logic">Logic</a>
+     <button onclick="openLoginModal()" class="text-[10px] font-black uppercase tracking-widest text-ink/40 hover:text-ink transition-colors" data-i18n="nav.auth">Auth</button>
   </div>
 </nav>
 
