@@ -103,11 +103,12 @@ const WCApi = {
       const res = await apiFetch<{ items: TeamOut[] }>('/api/teams?limit=500');
       return res.items || (res as unknown as TeamOut[]);
     },
-    async getMatches(status?: string, group?: string, matchType?: string): Promise<MatchItem[]> {
+    async getMatches(status?: string, group?: string, matchType?: string, date?: string): Promise<MatchItem[]> {
       const params = new URLSearchParams();
       if (status) params.append('status', status);
       if (group) params.append('group', group);
       if (matchType) params.append('match_type', matchType);
+      if (date) params.append('date', date);
       params.append('limit', '200');
       const res = await apiFetch<MatchListResponse>(`/api/matches?${params.toString()}`);
       return unwrapItems(res) as unknown as MatchItem[];

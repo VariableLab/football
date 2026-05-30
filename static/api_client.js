@@ -72,11 +72,12 @@
         const res = await apiFetch("/api/teams?limit=500");
         return res.items || res;
       },
-      async getMatches(status, group, matchType) {
+      async getMatches(status, group, matchType, date) {
         const params = new URLSearchParams();
         if (status) params.append("status", status);
         if (group) params.append("group", group);
         if (matchType) params.append("match_type", matchType);
+        if (date) params.append("date", date);
         params.append("limit", "200");
         const res = await apiFetch(`/api/matches?${params.toString()}`);
         return unwrapItems(res);

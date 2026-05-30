@@ -28,7 +28,14 @@ async function loadMatchView() {
   // Trigger loading state via event
   window.dispatchEvent(new CustomEvent('matches-loading'));
   try {
-    const matches = await WCApi.Data.getMatches(AppState.filter);
+    let matches;
+    if (['today', 'tomorrow'].includes(AppState.filter)) {
+      // 传递为 date 参数 (status=undefined, group=undefined, matchType=undefined, date=filter)
+      matches = await WCApi.Data.getMatches(undefined, undefined, undefined, AppState.filter);
+    } else {
+      // 传递为 status 参数 (如 'jingcai')
+      matches = await WCApi.Data.getMatches(AppState.filter);
+    }
     AppState.matches = matches || [];
     window.dispatchEvent(new CustomEvent('matches-updated', { detail: { matches: AppState.matches } }));
   } catch (e) {
