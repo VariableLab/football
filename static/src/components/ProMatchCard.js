@@ -103,25 +103,39 @@ function ReportModal() {
     },
 
     openPoster() {
-      // 提取一段精华文案作为海报摘要
-      let cleanRationale = this.reportContent.replace(/\*/g, '');
-      const sections = cleanRationale.split(/【|\[/);
-      let summary = "";
-      for (const section of sections) {
-        if (section.includes('精算结论') || section.includes('最终预测') || section.includes('结论')) {
-           summary = section.split(/】|\]/)[1]?.trim();
-           break;
-        }
+      // 深度解析 AI 报告内容，拆分出进攻、防守、战意等维度
+      let cleanContent = this.reportContent.replace(/\*/g, '');
+      const segments = [];
+      
+      // 提取“进攻”维度
+      const offenseMatch = cleanContent.match(/(?:进攻|攻击)[维度端]*[：: ]*([\s\S]*?)(?=\n\s*\n|【|\[|\n[^\n]*(?:防守|战意|结论))/i);
+      if (offenseMatch) segments.push({ title: "进攻推演", content: offenseMatch[1].trim().substring(0, 120) + "..." });
+
+      // 提取“防守”维度
+      const defenseMatch = cleanContent.match(/防守[维度端]*[：: ]*([\s\S]*?)(?=\n\s*\n|【|\[|\n[^\n]*(?:战意|结论))/i);
+      if (defenseMatch) segments.push({ title: "防守评估", content: defenseMatch[1].trim().substring(0, 120) + "..." });
+
+      // 提取“战意”维度
+      const motivationMatch = cleanContent.match(/战意[维度端]*[：: ]*([\s\S]*?)(?=\n\s*\n|【|\[|\n[^\n]*(?:结论|预测))/i);
+      if (motivationMatch) segments.push({ title: "战意画像", content: motivationMatch[1].trim().substring(0, 120) + "..." });
+
+      // 兜底摘要：如果没拆出来，则取前 200 字
+      if (segments.length === 0) {
+        segments.push({ title: "精算师核心逻辑", content: cleanContent.substring(0, 200).trim() + "..." });
       }
-      if (!summary) summary = cleanRationale.substring(0, 140) + "...";
+
+      const matchData = AppState.matches.find(m => m.id === this.matchId);
 
       window.dispatchEvent(new CustomEvent('open-poster-modal', { 
         detail: { 
           matchId: this.matchId,
           matchName: this.matchName,
           verdict: this.verdict,
-          rationale: summary,
-          league: this.league
+          rationaleItems: segments,
+          league: this.league,
+          kickoffAt: matchData?.kickoff_at,
+          aiProb: this.quant.aiProb,
+          edge: this.edge
         } 
       }));
     },
@@ -139,8 +153,11 @@ function PosterModal() {
     matchId: '',
     matchName: '',
     verdict: '',
-    rationale: '',
+    rationaleItems: [],
     league: '',
+    kickoffAt: null,
+    aiProb: { home: 0, draw: 0, away: 0 },
+    edge: '0%',
 
     init() {
       window.addEventListener('open-poster-modal', (e) => {
@@ -148,8 +165,11 @@ function PosterModal() {
         this.matchId = d.matchId;
         this.matchName = d.matchName;
         this.verdict = d.verdict;
-        this.rationale = d.rationale;
+        this.rationaleItems = d.rationaleItems;
         this.league = d.league;
+        this.kickoffAt = d.kickoffAt;
+        this.aiProb = d.aiProb;
+        this.edge = d.edge;
         this.show = true;
         document.getElementById('posterModal').classList.remove('hidden');
       });
@@ -158,7 +178,7 @@ function PosterModal() {
     async downloadPoster() {
       const canvas = await html2canvas(document.getElementById('posterCanvas'), {
         backgroundColor: '#FFFFFF',
-        scale: 3, // 高清导出
+        scale: 3, 
         useCORS: true
       });
       const link = document.createElement('a');
