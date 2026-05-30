@@ -23,13 +23,6 @@
     .font-serif { font-family: 'Newsreader', serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
     
-    .node-connector {
-      position: absolute;
-      width: 2px;
-      background: rgba(26, 26, 26, 0.05);
-      z-index: -1;
-    }
-    
     @keyframes pulse-ring {
       0% { transform: scale(0.8); opacity: 0.5; }
       100% { transform: scale(2); opacity: 0; }
@@ -103,6 +96,49 @@
       </div>
     );
 
+    const NNVisualization = ({ step }) => {
+      const layers = [6, 10, 4];
+      return (
+        <div className="relative w-full h-full flex flex-col justify-center items-center">
+          <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none">
+            {/* Draw connection lines between layers */}
+            {layers.map((count, layerIdx) => (
+              layers[layerIdx + 1] && Array.from({length: count}).map((_, i) => (
+                Array.from({length: layers[layerIdx+1]}).map((_, j) => {
+                  const x1 = 20 + (layerIdx * 40);
+                  const y1 = 50 + (i - (count-1)/2) * 8;
+                  const x2 = 20 + ((layerIdx + 1) * 40);
+                  const y2 = 50 + (j - (layers[layerIdx+1]-1)/2) * 8;
+                  return <line key={`${layerIdx}-${i}-${j}`} x1={`${x1}%`} y1={`${y1}%`} x2={`${x2}%`} y2={`${y2}%`} stroke="currentColor" strokeWidth="0.2" />;
+                })
+              ))
+            ))}
+          </svg>
+          
+          <div className="flex gap-20 sm:gap-32 relative z-10">
+            {layers.map((count, i) => (
+              <div key={i} className="flex flex-col gap-4 justify-center">
+                {Array.from({length: count}).map((_, j) => (
+                  <div 
+                    key={j} 
+                    className={`w-2 h-2 rounded-full border border-ink/20 transition-all duration-1000 ${step >= i ? 'bg-accent shadow-[0_0_8px_rgba(192,74,26,0.4)] scale-125' : ''}`}
+                    style={{ transitionDelay: `${j * 50}ms` }}
+                  ></div>
+                ))}
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-20 text-center space-y-2">
+            <div className="text-[10px] font-mono text-ink/40 uppercase tracking-widest">
+              Engine Status: <span className={step === 3 ? 'text-accent font-black' : ''}>{step === 3 ? 'CALIBRATION COMPLETE' : 'COMPUTING...'}</span>
+            </div>
+            {step >= 1 && <div className="text-[9px] font-mono text-accent/60 animate-pulse">>> Feature Tensor Detected</div>}
+          </div>
+        </div>
+      );
+    };
+
     const App = () => {
       const [currentStep, setCurrentStep] = useState(0);
       const steps = [
@@ -131,24 +167,24 @@
       useEffect(() => {
         const timer = setInterval(() => {
           setCurrentStep(prev => (prev + 1) % steps.length);
-        }, 5000);
+        }, 6000);
         return () => clearInterval(timer);
       }, []);
 
       return (
-        <div className="min-h-screen py-24 px-8">
-          <div className="max-w-5xl mx-auto">
-            <header className="mb-32">
-              <div className="text-[11px] font-black tracking-[0.5em] text-ink/40 uppercase mb-8">System Architecture // logic.v4</div>
-              <h1 className="text-6xl sm:text-8xl font-serif hero-text tracking-tighter mb-12" style={{color: 'var(--ink)'}}>How we find<br />the truth.</h1>
+        <div className="min-h-screen py-16 sm:py-24 px-6 sm:px-8">
+          <div className="max-w-6xl mx-auto">
+            <header className="mb-24 sm:mb-32">
+              <div className="text-[10px] font-black tracking-[0.5em] text-ink/40 uppercase mb-8">System Architecture // logic.v4</div>
+              <h1 className="text-5xl sm:text-8xl font-serif hero-text tracking-tighter mb-12" style={{color: 'var(--ink)'}}>How we find<br />the truth.</h1>
               <div className="h-px w-32 bg-accent/30 mb-12"></div>
-              <p className="text-lg text-ink/60 font-serif italic max-w-xl leading-relaxed">
+              <p className="text-base sm:text-lg text-ink/60 font-serif italic max-w-xl leading-relaxed">
                 这不是基于灵感的猜测，而是一场关于数学、算力与博弈逻辑的精确实验。欢迎来到 ProQuant 的量化核心实验室。
               </p>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
-              <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-12 sm:gap-20">
+              <div className="md:col-span-7 lg:col-span-6 relative">
                 {steps.map((step, idx) => (
                   <LogicStep 
                     key={idx}
@@ -162,34 +198,19 @@
                 ))}
               </div>
 
-              <div className="hidden lg:block sticky top-24 h-[600px] border border-ink/5 rounded-sm bg-[#EBEAE4]/40 p-12 overflow-hidden">
-                <div className="text-[9px] font-black tracking-[0.3em] text-ink/40 uppercase mb-10">Real-time Visualization</div>
-                
-                <div className="relative h-full flex flex-col justify-center items-center scale-150 transform">
-                  <div className="flex gap-16 relative">
-                    {[6, 10, 4].map((count, i) => (
-                      <div key={i} className="flex flex-col gap-4">
-                        {Array.from({length: count}).map((_, j) => (
-                          <div key={j} className={`w-2 h-2 rounded-full border border-ink/20 ${currentStep >= 1 ? 'bg-accent/40 animate-pulse' : ''}`}></div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="mt-20 text-center">
-                    <div className="text-[10px] font-mono text-ink/40 uppercase tracking-widest">
-                      Status: {currentStep === 3 ? 'CALIBRATION COMPLETE' : 'COMPUTING...'}
-                    </div>
-                  </div>
+              <div className="md:col-span-5 lg:col-span-6">
+                <div className="sticky top-24 h-[400px] sm:h-[600px] border border-ink/5 rounded-sm bg-[#EBEAE4]/40 p-8 sm:p-12 overflow-hidden shadow-inner">
+                  <div className="text-[9px] font-black tracking-[0.3em] text-ink/40 uppercase mb-10">Real-time Visualization</div>
+                  <NNVisualization step={currentStep} />
                 </div>
               </div>
             </div>
             
-            <div className="mt-40 text-center">
-               <a href="/static/index.html" className="text-xs font-black uppercase tracking-widest text-accent border-b-2 border-accent pb-2 hover:text-ink hover:border-ink transition-all">返回量化终端</a>
+            <div className="mt-32 sm:mt-40 text-center">
+               <a href="/static/index.html" className="text-[10px] font-black uppercase tracking-widest text-accent border-b-2 border-accent pb-2 hover:text-ink hover:border-ink transition-all">返回量化终端</a>
             </div>
 
-            <footer className="mt-40 pt-12 border-t border-ink/5 opacity-30 text-center">
+            <footer className="mt-32 sm:mt-40 pt-12 border-t border-ink/5 opacity-30 text-center">
               <div className="text-[9px] font-black tracking-[0.5em] uppercase">End of Documentation // First Principles Only</div>
             </footer>
           </div>
