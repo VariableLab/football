@@ -57,8 +57,11 @@ function ReportModal() {
   return {
     show: false,
     loading: true,
+    matchId: null,
     matchName: '',
     reportContent: '',
+    verdict: '',
+    league: '',
     eloDiff: '-',
     edge: '-',
     confidence: '-',
@@ -66,15 +69,20 @@ function ReportModal() {
     init() {
       window.addEventListener('open-report-modal', async (e) => {
         const { matchId } = e.detail;
+        this.matchId = matchId;
         this.show = true;
         this.loading = true;
         document.getElementById('reportModal').classList.remove('hidden');
-        
+
         try {
           const resp = await fetch(`/api/advisor/report/${matchId}`, { method: 'POST' });
           const data = await resp.json();
           this.reportContent = data.content;
-          
+
+          // 解析结论印章（从报告中提取胜/平/负）
+          const verdictMatch = data.content.match(/预测方向[：:]\s*(胜|平|负)/);
+          this.verdict = verdictMatch ? verdictMatch[1] : '待定';
+
           // Fetch additional quant data for the header
           const stratResp = await fetch(`/api/matches/${matchId}/strategy`);
           const stratData = await stratResp.json();
@@ -82,6 +90,11 @@ function ReportModal() {
           this.edge = (stratData.strategies[0]?.edge * 100).toFixed(1) + '%';
           this.confidence = stratData.confidence || 'Normal';
           this.eloDiff = e.detail.eloDiff || '-';
+
+          // 获取联赛名
+          const matchData = AppState.matches.find(m => m.id === matchId);
+          this.league = matchData?.competition || 'QUANT LAB';
+
         } catch (e) {
           this.reportContent = "报告生成失败，请检查系统状态。";
         } finally {
@@ -90,11 +103,61 @@ function ReportModal() {
       });
     },
 
+    openPoster() {
+      window.dispatchEvent(new CustomEvent('open-poster-modal', { 
+        detail: { 
+          matchId: this.matchId,
+          matchName: this.matchName,
+          verdict: this.verdict,
+          rationale: this.reportContent.split('【')[1]?.split('】')[1]?.substring(0, 150) + '...',
+          league: this.league
+        } 
+      }));
+    },
+
     close() {
       document.getElementById('reportModal').classList.add('hidden');
     }
   };
 }
+
+function PosterModal() {
+  return {
+    matchId: '',
+    matchName: '',
+    verdict: '',
+    rationale: '',
+    league: '',
+
+    init() {
+      window.addEventListener('open-poster-modal', (e) => {
+        const d = e.detail;
+        this.matchId = d.matchId;
+        this.matchName = d.matchName;
+        this.verdict = d.verdict;
+        this.rationale = d.rationale;
+        this.league = d.league;
+        document.getElementById('posterModal').classList.remove('hidden');
+      });
+    },
+
+    async downloadPoster() {
+      const canvas = await html2canvas(document.getElementById('posterCanvas'), {
+        backgroundColor: '#F9F8F3',
+        scale: 2
+      });
+      const link = document.createElement('a');
+      link.download = `ProQuant-${this.matchId}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+    },
+
+    close() {
+      document.getElementById('posterModal').classList.add('hidden');
+    }
+  };
+}
+
 
 // 全局触发函数
 function openReport(matchId) {

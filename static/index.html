@@ -211,12 +211,84 @@
              <div class="mt-20 p-6 bg-paper-dark/20 text-[10px] text-ink-faded leading-loose">
                 ⚠️ 模型声明：本报告由 StackingNet v4.5 神经网络自动生成，基于 48 个历史特征变量及实时赔率偏差。评估结果仅供数学参考，不作为最终投注依据。
              </div>
+             
+             <div class="mt-12">
+                <button @click="openPoster()" class="w-full py-4 border-2 border-accent text-accent text-[10px] font-black uppercase tracking-widest hover:bg-accent hover:text-paper transition-all">生成分享推文海报</button>
+             </div>
+             <div class="mt-20 p-6 bg-paper-dark/20 text-[10px] text-ink-faded leading-loose">
+                ⚠️ 模型声明：本报告由 StackingNet v4.5 神经网络自动生成，基于 48 个历史特征变量及实时赔率偏差。评估结果仅供数学参考，不作为最终投注依据。
+             </div>
           </div>
        </template>
     </div>
     
     <div class="p-8 border-t border-ink/5 bg-paper-dark/5 flex justify-center">
        <button @click="close()" class="btn-zen">关闭报告</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Share Poster Modal -->
+<div id="posterModal" class="fixed inset-0 z-[150] hidden overflow-y-auto" x-data="PosterModal()">
+  <div class="absolute inset-0 bg-paper/98 backdrop-blur-xl" @click="close()"></div>
+  <div class="relative min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-lg">
+      <!-- The Poster Paper -->
+      <div id="posterCanvas" class="paper-sheet p-12 sm:p-16 border-2 border-ink/5 bg-white relative overflow-hidden shadow-2xl">
+         <div class="absolute -top-10 -right-10 w-40 h-40 bg-accent/5 rounded-full blur-3xl opacity-50"></div>
+         
+         <div class="flex justify-between items-center mb-16 border-b border-ink/5 pb-8">
+            <div>
+               <div class="text-[9px] font-black text-accent uppercase tracking-[0.4em]">Official Verdict</div>
+               <div class="font-serif italic text-ink text-sm">ProQuant Intelligence</div>
+            </div>
+            <div class="text-right">
+               <div class="text-[9px] font-black text-ink-faded uppercase tracking-widest">Serial #</div>
+               <div class="font-mono text-ink text-[10px]" x-text="matchId"></div>
+            </div>
+         </div>
+
+         <div class="mb-16 text-center">
+            <div class="text-xs font-black tracking-[0.3em] text-ink-faded uppercase mb-6" x-text="league"></div>
+            <div class="text-4xl font-serif italic text-ink leading-tight" x-text="matchName"></div>
+         </div>
+
+         <div class="mb-20 text-center relative">
+            <span class="stamp text-6xl" x-text="verdict"></span>
+         </div>
+
+         <div class="space-y-12 mb-20 relative z-10">
+            <div class="pt-8 border-t border-ink/5">
+               <h4 class="text-[10px] font-black text-accent uppercase tracking-[0.2em] mb-4">精算师核心研判</h4>
+               <p class="text-sm leading-relaxed text-ink font-serif italic" x-text="rationale"></p>
+            </div>
+         </div>
+
+         <div class="pt-12 border-t border-ink/5 flex justify-between items-end">
+            <div>
+               <div class="text-[9px] font-black text-ink-faded uppercase tracking-widest mb-2">Scan Integrity</div>
+               <div class="flex gap-1">
+                  <div class="w-1.5 h-1.5 rounded-full bg-accent"></div>
+                  <div class="w-1.5 h-1.5 rounded-full bg-accent"></div>
+                  <div class="w-1.5 h-1.5 rounded-full bg-accent"></div>
+                  <div class="w-1.5 h-1.5 rounded-full bg-accent/20"></div>
+               </div>
+            </div>
+            <div class="text-right">
+               <div class="text-[14px] font-serif font-black text-ink italic leading-none">football.nett.to</div>
+               <div class="text-[8px] font-black text-ink-faded uppercase tracking-[0.2em] mt-1">First Principles Lab</div>
+            </div>
+         </div>
+      </div>
+
+      <!-- Action -->
+      <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style="animation-delay: 0.5s">
+         <button @click="downloadPoster()" class="btn-zen">
+           <span>保存为图片分发</span>
+         </button>
+         <button @click="close()" class="text-[10px] font-black uppercase tracking-widest text-ink/40 hover:text-ink transition-all">取消</button>
+      </div>
     </div>
   </div>
 </div>
@@ -792,6 +864,7 @@
 <script src="/static/api_client.js?v=20260527-ultimate-reshaping"></script>
 <script src="/static/app.js?v=20260527-ultimate-reshaping"></script>
 <script src="/static/src/components/CopilotBubble.js?v=20260527-ultimate-reshaping"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="/static/src/components/ProMatchCard.js?v=4"></script>
 <script src="/static/src/components/CopilotBubble.js?v=20260527-ultimate-reshaping"></script>
 <script src="/static/src/components/MonitorDashboard.js?v=20260527-ultimate-reshaping"></script>
