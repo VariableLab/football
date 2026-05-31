@@ -1,6 +1,6 @@
 (() => {
   // static/src/api_client.ts
-  var API_BASE = "";
+  var API_BASE = "https://football.nett.to";
   function getToken() {
     return localStorage.getItem("wc_token");
   }

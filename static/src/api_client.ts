@@ -23,7 +23,7 @@ interface MatchItem {
   group: string | null; stage: string | null;
 }
 
-const API_BASE = '';
+const API_BASE = 'https://football.nett.to';
 
 function getToken(): string | null {
   return localStorage.getItem('wc_token');
