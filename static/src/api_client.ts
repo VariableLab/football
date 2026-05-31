@@ -23,7 +23,18 @@ interface MatchItem {
   group: string | null; stage: string | null;
 }
 
-const API_BASE = 'https://football.nett.to';
+// 智能环境感知：确保本地开发、主服务器和 Cloudflare Pages 无缝切换
+const getApiBase = () => {
+  const host = window.location.hostname;
+  // 如果是本地开发或主服务器访问，使用相对路径
+  if (host === 'localhost' || host === '127.0.0.1' || host === 'football.nett.to') {
+    return '';
+  }
+  // 否则（如在 Cloudflare Pages 访问），强行指向主服务器 API
+  return 'https://football.nett.to';
+};
+
+const API_BASE = getApiBase();
 
 function getToken(): string | null {
   return localStorage.getItem('wc_token');

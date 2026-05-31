@@ -1,6 +1,13 @@
 (() => {
   // static/src/api_client.ts
-  var API_BASE = "https://football.nett.to";
+  var getApiBase = () => {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1" || host === "football.nett.to") {
+      return "";
+    }
+    return "https://football.nett.to";
+  };
+  var API_BASE = getApiBase();
   function getToken() {
     return localStorage.getItem("wc_token");
   }
