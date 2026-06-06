@@ -1,0 +1,56 @@
+# 球队别名映射库 — WC Analytics
+# 格式: 别名: 规范名 (必须在 teams.name 中存在)
+
+# ─── 核心强队 ───
+Brazil: 巴西
+Argentina: 阿根廷
+Germany: 德国
+France: 法国
+England: 英格兰
+Spain: 西班牙
+Portugal: 葡萄牙
+Netherlands: 荷兰
+Belgium: 比利时
+Italy: 意大利
+Croatia: 克罗地亚
+Japan: 日本
+South Korea: 韩国
+Australia: 澳大利亚
+Saudi Arabia: 沙特阿拉伯
+USA: 美国
+United States: 美国
+Mexico: 墨西哥
+Canada: 加拿大
+Morocco: 摩洛哥
+Senegal: 塞内加尔
+Egypt: 埃及
+Nigeria: 尼日利亚
+
+# ─── 常见简称/变体 ───
+阿根廷 (ARG): 阿根廷
+巴西 (BRA): 巴西
+德国 (GER): 德国
+法国 (FRA): 法国
+日本 (JPN): 日本
+英格兰 (ENG): 英格兰
+埃及 (EGY): 埃及
+卡塔尔 (QAT): 卡塔尔
+爱尔兰 (IRL): 爱尔兰
+俄罗斯 (RUS): 俄罗斯
+安道尔 (AND): 安道尔
+
+# ─── 抓取源特定名称 ───
+Rep. of Ireland: 爱尔兰
+North Macedonia: 北马其顿
+Bosnia: 波黑
+Czech Republic: 捷克
+Czechia: 捷克
+DR Congo: 刚果民主共和国
+Curacao: 库拉索
+Grenada: 格林纳达
+Puerto Rico: 波多黎各
+Dominican Republic: 多米尼加共和国
+New Zealand: 新西兰
+Liechtenstein: 列支敦士登
+Cambodia: 柬埔寨
+Bhutan: 不 Bhutan

@@ -25,6 +25,7 @@ from datetime import datetime, timedelta
 from itertools import product
 
 import numpy as np
+import pandas as pd
 from scipy.stats import poisson
 
 from database.models import PlayType
@@ -51,10 +52,11 @@ from features.h2h_model import H2HModel
 # ────────────────────────────
 # 常量 / 配置（支持 YAML 动态加载）
 # ────────────────────────────
-_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "model_config.yaml")
+# 💡 修正路径：配置文件在 backend/data 下，而不是 backend/core/data
+_CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "model_config.yaml")
 
 def load_engine_config():
-    # 默认值
+    # 默认值 (调优版：显著提升 Elo 权重)
     cfg = {
         "MAX_GOALS": 8,
         "POISSON_TRUNCATE": 0.999,
@@ -63,10 +65,10 @@ def load_engine_config():
         "DIXON_COLES_RHO": 0.0092,
         "DRAW_INFLATION_FACTOR": 1.27,
         "DEFAULT_WEIGHTS": {
-            "elo": 0.05,
-            "poisson": 0.13,
-            "players": 0.19,
-            "market": 0.63,
+            "elo": 0.35,
+            "poisson": 0.35,
+            "players": 0.05,
+            "market": 0.25,
         }
     }
     if os.path.exists(_CONFIG_PATH):
@@ -101,6 +103,7 @@ class TeamContext:
     """一支球队的赛前上下文"""
     team_id: int
     name: str
+    name_en: str = ""
     elo: int = 1500
     fifa_rank: int = 100
 
@@ -1333,16 +1336,26 @@ class PredictionEngine:
             if os.path.exists(p_weight_path):
                 lab_p = LabPoisson()
                 lab_p.load_params(p_weight_path)
-                df_mock = pd.DataFrame([{"HomeTeam": ctx.home_team.name, "AwayTeam": ctx.away_team.name}])
+                # 💡 关键修复：使用英文名匹配专家模型权重
+                h_name = ctx.home_team.name_en or ctx.home_team.name
+                a_name = ctx.away_team.name_en or ctx.away_team.name
+                df_mock = pd.DataFrame([{"HomeTeam": h_name, "AwayTeam": a_name}])
                 lab_p_res = lab_p.predict_proba(df_mock)
-                lab_poisson_spf = {"home": lab_p_res[0][0], "draw": lab_p_res[0][1], "away": lab_p_res[0][2]}
-                trace.add_step("Lab-Expert Poisson", "使用实验室 Dixon-Coles 泊松参数", lab_poisson_spf)
+                if lab_p_res[0] is not None:
+                    lab_poisson_spf = {"home": lab_p_res[0][0], "draw": lab_p_res[0][1], "away": lab_p_res[0][2]}
+                    trace.add_step("Lab-Expert Poisson", "使用实验室 Dixon-Coles 泊松参数", lab_poisson_spf)
+                else:
+                    import logging
+                    logging.getLogger("prediction_engine").info(f"Lab Poisson skipped: Team not found in weights")
 
             # 2. Lab Elo
             if os.path.exists(e_weight_path):
                 lab_e = LabElo()
                 lab_e.load_params(e_weight_path)
-                df_mock = pd.DataFrame([{"HomeTeam": ctx.home_team.name, "AwayTeam": ctx.away_team.name}])
+                # 💡 关键修复：使用英文名匹配专家模型权重
+                h_name = ctx.home_team.name_en or ctx.home_team.name
+                a_name = ctx.away_team.name_en or ctx.away_team.name
+                df_mock = pd.DataFrame([{"HomeTeam": h_name, "AwayTeam": a_name}])
                 lab_e_res = lab_e.predict_proba(df_mock)
                 lab_elo_spf = {"home": lab_e_res[0][0], "draw": lab_e_res[0][1], "away": lab_e_res[0][2]}
                 trace.add_step("Lab-Expert Elo", "使用实验室百年历史基准 Elo 参数", lab_elo_spf)
@@ -1367,7 +1380,9 @@ class PredictionEngine:
         # 2. 融合胜平负 ── 优先使用 LR 逻辑回归融合 (v2)
         lr_spf = None
         weights = self._get_lr_weights_for_match(ctx.competition)
-        if weights:
+        # 💡 逻辑自愈：如果缺失市场赔率，LR 模型会因为 market_win 权重过大而导致结果趋同
+        # 因此，在无赔率场景下，强制降级到 v1.0 线性融合以保持预测的区分度
+        if weights and market_out is not None:
             lr_spf = self._predict_with_lr(
                 ctx, elo_out, poisson_out, players_factor, market_out, weights
             )
@@ -1429,7 +1444,16 @@ class PredictionEngine:
 
         # 5. 置信度判断
         confidence = self._compute_confidence(fused_spf, market_out, ctx)
-
+        
+        # 💡 核心增加：数据真实性审计 (Data Veracity Guard)
+        # 如果主队或客队的 Elo/xG 均为默认填充值，说明预测不可靠
+        is_mock_data = False
+        if ctx.home_team.elo == 1600 or ctx.away_team.elo == 1600:
+            is_mock_data = True
+            
+        if is_mock_data:
+            confidence = "low"
+            
         return PredictionResult(
             match_id=ctx.match_id,
             spf=fused_spf,
@@ -1443,7 +1467,7 @@ class PredictionEngine:
             raw_market=market_out or {},
             model_version="v2.0-lr" if lr_spf is not None else "v1.0",
             confidence=confidence,
-            odds_degraded=market_out is None,
+            odds_degraded=market_out is None or is_mock_data, # 标记数据降级
             weights_used={"_fusion": "lr_v2", **(lr_spf or {})} if lr_spf is not None else self.fusion.get_effective_weights(market_out, ctx),
             trace=trace,
         )
@@ -1775,6 +1799,7 @@ def build_team_context_from_orm(team) -> TeamContext:
     return TeamContext(
         team_id=team.id,
         name=team.name,
+        name_en=team.name_en or "",
         elo=team.elo or 1500,
         fifa_rank=team.fifa_rank or 100,
         avg_goals_scored=team.avg_goals_scored or 1.3,

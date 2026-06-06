@@ -53,15 +53,26 @@ class EloPredictor(BasePredictor):
             r_h = self._get_rating(row['HomeTeam']) + self.home_advantage
             r_a = self._get_rating(row['AwayTeam'])
             
+            # 使用逻辑回归映射或标准 Elo 转换
+            # 预期得分 E = 1 / (1 + 10^-(diff/400))
             e_h = self._expected_score(r_h, r_a)
             
-            # 简单的概率转换: Elo 预期得分即为胜率，这里用经验公式拆分平局
-            # 实际上更严谨的做法是结合泊松或逻辑回归，这里先做基础实现
-            prob_win = e_h * 0.9  # 略微缩减胜率分配给平局
-            prob_draw = 0.25      # 固定平局基准
-            prob_loss = 1 - prob_win - prob_draw
+            # 💡 改进：动态平局模型
+            # 概率 P(D) 随着实力差增大而减小
+            # 经验公式：P(D) = 0.25 * exp(-|diff|/600)
+            diff = abs(r_h - r_a)
+            prob_draw = 0.26 * np.exp(-diff / 500.0)
             
-            probs.append([prob_win, prob_draw, prob_loss])
+            # 剩余概率按预期得分比例分配
+            rem = 1.0 - prob_draw
+            # e_h 是主队预期得分(含平局贡献)，转换成纯胜率
+            # 简化模型：P(H) = e_h * (1-P(D)), P(A) = (1-e_h) * (1-P(D))
+            prob_home = e_h * rem
+            prob_away = (1 - e_h) * rem
+            
+            # 归一化确保万无一失
+            total = prob_home + prob_draw + prob_away
+            probs.append([prob_home/total, prob_draw/total, prob_away/total])
             
         return np.array(probs)
 

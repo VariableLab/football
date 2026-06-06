@@ -47,8 +47,14 @@ class PoissonPredictor(BasePredictor):
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         probs = []
         for _, row in X.iterrows():
-            h_params = self.team_params.get(row['HomeTeam'], {'att': 1.0, 'def': 1.0})
-            a_params = self.team_params.get(row['AwayTeam'], {'att': 1.0, 'def': 1.0})
+            h_name, a_name = row['HomeTeam'], row['AwayTeam']
+            if h_name not in self.team_params or a_name not in self.team_params:
+                # 💡 核心修复：如果找不到参数，返回 None，避免干扰全局预测
+                probs.append(None)
+                continue
+                
+            h_params = self.team_params.get(h_name)
+            a_params = self.team_params.get(a_name)
             l_h = h_params['att'] * a_params['def']
             l_a = a_params['att'] * h_params['def']
             max_goals = 6

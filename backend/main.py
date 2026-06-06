@@ -210,7 +210,7 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 @app.get("/")
 def root():
     """首页 — 返回前端入口"""
-    return FileResponse(str(STATIC_DIR / "index.html"))
+    return FileResponse(os.path.join(_root, "..", "static", "index.html"))
 
 
 if __name__ == "__main__":
