@@ -32,10 +32,11 @@ SYNC_TABLES = [
     "odds_history",
 ]
 
-SSH_USER = "ubuntu"
-SSH_HOST = "129.146.124.72"
-SSH_KEY = os.path.expanduser("~/.ssh/server_key")
-REMOTE_PROJECT = "/home/ubuntu/Github/football"
+# SSH 配置 (优先从环境变量读取)
+SSH_USER = os.environ.get("REMOTE_USER", "ubuntu")
+SSH_HOST = os.environ.get("REMOTE_HOST", "129.146.124.72")
+SSH_KEY = os.path.expanduser(os.environ.get("SSH_KEY_PATH", "~/.ssh/server_key"))
+REMOTE_PROJECT = os.environ.get("REMOTE_PROJECT", "/home/ubuntu/Github/football")
 
 
 def log(msg: str) -> None:

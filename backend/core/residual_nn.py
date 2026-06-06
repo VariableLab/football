@@ -25,7 +25,7 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 MODEL_PATH = os.path.join(MODEL_DIR, "stacking_v3.pt")
 STATS_PATH = os.path.join(MODEL_DIR, "stacking_stats.json")
 
-INPUT_DIM = 54  # 48 (FeatureBuilder) + 3 (LR) + 3 (Market)
+INPUT_DIM = 59  # 48 (FeatureBuilder) + 5 (Interactions) + 3 (LR) + 3 (Market)
 OUTPUT_DIM = 3
 BATCH_SIZE = 128
 LEARNING_RATE = 3e-4

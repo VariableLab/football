@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Tactical Intelligence Center - WC Analytics</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Noto+Sans+SC:wght@400;700;900&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #020408;
+            --gold: #FFD60A; 
+            --purple: #BF5AF2;    
+            --green: #32D74B;     
+            --blue: #00D4FF;
+            --glass-bg: rgba(10, 15, 28, 0.95);
+        }
+        body {
+            background-color: var(--bg-deep);
+            color: white;
+            font-family: 'Noto Sans SC', sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #root {
+            width: 1200px;
+            height: 850px;
+            position: relative;
+            box-shadow: 0 50px 100px -20px rgba(0,0,0,0.9);
+            border-radius: 16px;
+            background: var(--glass-bg);
+            border: 1px solid rgba(255,255,255,0.08);
+            overflow: hidden;
+        }
+        .lang-toggle {
+            cursor: pointer;
+            padding: 6px 12px;
+            border: 1px solid rgba(0,212,255,0.3);
+            color: var(--blue);
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 900;
+            transition: all 0.3s;
+            letter-spacing: 1px;
+        }
+        .lang-toggle:hover { background: var(--blue); color: black; }
+        .team-btn { cursor: pointer; transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); opacity: 0.25; }
+        .team-btn.active { opacity: 1; transform: scale(1.05); filter: drop-shadow(0 0 15px currentColor); }
+        
+        .pitch-canvas {
+            height: 400px;
+            width: 100%;
+            margin-top: 20px;
+            position: relative;
+            background: #080C14;
+            border: 1px solid #1F2937;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        @keyframes heat-pulse {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.6; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+        }
+        .heat-node {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(25px);
+            animation: heat-pulse 3s infinite ease-in-out;
+            transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        .animate-bar { transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const I18N = {
+            zh: {
+                subtitle: "F1 研发实验室 · 实时战术模拟",
+                prediction: "预测模型产出",
+                win: "胜率",
+                threat_title: "核心威胁热力分布",
+                metrics_title: "实时属性对撞 (PRO COMPARISON)",
+                key_node: "关键渗透点",
+                side: "进攻侧重",
+                formation: "预计阵型",
+                metrics: {
+                    overall: "综合战力",
+                    offense: "进攻火力",
+                    defense: "防守稳定性",
+                    transition: "攻防转换"
+                }
+            },
+            en: {
+                subtitle: "F1 RESEARCH LAB · REAL-TIME SIMULATION",
+                prediction: "MODEL OUTPUT",
+                win: "WIN PROB",
+                threat_title: "CORE THREAT HEATMAP",
+                metrics_title: "REAL-TIME ATTR COLLISION",
+                key_node: "PENETRATION NODE",
+                side: "ATTACK FOCUS",
+                formation: "EST. FORMATION",
+                metrics: {
+                    overall: "OVERALL",
+                    offense: "OFFENSE",
+                    defense: "DEFENSE STAB.",
+                    transition: "TRANSITION"
+                }
+            }
+        };
+
+        const MATCH_DATA = {
+            home: {
+                id: 'POR',
+                name: { zh: '葡萄牙', en: 'PORTUGAL' },
+                color: '#BF5AF2',
+                stats: { overall: 89, offense: 91, defense: 78, transition: 84 },
+                heat_nodes: [
+                    { x: '75%', y: '25%', size: '120px', intensity: 0.6 },
+                    { x: '85%', y: '50%', size: '150px', intensity: 0.8 },
+                    { x: '70%', y: '75%', size: '100px', intensity: 0.4 }
+                ],
+                focus: { zh: '右路内切 / 禁区压制', en: 'Right Inverted / Box Pressure' },
+                formation: '4-3-3'
+            },
+            away: {
+                id: 'COL',
+                name: { zh: '哥伦比亚', en: 'COLOMBIA' },
+                color: '#00D4FF',
+                stats: { overall: 82, offense: 75, defense: 88, transition: 91 },
+                heat_nodes: [
+                    { x: '25%', y: '50%', size: '140px', intensity: 0.7 },
+                    { x: '15%', y: '30%', size: '100px', intensity: 0.5 },
+                    { x: '45%', y: '50%', size: '110px', intensity: 0.4 }
+                ],
+                focus: { zh: '中路拦截 / 快速反击', en: 'Mid Block / Rapid Counter' },
+                formation: '4-2-3-1'
+            },
+            prediction: { home: 45, draw: 28, away: 27 }
+        };
+
+        const CollisionBar = ({ label, homeVal, awayVal, activeSide, homeColor, awayColor }) => {
+            return (
+                <div style={{ marginBottom: '25px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: '900', color: '#6B7280', marginBottom: '8px', letterSpacing: '1px' }}>
+                        <span>{label}</span>
+                        <div style={{ display: 'flex', gap: '15px' }}>
+                            <span style={{ color: activeSide === 'home' ? homeColor : '#6B7280' }}>{homeVal}</span>
+                            <span style={{ color: activeSide === 'away' ? awayColor : '#6B7280' }}>{awayVal}</span>
+                        </div>
+                    </div>
+                    <div style={{ position: 'relative', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden', display: 'flex' }}>
+                        {/* 对撞显示：左侧为葡萄牙，右侧为哥伦比亚 */}
+                        <div className="animate-bar" style={{ 
+                            width: `${homeVal/2}%`, height: '100%', background: homeColor, 
+                            opacity: activeSide === 'home' ? 1 : 0.3,
+                            boxShadow: activeSide === 'home' ? `0 0 10px ${homeColor}` : 'none'
+                        }}></div>
+                        <div style={{ width: '1px', height: '100%', background: 'rgba(255,255,255,0.2)' }}></div>
+                        <div className="animate-bar" style={{ 
+                            width: `${awayVal/2}%`, height: '100%', background: awayColor,
+                            opacity: activeSide === 'away' ? 1 : 0.3,
+                            boxShadow: activeSide === 'away' ? `0 0 10px ${awayColor}` : 'none'
+                        }}></div>
+                    </div>
+                </div>
+            );
+        };
+
+        const MatchCenter = () => {
+            const [lang, setLang] = useState('zh');
+            const [activeTeam, setActiveTeam] = useState('home');
+            const team = MATCH_DATA[activeTeam];
+            const t = I18N[lang];
+
+            return (
+                <div style={{ padding: '50px', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+                    
+                    {/* Top */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                            <div style={{ color: 'var(--gold)', fontWeight: '900', letterSpacing: '4px', fontSize: '12px' }}>{t.subtitle}</div>
+                            <div style={{ fontFamily: 'Montserrat', fontSize: '36px', fontWeight: '900', marginTop: '5px' }}>
+                                CORE <span style={{ color: team.color }}>ANALYSIS TERMINAL</span>
+                            </div>
+                        </div>
+                        <div className="lang-toggle" onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}>
+                            {lang === 'zh' ? 'ENGLISH' : '中文'}
+                        </div>
+                    </div>
+
+                    {/* Team Selector */}
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '80px', margin: '40px 0' }}>
+                        {['home', 'away'].map(side => (
+                            <div key={side} className={`team-btn ${activeTeam === side ? 'active' : ''}`} onClick={() => setActiveTeam(side)} style={{ color: MATCH_DATA[side].color, textAlign: 'center' }}>
+                                <div style={{ fontSize: '72px', fontWeight: '900' }}>{MATCH_DATA[side].name[lang]}</div>
+                                <div style={{ fontSize: '12px', letterSpacing: '6px', opacity: 0.8, fontWeight: 'bold' }}>{MATCH_DATA[side].id} / {MATCH_DATA[side].formation}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Main Layout */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '60px', flex: 1 }}>
+                        
+                        {/* LEFT: PITCH & HEATMAP */}
+                        <div style={{ borderLeft: `4px solid ${team.color}`, paddingLeft: '30px' }}>
+                            <div style={{ color: team.color, fontWeight: '900', fontSize: '16px' }}>{t.threat_title}</div>
+                            <div className="pitch-canvas">
+                                {/* Lines */}
+                                <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: '1px', background: 'rgba(255,255,255,0.05)' }}></div>
+                                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '100px', height: '100px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '50%' }}></div>
+                                {/* Goals */}
+                                <div style={{ position: 'absolute', top: '50%', left: 0, transform: 'translateY(-50%)', width: '10%', height: '50%', border: '1px solid rgba(255,255,255,0.1)', borderLeft: 'none' }}></div>
+                                <div style={{ position: 'absolute', top: '50%', right: 0, transform: 'translateY(-50%)', width: '10%', height: '50%', border: '1px solid rgba(255,255,255,0.1)', borderRight: 'none' }}></div>
+                                
+                                {/* Nodes */}
+                                {team.heat_nodes.map((node, idx) => (
+                                    <div key={`${activeTeam}-${idx}`} className="heat-node" style={{
+                                        left: node.x, top: node.y, width: node.size, height: node.size,
+                                        background: `radial-gradient(circle, ${team.color} 0%, transparent 70%)`,
+                                        opacity: node.intensity, transform: 'translate(-50%, -50%)'
+                                    }}></div>
+                                ))}
+                            </div>
+                            <div style={{ marginTop: '15px', color: '#9CA3AF', fontSize: '12px' }}>
+                                {t.side}: <span style={{ color: team.color, fontWeight: 'bold' }}>{team.focus[lang]}</span>
+                            </div>
+                        </div>
+
+                        {/* RIGHT: DATA COLLISION */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '35px' }}>
+                            {/* Win Prob */}
+                            <div style={{ borderLeft: '4px solid var(--green)', paddingLeft: '30px' }}>
+                                <div style={{ color: 'var(--green)', fontWeight: '900', fontSize: '16px' }}>{t.prediction}</div>
+                                <div style={{ marginTop: '15px', background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '14px', fontWeight: '900' }}>
+                                        <span style={{ color: MATCH_DATA.home.color }}>{MATCH_DATA.home.id} {MATCH_DATA.prediction.home}%</span>
+                                        <span style={{ color: '#555' }}>DRAW {MATCH_DATA.prediction.draw}%</span>
+                                        <span style={{ color: MATCH_DATA.away.color }}>{MATCH_DATA.away.id} {MATCH_DATA.prediction.away}%</span>
+                                    </div>
+                                    <div style={{ height: '6px', background: '#222', borderRadius: '3px', overflow: 'hidden', display: 'flex' }}>
+                                        <div className="animate-bar" style={{ width: `${MATCH_DATA.prediction.home}%`, background: MATCH_DATA.home.color }}></div>
+                                        <div style={{ width: `${MATCH_DATA.prediction.draw}%`, background: '#444' }}></div>
+                                        <div className="animate-bar" style={{ width: `${MATCH_DATA.prediction.away}%`, background: MATCH_DATA.away.color }}></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Attributes Collision HUD */}
+                            <div style={{ borderLeft: '4px solid var(--gold)', paddingLeft: '30px' }}>
+                                <div style={{ color: 'var(--gold)', fontWeight: '900', fontSize: '16px', marginBottom: '25px' }}>{t.metrics_title}</div>
+                                
+                                {Object.keys(MATCH_DATA.home.stats).map(key => (
+                                    <CollisionBar 
+                                        key={key}
+                                        label={t.metrics[key]}
+                                        homeVal={MATCH_DATA.home.stats[key]}
+                                        awayVal={MATCH_DATA.away.stats[key]}
+                                        activeSide={activeTeam}
+                                        homeColor={MATCH_DATA.home.color}
+                                        awayColor={MATCH_DATA.away.color}
+                                    />
+                                ))}
+
+                                <div style={{ marginTop: '20px', padding: '15px', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '6px' }}>
+                                    <div style={{ fontSize: '12px', color: '#6B7280' }}>
+                                        <strong style={{color: 'white'}}>{t.formation}:</strong> {team.formation} | 
+                                        <strong style={{color: 'white', marginLeft: '15px'}}>{t.key_node}:</strong> {activeTeam === 'home' ? 'Right Half-Space' : 'Zone 14'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<MatchCenter />);
+    </script>
+</body>
+</html>

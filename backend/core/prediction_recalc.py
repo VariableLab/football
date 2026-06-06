@@ -128,6 +128,31 @@ def trigger_batch_recalc(db: Session, match_ids: list[int], force: bool = False)
     return results
 
 
+def trigger_all_upcoming_recalc(db: Session, hours_ahead: int = 72) -> int:
+    """
+    触发所有即将开始比赛的预测重算（通常在模型重训后调用）
+    """
+    from database.models import MatchStatus
+    now = datetime.now(timezone.utc)
+    future_limit = now + timedelta(hours=hours_ahead)
+
+    matches = db.query(Match).filter(
+        Match.status == MatchStatus.UPCOMING,
+        Match.kickoff_at > now,
+        Match.kickoff_at < future_limit
+    ).all()
+
+    if not matches:
+        return 0
+
+    count = 0
+    for m in matches:
+        if trigger_recalc(db, m.id, force=True):
+            count += 1
+    
+    return count
+
+
 def clear_debounce_cache(match_id: Optional[int] = None):
     """清除防抖缓存"""
     global _recalc_cache

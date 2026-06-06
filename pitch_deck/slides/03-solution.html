@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-deep: #020408;
+            --gold: #FFD60A;
+            --blue: #00D4FF;
+        }
+        body {
+            width: 960pt; height: 540pt;
+            background-color: var(--bg-deep);
+            color: white;
+            font-family: 'PingFang SC', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+        .header { padding: 30pt 60pt; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .kicker { color: var(--gold); font-weight: 900; font-size: 14pt; letter-spacing: 2pt; display: flex; align-items: center; gap: 10pt; }
+        .kicker::before { content: ""; width: 30pt; height: 2pt; background: var(--gold); }
+        h1 { font-size: 32pt; margin-top: 10pt; font-weight: 900; }
+        .main { display: grid; grid-template-columns: 1fr 1fr; padding: 40pt 60pt; gap: 50pt; }
+        .solution-card { background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.1); padding: 30pt; border-radius: 12pt; text-align: center; }
+        .solution-card h2 { font-size: 48pt; font-weight: 900; color: var(--blue); margin-bottom: 10pt; }
+        .solution-card p { font-size: 16pt; font-weight: bold; color: white; }
+        .lang-switch { border: 1px solid var(--blue); padding: 5pt 10pt; color: var(--blue); cursor: pointer; font-size: 10pt; font-weight: 900; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+        const Solution = () => {
+            const [lang, setLang] = React.useState('zh');
+            const t = {
+                zh: {
+                    kicker: "OUR SOLUTION · 解决方案",
+                    title: "降维打击：让“深度战术”成为“社交货币”",
+                    s1_title: "CaaS",
+                    s1_subtitle: "赛事内容即服务",
+                    s1_desc: "利用 F1 级模型，将 3000+ 条 StatsBomb 事件全自动转化为“秒懂级”视觉资产。为媒体、自媒体提供 24/7 的高价值素材。",
+                    s2_title: "AI ADVISOR",
+                    s2_subtitle: "智慧赛事大脑",
+                    s2_desc: "不再是黑盒预测。通过可视化热图和属性对撞，为用户提供“看得到逻辑”的决策支撑，建立无可撼动的公信力壁垒。"
+                },
+                en: {
+                    kicker: "OUR SOLUTION · STRATEGY",
+                    title: "DIMENSION REDUCTION: DATA AS SOCIAL CURRENCY",
+                    s1_title: "CaaS",
+                    s1_subtitle: "Content as a Service",
+                    s1_desc: "Convert 3000+ StatsBomb events into 'instant-view' assets automatically. Providing 24/7 high-value content for global media channels.",
+                    s2_title: "AI ADVISOR",
+                    s2_subtitle: "Intelligence Advisor",
+                    s2_desc: "Beyond black-box prediction. Providing 'visible logic' through heatmaps and attribute collisions to build unshakable credibility."
+                }
+            }[lang];
+
+            return (
+                <div style={{height: '100%'}}>
+                    <div className="header">
+                        <div>
+                            <div className="kicker">{t.kicker}</div>
+                            <h1>{t.title}</h1>
+                        </div>
+                        <div className="lang-switch" onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}>
+                            {lang === 'zh' ? 'EN' : '中'}
+                        </div>
+                    </div>
+                    <div className="main">
+                        <div className="solution-card">
+                            <h2>{t.s1_title}</h2>
+                            <p>{t.s1_subtitle}</p>
+                            <p style={{fontSize: '12pt', color: '#888', fontWeight: 'normal', marginTop: '20pt'}}>{t.s1_desc}</p>
+                        </div>
+                        <div className="solution-card" style={{background: 'rgba(255,214,10,0.05)', borderColor: 'rgba(255,214,10,0.1)'}}>
+                            <h2 style={{color: 'var(--gold)'}}>{t.s2_title}</h2>
+                            <p>{t.s2_subtitle}</p>
+                            <p style={{fontSize: '12pt', color: '#888', fontWeight: 'normal', marginTop: '20pt'}}>{t.s2_desc}</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<Solution />);
+    </script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-deep: #020408; --gold: #FFD60A; --purple: #BF5AF2; --green: #32D74B; --blue: #00D4FF; --glass-bg: rgba(10, 15, 28, 0.95); }
+        body { background-color: var(--bg-deep); color: white; font-family: 'Noto Sans SC', sans-serif; margin: 0; padding: 0; overflow: hidden; }
+        #canvas { width: 1200px; height: 800px; position: relative; background: var(--glass-bg); border: 1px solid rgba(255,255,255,0.1); overflow: hidden; display: flex; flex-direction: column; }
+        .pitch-canvas { height: 400px; width: 100%; margin-top: 20px; position: relative; background: #080C14; border: 1px solid #1F2937; border-radius: 8px; overflow: hidden; }
+        .heat-node { position: absolute; border-radius: 50%; filter: blur(25px); opacity: 0.6; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const MatchCard = ({ data }) => {
+            const team = data.activeSide === 'home' ? data.home : data.away;
+            return (
+                <div id="canvas" style={{ padding: '50px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                            <div style={{ color: 'var(--gold)', fontWeight: '900', letterSpacing: '4px', fontSize: '12px' }}>F1 RESEARCH LAB · 2026 WORLD CUP</div>
+                            <div style={{ fontFamily: 'Montserrat', fontSize: '40px', fontWeight: '900', marginTop: '5px' }}>
+                                CORE <span style={{ color: team.color }}>ANALYSIS TERMINAL</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '80px', margin: '30px 0' }}>
+                        <div style={{ color: data.home.color, textAlign: 'center', opacity: data.activeSide === 'home' ? 1 : 0.3 }}>
+                            <div style={{ fontSize: '72px', fontWeight: '900' }}>{data.home.name}</div>
+                        </div>
+                        <div style={{ fontSize: '24px', color: '#444', fontWeight: 'bold' }}>VS</div>
+                        <div style={{ color: data.away.color, textAlign: 'center', opacity: data.activeSide === 'away' ? 1 : 0.3 }}>
+                            <div style={{ fontSize: '72px', fontWeight: '900' }}>{data.away.name}</div>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '60px', flex: 1 }}>
+                        <div>
+                            <div style={{ borderLeft: `4px solid ${team.color}`, paddingLeft: '20px' }}>
+                                <div style={{ color: team.color, fontWeight: '900', fontSize: '16px' }}>TACTICAL THREAT HEATMAP</div>
+                                <div className="pitch-canvas">
+                                    <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: '1px', background: 'rgba(255,255,255,0.05)' }}></div>
+                                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '100px', height: '100px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '50%' }}></div>
+                                    <div style={{ position: 'absolute', top: '50%', left: 0, transform: 'translateY(-50%)', width: '10%', height: '50%', border: '1px solid rgba(255,255,255,0.1)', borderLeft: 'none' }}></div>
+                                    <div style={{ position: 'absolute', top: '50%', right: 0, transform: 'translateY(-50%)', width: '10%', height: '50%', border: '1px solid rgba(255,255,255,0.1)', borderRight: 'none' }}></div>
+                                    {team.heat_nodes.map((node, idx) => (
+                                        <div key={idx} className="heat-node" style={{
+                                            left: node.x, top: node.y, width: node.size, height: node.size,
+                                            background: `radial-gradient(circle, ${team.color} 0%, transparent 70%)`,
+                                            transform: 'translate(-50%, -50%)'
+                                        }}></div>
+                                    ))}
+                                </div>
+                                <div style={{ marginTop: '15px', color: '#9CA3AF', fontSize: '13px' }}>AI INSIGHT: <span style={{ color: team.color, fontWeight: 'bold' }}>{data.ai_commentary}</span></div>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                            <div style={{ borderLeft: '4px solid var(--green)', paddingLeft: '20px' }}>
+                                <div style={{ color: 'var(--green)', fontWeight: '900', fontSize: '16px' }}>WIN PROBABILITY</div>
+                                <div style={{ marginTop: '15px', background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '14px', fontWeight: '900' }}>
+                                        <span style={{ color: data.home.color }}>{data.home.id} {data.prediction.home}%</span>
+                                        <span style={{ color: data.away.color }}>{data.away.id} {data.prediction.away}%</span>
+                                    </div>
+                                    <div style={{ height: '6px', background: '#222', borderRadius: '3px', overflow: 'hidden', display: 'flex' }}>
+                                        <div style={{ width: `${data.prediction.home}%`, background: data.home.color }}></div>
+                                        <div style={{ width: `${data.prediction.draw}%`, background: '#444' }}></div>
+                                        <div style={{ width: `${data.prediction.away}%`, background: data.away.color }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style={{ borderLeft: '4px solid var(--gold)', paddingLeft: '20px' }}>
+                                <div style={{ color: 'var(--gold)', fontWeight: '900', fontSize: '16px' }}>ATTR COLLISION</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '15px' }}>
+                                    {Object.entries(team.stats).map(([k, v]) => (
+                                        <div key={k} style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '6px' }}>
+                                            <div style={{ fontSize: '10px', color: '#6B7280', fontWeight: 'bold' }}>{k.toUpperCase()}</div>
+                                            <div style={{ fontSize: '24px', fontWeight: '900', color: team.color }}>{v}%</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        window.renderCard = (data) => {
+            ReactDOM.createRoot(document.getElementById('root')).render(<MatchCard data={data} />);
+        };
+    </script>
+</body>
+</html>

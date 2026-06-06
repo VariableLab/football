@@ -45,11 +45,23 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/${{ secrets.SERVER_USER }}/Github/football
-            git pull origin master
-            # 更新依赖
-            ./backend/venv/bin/pip install -r backend/requirements.txt
-            # 前端构建 (如有 node 环境)
-            npm install && npm run build
-            # 重启服务
-            sudo systemctl restart football.service
-            sudo systemctl status football.service
+            # 强制重置以防本地修改冲突 (生产环境最佳实践)
+            git fetch origin master
+            git reset --hard origin/master
+            
+            # 更新后端依赖
+            cd backend
+            ./venv/bin/pip install -r requirements.txt -q
+            
+            # 针对 ARM 架构注入补丁 (确保远程环境 Scraper 正常)
+            ./venv/bin/python3 -c "from utils.scraper_patch import patch_soccerdata; patch_soccerdata()"
+            
+            # 重启系统服务
+            echo "🚀 Restarting V5 API and Agent services..."
+            sudo systemctl restart football-api
+            sudo systemctl restart football-agent
+            
+            # 最终健康检查
+            echo "📊 Verifying service status..."
+            sudo systemctl is-active football-api
+            sudo systemctl is-active football-agent

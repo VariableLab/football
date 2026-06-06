@@ -12,8 +12,8 @@
 <body class="min-h-screen antialiased">
   <nav class="fixed top-0 left-0 right-0 z-50 glass-strong">
     <div class="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
-      <a href="/" class="font-semibold text-sm tracking-wide text-slate-200 hover:text-accent-cyan transition-colors">&larr; 返回首页</a>
-      <span class="text-xs text-slate-500 font-mono">WC ANALYTICS</span>
+      <a href="/static/index.html" class="font-semibold text-sm tracking-wide text-slate-200 hover:text-accent-cyan transition-colors">&larr; 返回首页</a>
+      <span class="text-xs text-slate-500 font-mono">WC ANALYTICS RESEARCH LAB</span>
     </div>
   </nav>
 
@@ -32,28 +32,28 @@
 <p class="text-sm text-slate-400 mb-3">最后更新：2026年5月</p>
 
 <h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">1. 数据性质</h3>
-<p class="text-sm text-slate-400">本平台提供的所有概率预测、赔率分析和投注策略均基于历史数据的统计模型回测结果，属于数学模型的估算输出，不代表未来赛事的实际结果。任何统计模型都存在不确定性，过去的表现不保证未来的准确性。</p>
+<p class="text-sm text-slate-400">本平台提供的所有概率估算、偏差分析和模型推演策略均基于历史数据的统计模型回测结果，属于数学模型的估算输出，仅用于学术研究验证，不代表未来赛事的实际结果。任何统计模型都存在不确定性，过去的表现不保证未来的校准质量。</p>
 
-<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">2. 不构成投注建议</h3>
-<p class="text-sm text-slate-400">本平台内容仅供数据分析和学术研究参考，不构成任何形式的投注建议、投资建议或财务建议。用户应根据自身判断做出决策，平台不对因使用本平台信息而产生的任何损失承担责任。</p>
+<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">2. 不构成决策建议</h3>
+<p class="text-sm text-slate-400">本平台内容仅供数据分析和学术研究参考，不构成任何形式的投注建议、投资建议或财务建议。用户应根据自身判断做出决策，平台不对因使用本平台信息而产生的任何后果承担责任。</p>
 
 <h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">3. 法律合规</h3>
-<p class="text-sm text-slate-400">本平台遵守中华人民共和国相关法律法规。中国境内彩票销售由国家特许的彩票发行机构依法开展，本平台不从事彩票销售、代购或任何形式的彩票经营活动。</p>
+<p class="text-sm text-slate-400">本平台遵守中华人民共和国相关法律法规。本平台致力于模型算法研究，不从事彩票销售、代购或任何形式的博弈经营活动。请用户理性看待体育竞赛，遵守所在地法律。</p>
 
-<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">4. 赔率数据来源</h3>
-<p class="text-sm text-slate-400">竞彩赔率数据来源于中国体育彩票官方公布的公开信息，仅用于数据分析目的。赔率信息可能存在延迟，请以官方渠道发布的实时赔率为准。</p>
+<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">4. 市场快照来源</h3>
+<p class="text-sm text-slate-400">市场快照数据（包括即时赔率）来源于公开的第三方接口及官方公布信息，仅用于模型特征输入和校准目的。数据可能存在延迟，不应作为实时决策依据。</p>
 
 <h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">5. 模型局限</h3>
-<p class="text-sm text-slate-400">本平台使用的预测模型基于 Poisson 回归、Elo 评分、市场赔率等统计方法，具有以下已知局限：</p>
+<p class="text-sm text-slate-400">本平台使用的预测模型具有以下已知局限：</p>
 <ul class="text-sm text-slate-400 list-disc pl-5 space-y-1">
-  <li>无法捕捉突发事件（伤病、红牌、天气剧变等）的影响</li>
-  <li>历史数据回测准确率约 60-65%，意味着约 35-40% 的预测与实际结果不符</li>
-  <li>平局概率估算存在系统性偏差</li>
-  <li>淘汰赛阶段模型校准数据有限</li>
+  <li>无法捕捉不可建模的突发事件（伤病、红牌、天气等）</li>
+  <li>历史数据回测准确率受样本分布影响</li>
+  <li>平局概率估算在特定联赛存在系统性偏差</li>
+  <li>实时验证指标处于预览阶段</li>
 </ul>
 
-<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">6. 知识产权</h3>
-<p class="text-sm text-slate-400">本平台的模型算法、界面设计和代码实现受知识产权保护。球队名称、赛事标志等归其各自所有者所有。</p>
+<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">6. 开源与知识产权</h3>
+<p class="text-sm text-slate-400">核心算法框架已在 GitHub 开源。本平台的界面设计和非开源代码实现受版权保护。</p>
 `
       },
       privacy: {
@@ -63,28 +63,18 @@
 <p class="text-sm text-slate-400 mb-3">最后更新：2026年5月</p>
 
 <h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">1. 信息收集</h3>
-<p class="text-sm text-slate-400">我们收集以下信息以提供服务：</p>
+<p class="text-sm text-slate-400">我们收集以下信息以提供研究服务：</p>
 <ul class="text-sm text-slate-400 list-disc pl-5 space-y-1">
-  <li><strong>账户信息</strong>：注册邮箱（用于登录和身份验证），密码（bcrypt 加密存储，不可逆）</li>
-  <li><strong>使用数据</strong>：页面访问记录、API 调用频率（用于限流和安全防护）</li>
-  <li><strong>授权信息</strong>：卡密兑换记录（用于访问控制）</li>
+  <li><strong>账户信息</strong>：注册邮箱（用于身份验证及保存研究报告）</li>
+  <li><strong>使用数据</strong>：API 调用记录（用于安全防护）</li>
+  <li><strong>授权信息</strong>：授权码激活记录（用于研究策略访问控制）</li>
 </ul>
-<p class="text-sm text-slate-400">我们不收集：真实姓名、身份证号、支付信息、设备位置。</p>
 
-<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">2. 数据存储与安全</h3>
-<p class="text-sm text-slate-400">所有数据存储在服务器本地 SQLite 数据库中，不使用第三方云存储。数据库每日自动备份。JWT 令牌使用 HS256 算法签名，有效期 7 天。所有 API 通信建议使用 HTTPS 加密。</p>
+<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">2. 数据安全</h3>
+<p class="text-sm text-slate-400">所有数据存储在受控服务器中。我们不收集真实姓名、身份证号或支付信息。</p>
 
 <h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">3. 数据使用</h3>
-<p class="text-sm text-slate-400">您的数据仅用于：账户验证、访问控制、服务安全防护。我们不会将您的个人信息出售、共享或转让给任何第三方。</p>
-
-<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">4. 数据删除</h3>
-<p class="text-sm text-slate-400">您可以通过联系管理员请求删除账户及关联数据。数据删除后不可恢复。</p>
-
-<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">5. Cookie 使用</h3>
-<p class="text-sm text-slate-400">本平台使用 localStorage 存储 JWT 令牌，不使用追踪 Cookie 或第三方分析工具。</p>
-
-<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">6. 政策变更</h3>
-<p class="text-sm text-slate-400">隐私政策如有更新，将在本页面发布新版本，不再另行通知。</p>
+<p class="text-sm text-slate-400">您的数据仅用于提升模型性能和提供个性化研究功能。我们不会将信息共享给第三方。</p>
 `
       },
       terms: {
@@ -93,28 +83,24 @@
 <h2 class="text-lg font-semibold text-slate-200 mb-4">用户协议</h2>
 <p class="text-sm text-slate-400 mb-3">最后更新：2026年5月</p>
 
-<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">1. 服务内容</h3>
-<p class="text-sm text-slate-400">WC Analytics 提供基于统计模型的世界杯赛事数据分析服务，包括概率预测、赔率对比和策略建议。服务内容以"现状"提供，不作任何明示或暗示的保证。</p>
+<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">1. 服务性质</h3>
+<p class="text-sm text-slate-400">WC Analytics 提供足球赛事概率校准研究服务。服务内容以“现状”提供，旨在辅助学术研究。</p>
 
-<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">2. 账户注册</h3>
-<p class="text-sm text-slate-400">注册时您同意：提供真实有效的邮箱地址；妥善保管账户密码；对账户下所有活动负责。禁止注册多个账户、使用自动化工具批量操作、或尝试未授权访问。</p>
+<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">2. 账户责任</h3>
+<p class="text-sm text-slate-400">注册用户需对账户下所有研究行为负责。禁止利用本平台进行任何违法活动。</p>
 
-<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">3. 卡密与访问</h3>
-<p class="text-sm text-slate-400">卡密为一次性使用，兑换后不可转让或退款。比赛结束后的策略内容自动对所有用户开放。卡密过期后需重新兑换。</p>
+<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">3. 授权码</h3>
+<p class="text-sm text-slate-400">授权码用于激活模型高级推演策略。授权码一经使用不可撤销。研究数据在比赛结束后自动公开。</p>
 
 <h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">4. 禁止行为</h3>
 <ul class="text-sm text-slate-400 list-disc pl-5 space-y-1">
-  <li>逆向工程、反编译或反汇编本平台的模型算法</li>
-  <li>批量抓取、爬取平台数据</li>
-  <li>将平台内容用于商业转售</li>
-  <li>干扰平台正常运行或攻击平台基础设施</li>
+  <li>批量抓取平台研究数据</li>
+  <li>将研究结果用于任何形式的博弈商业转售</li>
+  <li>干扰系统校准引擎正常运行</li>
 </ul>
 
-<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">5. 责任限制</h3>
-<p class="text-sm text-slate-400">在适用法律允许的最大范围内，平台不对因使用或无法使用本服务导致的任何直接、间接、附带、特殊或后果性损害承担责任。</p>
-
-<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">6. 协议修改</h3>
-<p class="text-sm text-slate-400">我们保留随时修改本协议的权利。继续使用本服务即视为接受修改后的协议。</p>
+<h3 class="text-sm font-medium text-slate-300 mt-6 mb-2">5. 协议修改</h3>
+<p class="text-sm text-slate-400">我们保留随时修改协议的权利。继续使用即视为接受新协议。</p>
 `
       }
     };

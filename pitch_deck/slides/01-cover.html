@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-deep: #020408;
+            --gold: #FFD60A;
+            --blue: #00D4FF;
+        }
+        body {
+            width: 960pt; height: 540pt;
+            background-color: var(--bg-deep);
+            color: white;
+            font-family: 'Montserrat', 'PingFang SC', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .glow {
+            position: absolute;
+            width: 600pt; height: 600pt;
+            background: radial-gradient(circle, rgba(0,212,255,0.1) 0%, transparent 70%);
+            top: -200pt; right: -200pt;
+        }
+        .content { text-align: left; padding: 60pt; width: 100%; }
+        h1 { font-size: 84pt; font-weight: 900; line-height: 0.9; margin-bottom: 20pt; letter-spacing: -2pt; }
+        .accent { color: var(--blue); }
+        .subtitle { font-size: 24pt; color: rgba(255,255,255,0.6); letter-spacing: 4pt; font-weight: 300; }
+        .lang-switch { position: absolute; top: 40pt; right: 60pt; border: 1px solid var(--blue); padding: 5pt 10pt; color: var(--blue); cursor: pointer; font-size: 10pt; font-weight: 900; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="root"></div>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+        const Cover = () => {
+            const [lang, setLang] = React.useState('zh');
+            return (
+                <div style={{width: '100%', height: '100%', display: 'flex', alignItems: 'center'}}>
+                    <div className="glow"></div>
+                    <div className="lang-switch" onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}>
+                        {lang === 'zh' ? 'EN' : '中'}
+                    </div>
+                    <div className="content">
+                        <p className="subtitle">{lang === 'zh' ? '2026 世界杯' : '2026 WORLD CUP'}</p>
+                        <h1>WC-ANALYTICS<br/><span className="accent">INTELLIGENCE</span></h1>
+                        <p style={{fontSize: '20pt', color: 'var(--gold)', fontWeight: 'bold', marginTop: '30pt'}}>
+                            {lang === 'zh' ? '全自动赛事内容引擎：定义未来观赛体验' : 'Automated Content Engine: Defining Future Experience'}
+                        </p>
+                    </div>
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<Cover />);
+    </script>
+</body>
+</html>

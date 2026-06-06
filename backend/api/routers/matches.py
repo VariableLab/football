@@ -21,15 +21,15 @@ _VALID_STATUSES = {"upcoming", "live", "finished", "postponed", "cancelled"}
 _VALID_MATCH_TYPES = {"world_cup", "friendly", "warm_up", "qualifier"}
 
 def _enrich_rationale(pick, match) -> str:
-    """将 pipeline 的技术性 rationale 增强为用户可读的中文分析。"""
+    """将 pipeline 的技术性 rationale 增强为模型研究分析。"""
     sel_label = pick.selection_label
     parts: list[str] = []
 
     # 1. 核心模型估算原因
     if pick.edge > 0.05:
-        parts.append(f"{sel_label}有显著价值: 模型概率{pick.model_prob_calibrated:.0%}高于市场隐含{pick.market_prob:.0%}，边际{pick.edge:+.1%}")
+        parts.append(f"{sel_label}模型偏差显著: 模型概率{pick.model_prob_calibrated:.0%}显著偏离市场共识{pick.market_prob:.0%}，统计偏差{pick.edge:+.1%}")
     elif pick.edge > 0:
-        parts.append(f"{sel_label}具备正期望: 模型概率{pick.model_prob_calibrated:.1%}略高于赔率折算")
+        parts.append(f"{sel_label}存在正向偏差: 模型估值{pick.model_prob_calibrated:.1%}略高于市场快照折算")
 
     # 2. 球队基本面
     home = match.home_team
@@ -38,25 +38,25 @@ def _enrich_rationale(pick, match) -> str:
         if home.elo and away.elo:
             elo_diff = home.elo - away.elo
             if elo_diff > 150:
-                parts.append(f"{home.name}实力占优(ELO +{elo_diff})")
+                parts.append(f"{home.name}历史实力基准占优(ELO +{elo_diff})")
             elif elo_diff < -150:
-                parts.append(f"{away.name}实力占优(ELO {elo_diff})")
+                parts.append(f"{away.name}历史实力基准占优(ELO {elo_diff})")
 
     # 3. 状态因子
     if home and home.form_factor and home.form_factor > 1.1:
-        parts.append(f"{home.name}状态良好(系数{home.form_factor:.2f})")
+        parts.append(f"{home.name}近期统计状态良好(系数{home.form_factor:.2f})")
     if away and away.form_factor and away.form_factor > 1.1:
-        parts.append(f"{away.name}状态良好(系数{away.form_factor:.2f})")
+        parts.append(f"{away.name}近期统计状态良好(系数{away.form_factor:.2f})")
 
     # 4. 置信度
     if pick.confidence == "high":
-        parts.append("高置信模型估算")
+        parts.append("高信心统计校准")
     elif pick.confidence == "low":
-        parts.append("低置信，谨慎参考")
+        parts.append("低信心样本，仅供参考")
 
-    # 5. 风险提示
+    # 5. 偏差程度
     if pick.risk_label in ("high", "extreme"):
-        parts.append(f"风险等级{pick.risk_label}，仓位已缩减")
+        parts.append(f"偏差程度{pick.risk_label}，建议关注模型稳定性")
 
     return "。".join(parts)
 
@@ -71,8 +71,8 @@ def list_matches(
     db: Session = Depends(get_db)
 ):
     """
-    List matches with pagination.
-    Supports filtering by status (including 'jingcai'), group, match_type, date (today|tomorrow).
+    列出研究样本赛事。
+    支持通过状态（含 'jingcai' 批次）、分组、类型及日期进行过滤。
     """
     if status == "jingcai":
         pass # 特殊处理，见下文 join 逻辑
@@ -136,8 +136,8 @@ def get_strategy(
     user: Optional[any] = Depends(get_optional_user),
 ):
     """
-    Get prediction strategy for a match.
-    Requires paid license unless the match has finished (auto-unlock).
+    获取单场赛事的模型推演策略。
+    未完赛场次需要有效的授权码访问（赛后自动公开验证）。
     """
     match = db.query(Match).filter(Match.id == match_id).first()
     if not match:

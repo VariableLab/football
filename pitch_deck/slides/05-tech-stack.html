@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-deep: #020408;
+            --gold: #FFD60A;
+            --blue: #00D4FF;
+        }
+        body {
+            width: 960pt; height: 540pt;
+            background-color: var(--bg-deep);
+            color: white;
+            font-family: 'PingFang SC', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+        .header { padding: 30pt 60pt; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .kicker { color: var(--blue); font-weight: 900; font-size: 14pt; letter-spacing: 2pt; display: flex; align-items: center; gap: 10pt; }
+        .kicker::before { content: ""; width: 30pt; height: 2pt; background: var(--blue); }
+        h1 { font-size: 32pt; margin-top: 10pt; font-weight: 900; }
+        .main { display: flex; padding: 40pt 60pt; gap: 60pt; align-items: center; }
+        .engine-visual { flex: 1; position: relative; text-align: center; }
+        .engine-core { width: 150pt; height: 150pt; border: 4pt solid var(--gold); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 24pt; color: var(--gold); box-shadow: 0 0 30pt var(--gold); margin: 0 auto; }
+        .orbit { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 250pt; height: 250pt; border: 1pt dashed rgba(255,255,255,0.2); border-radius: 50%; }
+        .data-point { position: absolute; background: var(--blue); padding: 5pt 10pt; border-radius: 4pt; font-size: 10pt; font-weight: 900; }
+        .features { flex: 1.2; }
+        .feature-item { margin-bottom: 25pt; }
+        .feature-item h3 { color: var(--gold); font-size: 18pt; margin-bottom: 5pt; }
+        .feature-item p { color: rgba(255,255,255,0.6); font-size: 14pt; line-height: 1.4; }
+        .lang-switch { border: 1px solid var(--blue); padding: 5pt 10pt; color: var(--blue); cursor: pointer; font-size: 10pt; font-weight: 900; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+        const TechStack = () => {
+            const [lang, setLang] = React.useState('zh');
+            const t = {
+                zh: {
+                    kicker: "THE ENGINE · 技术壁垒",
+                    title: "双轨进化的“F1 级”预测大脑",
+                    f1: "01. 百年历史基准",
+                    f1_d: "接入 1872 年至今 4.9 万场国际赛数据，构建最稳健的实力模型。",
+                    f2: "02. 深度事件挖掘",
+                    f2_d: "StatsBomb 毫秒级数据对接，还原真实的射门压力与战术分布。",
+                    f3: "03. 实验室-赛道机制",
+                    f3_d: "研发环境负责模型自愈，生产环境实时输出，确保算法永不失效。"
+                },
+                en: {
+                    kicker: "THE ENGINE · TECH BARRIER",
+                    title: "EVOLVING 'F1' PREDICTION CORE",
+                    f1: "01. CENTURY BASELINE",
+                    f1_d: "Accessing 49,000+ intl matches since 1872 for the most robust model.",
+                    f2: "02. DEEP EVENT MINING",
+                    f2_d: "StatsBomb ms-level data syncing, restoring real shot pressure and tactics.",
+                    f3: "03. LAB-PROD HYBRID",
+                    f3_d: "Lab handles self-healing, Prod handles real-time output. Never fails."
+                }
+            }[lang];
+
+            return (
+                <div style={{height: '100%'}}>
+                    <div className="header">
+                        <div>
+                            <div className="kicker">{t.kicker}</div>
+                            <h1>{t.title}</h1>
+                        </div>
+                        <div className="lang-switch" onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}>
+                            {lang === 'zh' ? 'EN' : '中'}
+                        </div>
+                    </div>
+                    <div className="main">
+                        <div className="engine-visual">
+                            <div className="orbit"></div>
+                            <div className="engine-core">F1 CORE</div>
+                            <div className="data-point" style={{top: '10%', left: '20%'}}>ELO BASE</div>
+                            <div className="data-point" style={{bottom: '10%', right: '20%'}}>xG STREAM</div>
+                            <div className="data-point" style={{top: '50%', right: '-10%'}}>POISSON</div>
+                        </div>
+                        <div className="features">
+                            <div className="feature-item"><h3>{t.f1}</h3><p>{t.f1_d}</p></div>
+                            <div className="feature-item"><h3>{t.f2}</h3><p>{t.f2_d}</p></div>
+                            <div className="feature-item"><h3>{t.f3}</h3><p>{t.f3_d}</p></div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<TechStack />);
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi.security import OAuth2PasswordBearer
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Header
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
@@ -45,6 +45,14 @@ def decode_token(token: str) -> Optional[dict]:
     except JWTError:
         return None
 
+
+import hmac
+
+def _verify_admin_key(x_api_key: str = Header(..., alias="X-Api-Key")) -> bool:
+    """验证 Admin API Key — Header 传递，常量时间比较"""
+    if not hmac.compare_digest(x_api_key, settings.ADMIN_API_KEY):
+        raise HTTPException(status_code=403, detail="Invalid admin key")
+    return True
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),

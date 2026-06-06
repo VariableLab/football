@@ -85,12 +85,20 @@ class LogisticFusionWeights:
         if features.ndim == 1:
             features = features.reshape(1, -1)
             
-        # 维度检查
-        if features.shape[1] != self.coef_home.shape[0]:
-            raise ValueError(
-                f"Feature dimension mismatch: expected {self.coef_home.shape[0]}, "
-                f"got {features.shape[1]}. Model may need retraining."
-            )
+        # 维度检查与自适应处理
+        incoming_dim = features.shape[1]
+        weight_dim = self.coef_home.shape[0]
+        
+        if incoming_dim != weight_dim:
+            if incoming_dim > weight_dim:
+                # 💡 兼容性：如果输入包含多余特征（如新加的交互项），自动截断以匹配旧权重
+                logger.debug(f"[logistic_fusion] Truncating features: {incoming_dim} -> {weight_dim}")
+                features = features[:, :weight_dim]
+            else:
+                raise ValueError(
+                    f"Feature dimension mismatch: expected {weight_dim}, "
+                    f"got {incoming_dim}. Model needs retraining."
+                )
 
         logodds_home = features @ self.coef_home + self.intercept_home
         logodds_away = features @ self.coef_away + self.intercept_away

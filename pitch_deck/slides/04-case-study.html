@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-deep: #020408;
+            --gold: #FFD60A;
+            --blue: #00D4FF;
+        }
+        body {
+            width: 960pt; height: 540pt;
+            background-color: var(--bg-deep);
+            color: white;
+            font-family: 'PingFang SC', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+        .header { padding: 30pt 60pt; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .kicker { color: var(--gold); font-weight: 900; font-size: 14pt; letter-spacing: 2pt; display: flex; align-items: center; gap: 10pt; }
+        .kicker::before { content: ""; width: 30pt; height: 2pt; background: var(--gold); }
+        h1 { font-size: 32pt; margin-top: 10pt; font-weight: 900; }
+        .main { display: flex; padding: 40pt 60pt; gap: 40pt; height: 380pt; }
+        .text-column { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .image-column { flex: 1.5; position: relative; }
+        .case-card { width: 100%; border: 2px solid var(--blue); border-radius: 8pt; box-shadow: 0 0 30pt rgba(0,212,255,0.2); }
+        ul { list-style: none; margin-top: 20pt; }
+        li { margin-bottom: 15pt; font-size: 16pt; display: flex; align-items: flex-start; gap: 10pt; color: rgba(255,255,255,0.8); }
+        li::before { content: "✦"; color: var(--blue); }
+        .lang-switch { border: 1px solid var(--blue); padding: 5pt 10pt; color: var(--blue); cursor: pointer; font-size: 10pt; font-weight: 900; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+        const CaseStudy = () => {
+            const [lang, setLang] = React.useState('zh');
+            const t = {
+                zh: {
+                    kicker: "CASE STUDY · 实战案例",
+                    title: "从百年历史，到实时战术空间",
+                    l1: "高维降维打击：将 3000+ 条 StatsBomb 事件映射为 1 秒秒懂的视觉资产。",
+                    l2: "空间建模：利用数据还原球队的“战术威胁指纹”。",
+                    l3: "商业溢价：全自动化生成的专业底片，零边际成本。",
+                    demo: "[ 实机演示: 2026 世界杯模拟赛程 ]"
+                },
+                en: {
+                    kicker: "CASE STUDY · LIVE PREVIEW",
+                    title: "FROM HISTORY TO TACTICAL SPACE",
+                    l1: "Dimension Reduction: Mapping 3000+ events into 'instant-view' assets.",
+                    l2: "Spatial Modeling: Restoring 'Tactical Fingerprints' through raw data.",
+                    l3: "Commercial Premium: Fully automated professional content with zero marginal cost.",
+                    demo: "[ LIVE DEMO: 2026 WC SIMULATION ]"
+                }
+            }[lang];
+
+            return (
+                <div style={{height: '100%'}}>
+                    <div className="header">
+                        <div>
+                            <div className="kicker">{t.kicker}</div>
+                            <h1>{t.title}</h1>
+                        </div>
+                        <div className="lang-switch" onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}>
+                            {lang === 'zh' ? 'EN' : '中'}
+                        </div>
+                    </div>
+                    <div className="main">
+                        <div className="text-column">
+                            <ul>
+                                <li>{t.l1}</li>
+                                <li>{t.l2}</li>
+                                <li>{t.l3}</li>
+                            </ul>
+                        </div>
+                        <div className="image-column">
+                            <img src="../assets/images/case_study_01.png" className="case-card" />
+                            <p style={{textAlign: 'center', color: 'var(--gold)', fontSize: '12pt', marginTop: '10pt', fontWeight: 'bold'}}>{t.demo}</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<CaseStudy />);
+    </script>
+</body>
+</html>

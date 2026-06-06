@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Vault Seek - The Sacred Archive (A+C Fusion)</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=Newsreader:italic,wght@400;700&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #FDFDFB;    /* Kenya Hara: Pure warm white */
+      --ink: #111111;     /* Takram: Sharp ink black */
+      --accent: #0047FF;  /* Precision blue */
+      --grid-line: rgba(0, 0, 0, 0.03);
+    }
+    body {
+      background-color: var(--paper);
+      color: var(--ink);
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-serif { font-family: 'Newsreader', serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Paper Texture Overlay */
+    .paper-texture {
+      position: fixed;
+      inset: 0;
+      background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+      opacity: 0.2;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* Takram Precision Grid */
+    .precision-grid {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 100px 100px;
+      pointer-events: none;
+    }
+
+    /* Crosshair Cursor */
+    .crosshair-h { position: fixed; left: 0; right: 0; height: 1px; background: var(--grid-line); pointer-events: none; z-index: 50; }
+    .crosshair-v { position: fixed; top: 0; bottom: 0; width: 1px; background: var(--grid-line); pointer-events: none; z-index: 50; }
+
+    .vault-card {
+      border: 1px solid rgba(0,0,0,0.06);
+      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      background: white;
+    }
+    .vault-card:hover {
+      border-color: var(--ink);
+      transform: translateY(-4px);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.04);
+    }
+
+    .btn-precision {
+      border: 1px solid var(--ink);
+      padding: 10px 24px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+    }
+    .btn-precision:hover {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    @keyframes line-grow {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+    .animate-line { animation: line-grow 1.5s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+  </style>
+</head>
+<body>
+  <div class="paper-texture"></div>
+  <div class="precision-grid"></div>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const useMousePosition = () => {
+      const [pos, setPos] = useState({ x: 0, y: 0 });
+      useEffect(() => {
+        const handle = (e) => setPos({ x: e.clientX, y: e.clientY });
+        window.addEventListener('mousemove', handle);
+        return () => window.removeEventListener('mousemove', handle);
+      }, []);
+      return pos;
+    };
+
+    const Header = () => (
+      <nav className="fixed top-0 left-0 right-0 z-[110] px-12 py-10 flex justify-between items-end pointer-events-none">
+        <div className="pointer-events-auto">
+          <div className="text-2xl font-serif italic font-black tracking-tighter">vs.</div>
+          <div className="text-[9px] font-black tracking-[0.4em] uppercase opacity-40 mt-1">Vault Seek // Archive.v2</div>
+        </div>
+        <div className="flex gap-16 pointer-events-auto items-end">
+           {['Archive', 'Systems', 'Intelligence'].map(item => (
+             <button key={item} className="text-[10px] font-bold uppercase tracking-widest text-ink/40 hover:text-ink transition-colors">{item}</button>
+           ))}
+           <button className="btn-precision ml-4">Access Key</button>
+        </div>
+      </nav>
+    );
+
+    const DataPoint = ({ label, value }) => (
+      <div className="space-y-1">
+        <div className="text-[8px] font-black text-ink/30 uppercase tracking-widest">{label}</div>
+        <div className="text-xs font-mono font-medium">{value}</div>
+      </div>
+    );
+
+    const ResourceDossier = ({ title, category, description, metrics }) => (
+      <div className="vault-card p-10 group flex flex-col h-full relative overflow-hidden">
+        <div className="flex justify-between items-start mb-12">
+          <div className="space-y-1">
+             <span className="text-[9px] font-black text-accent uppercase tracking-widest">{category}</span>
+             <h3 className="text-2xl font-serif italic group-hover:underline decoration-ink/10 underline-offset-8 transition-all">{title}</h3>
+          </div>
+          <div className="font-mono text-[9px] opacity-20">00{Math.floor(Math.random()*99)}</div>
+        </div>
+        
+        <p className="text-sm leading-relaxed text-ink/60 font-serif italic mb-16 flex-1">{description}</p>
+        
+        <div className="grid grid-cols-3 gap-6 pt-8 border-t border-ink/5">
+           {Object.entries(metrics).map(([k, v]) => <DataPoint key={k} label={k} value={v} />)}
+        </div>
+
+        {/* Takram Detail: Corner HUD */}
+        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+           <div className="w-4 h-4 border-r border-b border-accent"></div>
+        </div>
+      </div>
+    );
+
+    const App = () => {
+      const mouse = useMousePosition();
+      const resources = [
+        { 
+          title: "Cognitive Vector Engine", 
+          category: "Neural Infra", 
+          description: "这是一个关于纯粹逻辑的容器。通过对高维语义空间的物理映射，我们将零散的知识碎片转化为可检索的拓扑网络。", 
+          metrics: { latency: "1.2ms", dim: "1536", parity: "0.99" } 
+        },
+        { 
+          title: "Obsidian Core Protocol", 
+          category: "Security", 
+          description: "极致的安全性来源于对结构的克制。采用非对称加密流与零知识证明，确保每一份技术资产都在数字深渊中绝对静默。", 
+          metrics: { entropy: "High", layer: "L3", status: "Locked" } 
+        },
+        { 
+          title: "Monochrome UI Lexicon", 
+          category: "Design", 
+          description: "排版即算法。通过对留白（WhiteSpace）的精确度量，建立一套超越视觉噪音的交互语法。让信息本身成为唯一的装潢。", 
+          metrics: { grid: "100px", ratio: "1.618", kerning: "Tight" } 
+        },
+        { 
+          title: "Decentralized Registry", 
+          category: "Consensus", 
+          description: "分布式真理校验系统。每一条录入的知识都经过网络共识的洗礼，确保证据链条的完整性与不可篡改性。", 
+          metrics: { nodes: "1,204", sync: "Active", tps: "48k" } 
+        }
+      ];
+
+      return (
+        <div className="min-h-screen pt-60 pb-60 px-12">
+          {/* Crosshairs */}
+          <div className="crosshair-h" style={{ top: mouse.y }}></div>
+          <div className="crosshair-v" style={{ left: mouse.x }}></div>
+
+          <Header />
+          
+          <div className="max-w-6xl mx-auto">
+            {/* Hero Section */}
+            <header className="mb-48 relative">
+               <div className="text-[11px] font-black tracking-[0.6em] text-ink/30 uppercase mb-10">Verification Protocol // active</div>
+               <h1 className="text-7xl sm:text-9xl font-serif hero-text tracking-tighter mb-16 leading-[0.9]">Find the<br />Truth<span className="text-accent">.</span></h1>
+               <div className="h-px bg-ink animate-line mb-16"></div>
+               <p className="text-xl text-ink/50 font-serif italic max-w-xl leading-relaxed">
+                 在信息的洪流中保持绝对的静默。这是一个面向未来的知识保险库，每一行代码都经过了数学意义上的审美校准。
+               </p>
+            </header>
+
+            {/* Search as a Line */}
+            <div className="mb-40 max-w-3xl">
+               <div className="flex items-end gap-6 border-b-2 border-ink pb-6 group">
+                  <span className="text-2xl font-serif italic opacity-30 group-focus-within:opacity-100 transition-opacity">Seek:</span>
+                  <input 
+                    type="text" 
+                    placeholder="ENTER QUERY_STRING"
+                    className="flex-1 bg-transparent font-mono text-xl tracking-[0.2em] focus:outline-none placeholder:opacity-10"
+                  />
+                  <div className="text-[10px] font-black opacity-20 uppercase tracking-widest">Vector_Scan_v4.5</div>
+               </div>
+            </div>
+
+            {/* Content Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-ink/5 border border-ink/5">
+              {resources.map((r, idx) => (
+                <div key={idx} className="bg-paper">
+                   <ResourceDossier {...r} />
+                </div>
+              ))}
+            </div>
+            
+            {/* System Log Footer */}
+            <footer className="mt-60 pt-16 border-t border-ink/10 flex flex-col md:flex-row justify-between items-start gap-12">
+               <div className="space-y-6 max-w-xs">
+                  <div className="text-[10px] font-black uppercase tracking-widest">Algorithmic Integrity</div>
+                  <div className="font-mono text-[9px] leading-relaxed text-ink/40">
+                     > System Uptime: 99.999%<br />
+                     > Neural Layers: 3 (Ensemble)<br />
+                     > Features Logged: 48<br />
+                     > Global Trust Index: 0.88
+                  </div>
+               </div>
+               
+               <div className="text-right flex flex-col items-end">
+                  <div className="text-[10px] font-black uppercase tracking-[0.5em] mb-4">First Principles Only</div>
+                  <div className="w-24 h-24 border border-ink/5 flex items-center justify-center relative">
+                     <div className="absolute inset-0 m-2 border border-accent/20 animate-spin-slow" style={{animationDuration: '10s'}}></div>
+                     <span className="text-[8px] font-mono opacity-30 text-center">QUANT<br/>VERIFIED</span>
+                  </div>
+               </div>
+            </footer>
+          </div>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

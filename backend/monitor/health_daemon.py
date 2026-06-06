@@ -15,7 +15,13 @@ logger = get_logger("health_daemon")
 
 _CUR = os.path.dirname(os.path.abspath(__file__))
 _BASE = os.path.dirname(_CUR)  # Point to backend/
-DB_PATH = os.path.join(_BASE, "database.sqlite")
+from database.config import get_settings
+settings = get_settings()
+
+DB_URL = settings.DATABASE_URL
+IS_SQLITE = "sqlite" in DB_URL
+# 如果是 SQLite，获取路径用于完整性检查
+DB_PATH = DB_URL.replace("sqlite:///", "") if IS_SQLITE else None
 BACKUP_DIR = os.path.join(_BASE, "backup")
 HEALTH_FILE = os.path.join(_CUR, "data", "health_status.json")
 
@@ -73,6 +79,7 @@ class HealthDaemon:
         self._check_data_completeness()
         self._check_zgzcw_sync()
         self._check_jingcai_issues()
+        self._check_data_flow()
         self._check_model_drift()
         self._check_consecutive_failures()
         self._check_backup_freshness()
@@ -87,7 +94,23 @@ class HealthDaemon:
     def _check_db_integrity(self) -> None:
         result = CheckResult(name="db_integrity")
 
-        if not os.path.exists(DB_PATH):
+        if not IS_SQLITE:
+            # 对于非 SQLite (如 Postgres)，执行简单的连接测试
+            from sqlalchemy import text
+            from database.models import SessionLocal
+            session = SessionLocal()
+            try:
+                session.execute(text("SELECT 1"))
+                result.message = f"Database connection OK ({DB_URL.split('@')[-1] if '@' in DB_URL else 'PostgreSQL'})"
+            except Exception as e:
+                result.status = "fail"
+                result.message = f"Database connection FAIL: {e}"
+            finally:
+                session.close()
+            self._report.checks.append(result)
+            return
+
+        if not DB_PATH or not os.path.exists(DB_PATH):
             result.status = "fail"
             result.message = f"数据库文件不存在: {DB_PATH}"
             self._report.checks.append(result)
@@ -203,7 +226,7 @@ class HealthDaemon:
 
         try:
             from ingestion.zgzcw_jc_sync import sync_jc_matches
-            sync_result = sync_jc_matches(DB_PATH)
+            sync_result = sync_jc_matches()
             if sync_result.get("matches", 0) > 0:
                 actions.append(f"zgzcw({sync_result['matches']})")
         except Exception as e:
@@ -341,7 +364,7 @@ class HealthDaemon:
         result = CheckResult(name="zgzcw_sync")
         from ingestion.zgzcw_jc_sync import sync_jc_matches
         try:
-            sync_result = sync_jc_matches(DB_PATH)
+            sync_result = sync_jc_matches()
             m = sync_result.get("matches", 0)
             e = sync_result.get("errors", 0)
             linked = sync_result.get("issues_linked", 0)
@@ -360,28 +383,58 @@ class HealthDaemon:
     # ────────────────────────────
     def _check_jingcai_issues(self) -> None:
         result = CheckResult(name="jingcai_issues")
+        from database.models import SessionLocal, JingcaiIssue
+        from sqlalchemy import func
+        session = SessionLocal()
         try:
-            conn = sqlite3.connect(DB_PATH)
-            cur = conn.cursor()
-            cur.execute("SELECT status, COUNT(*) FROM jingcai_issues GROUP BY status")
-            rows = cur.fetchall()
-            conn.close()
+            stats = session.query(
+                JingcaiIssue.status, func.count(JingcaiIssue.id)
+            ).group_by(JingcaiIssue.status).all()
 
-            if not rows:
+            if not stats:
                 result.status = "warn"
                 result.message = "无竞彩期号记录"
             else:
-                parts = [f"{s}={c}" for s, c in rows]
-                total = sum(c for _, c in rows)
+                parts = [f"{s}={c}" for s, c in stats]
+                total = sum(c for _, c in stats)
                 result.message = f"共 {total} 期: " + ", ".join(parts)
 
-                on_sale = sum(c for s, c in rows if s == "on_sale")
+                on_sale = sum(c for s, c in stats if s == "on_sale")
                 if on_sale == 0:
                     result.status = "warn"
                     result.message += " (无在售期号)"
         except Exception as e:
             result.status = "fail"
             result.message = f"期号检查异常: {e}"
+        finally:
+            session.close()
+        self._report.checks.append(result)
+
+    # ────────────────────────────
+    # Check 6.5: 数据断流检测
+    # ────────────────────────────
+    def _check_data_flow(self) -> None:
+        """检查过去12小时内是否有任何新赔率入库（判断系统是否还在采集）"""
+        result = CheckResult(name="data_flow")
+        from database.models import SessionLocal, OddsHistory
+        session = SessionLocal()
+        try:
+            cutoff = datetime.now(timezone.utc) - timedelta(hours=12)
+            recent_count = session.query(OddsHistory).filter(
+                OddsHistory.recorded_at >= cutoff
+            ).count()
+
+            if recent_count > 0:
+                result.message = f"活跃 (12h内录入 {recent_count} 条赔率)"
+            else:
+                result.status = "fail"
+                result.message = "数据断流！过去 12 小时无新赔率记录"
+                fire_alert("health_daemon", "critical", "系统数据断流：过去 12 小时没有任何赔率更新，请检查采集器状态。")
+        except Exception as e:
+            result.status = "warn"
+            result.message = f"断流检查异常: {e}"
+        finally:
+            session.close()
         self._report.checks.append(result)
 
     # ────────────────────────────

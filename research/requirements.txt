@@ -1,0 +1,8 @@
+statsbombpy
+requests
+pandas
+numpy
+pyyaml
+scikit-learn
+matplotlib
+jinja2

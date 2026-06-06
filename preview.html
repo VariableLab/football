@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WC-Analytics Local Preview</title>
+    <style>
+        body {
+            background-color: #0B0F19;
+            color: white;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 40px;
+            text-align: center;
+        }
+        h1 {
+            color: #00D4FF;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+        p.subtitle {
+            color: #AAAAAA;
+            margin-bottom: 40px;
+        }
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+        }
+        .card {
+            background-color: #111827;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 800px;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #00D4FF;
+        }
+        .card h3 {
+            color: white;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            border-bottom: 1px solid #374151;
+            padding-bottom: 10px;
+        }
+        .card img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>2026 WORLD CUP TACTICAL SIMULATION</h1>
+    <p class="subtitle">PRO Series Local Preview Gallery</p>
+
+    <div class="gallery">
+        <!-- 2026 PRO Series Preview -->
+        <div class="card">
+            <h3>PRO Preview: Colombia vs Portugal (2026)</h3>
+            <img src="./research/reports/cards/pro_series/PRO_PREVIEW_Colombia_vs_Portugal.png" alt="Colombia vs Portugal">
+        </div>
+
+        <!-- 2022 Batch Preview -->
+        <div class="card">
+            <h3>Batch Preview: Argentina vs France (2022 Final)</h3>
+            <img src="./research/reports/cards/batch_2022/Argentina_vs_France.png" alt="Argentina vs France">
+        </div>
+        
+        <div class="card">
+            <h3>Batch Preview: Croatia vs Brazil (2022)</h3>
+            <img src="./research/reports/cards/batch_2022/Croatia_vs_Brazil.png" alt="Croatia vs Brazil">
+        </div>
+    </div>
+
+</body>
+</html>

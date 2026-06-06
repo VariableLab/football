@@ -21,16 +21,22 @@ sudo apt-get update -qq
 sudo apt-get install -y -qq python3 python3-venv python3-pip nginx git
 
 # ────────────────────────────
-# 2. 代码部署
+# 2. 代码部署 (F1 Optimized)
 # ────────────────────────────
 echo "[2/6] 部署代码..."
-if [ ! -d "$PROJECT_DIR" ]; then
-    # 首次部署：从git克隆或本地复制
-    echo "请先将代码上传到 $PROJECT_DIR"
-    exit 1
-fi
 
-cd "$BACKEND_DIR"
+# 使用 rsync 进行轻量化同步
+# 排除本地虚拟环境、重型研究库(本地安装即可)、数据库以及.env
+rsync -avz --quiet \
+  --exclude='.git/' \
+  --exclude='node_modules/' \
+  --exclude='backend/venv/' \
+  --exclude='backend/.env' \
+  --exclude='*.sqlite' \
+  --exclude='research/data/raw/' \
+  --exclude='research/reports/' \
+  -e "ssh -o StrictHostKeyChecking=no" \
+  ./ /home/ubuntu/Github/football/
 
 # ────────────────────────────
 # 3. Python 虚拟环境

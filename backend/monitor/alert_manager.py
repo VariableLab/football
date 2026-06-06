@@ -37,6 +37,39 @@ def _save_alerts(alerts: list) -> None:
         json.dump(fresh[-50:], f, indent=2)
 
 
+def _notify_telegram(source: str, level: str, message: str) -> None:
+    """发送 Telegram 消息告警"""
+    from database.config import get_settings
+    try:
+        s = get_settings()
+    except Exception:
+        return
+        
+    if not s.TELEGRAM_BOT_TOKEN or not s.TELEGRAM_CHAT_ID:
+        return
+    
+    try:
+        import httpx
+        url = f"https://api.telegram.org/bot{s.TELEGRAM_BOT_TOKEN}/sendMessage"
+        emoji = "🔴" if level == "critical" else "⚠️"
+        text = (
+            f"{emoji} *WC Analytics Alert*\n"
+            f"━━━━━━━━━━━━━━━\n"
+            f"*Source:* `{source}`\n"
+            f"*Level:* `{level.upper()}`\n"
+            f"*Time:* `{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC`\n\n"
+            f"{message}"
+        )
+        payload = {
+            "chat_id": s.TELEGRAM_CHAT_ID,
+            "text": text,
+            "parse_mode": "Markdown",
+        }
+        httpx.post(url, json=payload, timeout=10)
+    except Exception as e:
+        logger.warning(f"[alert] telegram notification failed: {e}")
+
+
 def _notify_webhook(source: str, level: str, message: str) -> None:
     if not ALERT_WEBHOOK_URL:
         return
@@ -73,6 +106,7 @@ def fire_alert(source: str, level: str, message: str) -> None:
         log_fn = logger.critical if level == "critical" else logger.warning
         log_fn(f"[ALERT] {source} | {level} | {message}")
         _notify_webhook(source, level, message)
+        _notify_telegram(source, level, message)
 
 
 def check_consecutive_failures(source: str, max_failures: int = 3) -> None:

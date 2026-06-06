@@ -1317,9 +1317,50 @@ class PredictionEngine:
         from core.logic_tracer import LogicChain
         trace = LogicChain(match_id=ctx.match_id)
 
+        # ─── F1 Bridge: 尝试加载实验室验证的最强逻辑 ───
+        lab_poisson_spf = None
+        lab_elo_spf = None
+        try:
+            from core.research_poisson import PoissonPredictor as LabPoisson
+            from core.research_elo import EloPredictor as LabElo
+            import os
+            
+            _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            p_weight_path = os.path.join(_root, "data", "weights", "research", "poisson_expert_weights.json")
+            e_weight_path = os.path.join(_root, "data", "weights", "research", "elo_expert_weights.json")
+            
+            # 1. Lab Poisson
+            if os.path.exists(p_weight_path):
+                lab_p = LabPoisson()
+                lab_p.load_params(p_weight_path)
+                df_mock = pd.DataFrame([{"HomeTeam": ctx.home_team.name, "AwayTeam": ctx.away_team.name}])
+                lab_p_res = lab_p.predict_proba(df_mock)
+                lab_poisson_spf = {"home": lab_p_res[0][0], "draw": lab_p_res[0][1], "away": lab_p_res[0][2]}
+                trace.add_step("Lab-Expert Poisson", "使用实验室 Dixon-Coles 泊松参数", lab_poisson_spf)
+
+            # 2. Lab Elo
+            if os.path.exists(e_weight_path):
+                lab_e = LabElo()
+                lab_e.load_params(e_weight_path)
+                df_mock = pd.DataFrame([{"HomeTeam": ctx.home_team.name, "AwayTeam": ctx.away_team.name}])
+                lab_e_res = lab_e.predict_proba(df_mock)
+                lab_elo_spf = {"home": lab_e_res[0][0], "draw": lab_e_res[0][1], "away": lab_e_res[0][2]}
+                trace.add_step("Lab-Expert Elo", "使用实验室百年历史基准 Elo 参数", lab_elo_spf)
+
+        except Exception as e:
+            import logging
+            logging.getLogger("prediction_engine").warning(f"[F1-Bridge] Lab injection failed: {e}")
+
         # 1. 跑各子模型
         elo_out = EloModel.predict(ctx)
+        if lab_elo_spf:
+            elo_out = lab_elo_spf
+
+        # 如果有实验室泊松，优先使用
         poisson_out = PoissonModel.predict(ctx)
+        if lab_poisson_spf:
+            poisson_out["spf"] = lab_poisson_spf
+
         players_factor = PlayerAdjustmentModel.predict(ctx)
         market_out = MarketModel.predict(ctx)
 

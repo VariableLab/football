@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-deep: #020408;
+            --gold: #FFD60A;
+            --blue: #00D4FF;
+            --red: #FF4136;
+        }
+        body {
+            width: 960pt; height: 540pt;
+            background-color: var(--bg-deep);
+            color: white;
+            font-family: 'PingFang SC', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+        .header { padding: 30pt 60pt; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .kicker { color: var(--blue); font-weight: 900; font-size: 14pt; letter-spacing: 2pt; display: flex; align-items: center; gap: 10pt; }
+        .kicker::before { content: ""; width: 30pt; height: 2pt; background: var(--blue); }
+        h1 { font-size: 32pt; margin-top: 10pt; font-weight: 900; }
+        .main { display: grid; grid-template-columns: 1fr 1fr; padding: 40pt 60pt; gap: 40pt; }
+        .pain-point { background: rgba(255,65,54,0.05); border: 1px solid rgba(255,65,54,0.1); padding: 20pt; border-radius: 8pt; }
+        .pain-point h3 { color: var(--red); font-size: 18pt; margin-bottom: 10pt; }
+        .pain-point p { font-size: 14pt; color: rgba(255,255,255,0.6); line-height: 1.6; }
+        .lang-switch { border: 1px solid var(--blue); padding: 5pt 10pt; color: var(--blue); cursor: pointer; font-size: 10pt; font-weight: 900; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+        const Problem = () => {
+            const [lang, setLang] = React.useState('zh');
+            const t = {
+                zh: {
+                    kicker: "THE USER GAP · 用户痛点",
+                    title: "普通球迷，正被“数据噪音”淹没",
+                    p1_title: "01. “看不懂”的专业数据",
+                    p1_desc: "传统的 xG 指标、热点图过于学术化。对于 90% 的用户而言，复杂的数学模型只是“天书”，无法转化为观赛快感。",
+                    p2_title: "02. “太枯燥”的纯文字预测",
+                    p2_desc: "在短视频时代，用户不再有耐心阅读长篇大论。缺乏视觉张力的分析内容，在社交媒体上完全没有生存空间。",
+                    market: "$1.3 万亿美元 · 全球体育数据市场"
+                },
+                en: {
+                    kicker: "THE USER GAP · PAIN POINTS",
+                    title: "FANS ARE DROWNING IN 'DATA NOISE'",
+                    p1_title: "01. INCOMPREHENSIBLE DATA",
+                    p1_desc: "Traditional xG and Heatmaps are too academic. For 90% of fans, complex models are just 'Greek', failing to enhance the joy of watching.",
+                    p2_title: "02. BORING TEXT PREDICTIONS",
+                    p2_desc: "In the short-video era, fans have no patience for long articles. Analysis lacking visual impact has zero survival space on social media.",
+                    market: "$1.3 TRILLION · GLOBAL SPORTS DATA MARKET"
+                }
+            }[lang];
+
+            return (
+                <div style={{height: '100%'}}>
+                    <div className="header">
+                        <div>
+                            <div className="kicker">{t.kicker}</div>
+                            <h1>{t.title}</h1>
+                        </div>
+                        <div className="lang-switch" onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}>
+                            {lang === 'zh' ? 'EN' : '中'}
+                        </div>
+                    </div>
+                    <div className="main">
+                        <div className="pain-point">
+                            <h3>{t.p1_title}</h3>
+                            <p>{t.p1_desc}</p>
+                        </div>
+                        <div className="pain-point" style={{background: 'rgba(255,214,10,0.05)', borderColor: 'rgba(255,214,10,0.1)'}}>
+                            <h3 style={{color: 'var(--gold)'}}>{t.p2_title}</h3>
+                            <p>{t.p2_desc}</p>
+                        </div>
+                    </div>
+                    <div style={{position: 'absolute', bottom: '40pt', left: '60pt', fontSize: '32pt', fontWeight: '900', color: 'var(--gold)', opacity: 0.6}}>
+                        {t.market}
+                    </div>
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<Problem />);
+    </script>
+</body>
+</html>

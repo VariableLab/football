@@ -235,6 +235,11 @@
       async train() {
         return apiFetch("/api/bet-nn/train", { method: "POST" });
       }
+    },
+    Content: {
+      async getPreview(matchId) {
+        return apiFetch(`/api/content/preview/${matchId}`);
+      }
     }
   };
   window.WCApi = WCApi;

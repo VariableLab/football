@@ -11,8 +11,9 @@ function ProMatchCard(match, index) {
     },
 
     async init() {
-      this.homeTeam = AppState.teams.find(t => t.id === this.match.home_team_id) || { name: this.match.home_team?.name || '主队', elo: 1500 };
-      this.awayTeam = AppState.teams.find(t => t.id === this.match.away_team_id) || { name: this.match.away_team?.name || '客队', elo: 1500 };
+      const teams = Alpine.store('app').teams;
+      this.homeTeam = teams.find(t => t.id === this.match.home_team_id) || { name: this.match.home_team?.name || '主队', elo: 1500 };
+      this.awayTeam = teams.find(t => t.id === this.match.away_team_id) || { name: this.match.away_team?.name || '客队', elo: 1500 };
       
       const spf = this.match.predictions?.find(p => p.play_type === 'SPF');
       if (spf) {
@@ -91,7 +92,7 @@ function ReportModal() {
           this.confidence = stratData.confidence || 'Normal';
           this.eloDiff = e.detail.eloDiff || '-';
 
-          const matchData = AppState.matches.find(m => m.id === matchId);
+          const matchData = Alpine.store('app').matches.find(m => m.id === matchId);
           this.league = matchData?.competition || 'QUANT LAB';
 
         } catch (e) {
@@ -124,7 +125,7 @@ function ReportModal() {
         segments.push({ title: "精算师核心逻辑", content: cleanContent.substring(0, 200).trim() + "..." });
       }
 
-      const matchData = AppState.matches.find(m => m.id === this.matchId);
+      const matchData = Alpine.store('app').matches.find(m => m.id === this.matchId);
 
       window.dispatchEvent(new CustomEvent('open-poster-modal', { 
         detail: { 
@@ -194,7 +195,44 @@ function PosterModal() {
   };
 }
 
+function AIPreviewModal() {
+  return {
+    show: false,
+    loading: true,
+    matchId: null,
+    preview: null,
+
+    init() {
+      window.addEventListener('open-ai-preview', async (e) => {
+        const { matchId } = e.detail;
+        this.matchId = matchId;
+        this.show = true;
+        this.loading = true;
+        document.getElementById('aiPreviewModal').classList.remove('hidden');
+
+        try {
+          this.preview = await WCApi.Content.getPreview(matchId);
+        } catch (e) {
+          console.error('Failed to load AI preview', e);
+          this.preview = null;
+        } finally {
+          this.loading = false;
+        }
+      });
+    },
+
+    close() {
+      this.show = false;
+      document.getElementById('aiPreviewModal').classList.add('hidden');
+    }
+  };
+}
+
 // 全局触发函数
 function openReport(matchId) {
   window.dispatchEvent(new CustomEvent('open-report-modal', { detail: { matchId } }));
+}
+
+function openAIPreview(matchId) {
+  window.dispatchEvent(new CustomEvent('open-ai-preview', { detail: { matchId } }));
 }

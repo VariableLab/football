@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>ProQuant 核心逻辑推演看板</title>
+  <title>WC Analytics 核心逻辑推演看板</title>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -32,7 +32,6 @@
       z-index: 100;
     }
 
-    /* 数据流动粒子动画 */
     @keyframes flow-particle {
       0% { transform: translateY(0); opacity: 0; }
       20% { opacity: 1; }
@@ -48,7 +47,6 @@
       animation: flow-particle 3s linear infinite;
     }
 
-    /* 矩阵网格背景 */
     .grid-bg {
       background-image: radial-gradient(var(--ink) 0.5px, transparent 0.5px);
       background-size: 20px 20px;
@@ -64,6 +62,14 @@
       border-color: var(--accent);
       box-shadow: 0 20px 50px rgba(192, 74, 26, 0.1);
     }
+    .stamp {
+      border: 4px solid var(--accent);
+      color: var(--accent);
+      padding: 10px 20px;
+      font-weight: 900;
+      transform: rotate(-15deg);
+      opacity: 0.8;
+    }
   </style>
 </head>
 <body>
@@ -77,14 +83,13 @@
     const QuantPipeline = ({ phase }) => {
       return (
         <div className="relative w-full h-full flex flex-col items-center">
-          {/* 流动背景 */}
           <div className="absolute inset-0 grid-bg"></div>
           
           <div className="relative z-10 w-full flex flex-col items-center gap-12 mt-10">
             
             {/* 1. Raw Data Input */}
             <div className={`w-40 h-24 border-2 border-ink/10 flex flex-col items-center justify-center p-4 transition-all duration-700 ${phase >= 0 ? 'bg-white' : 'opacity-10'}`}>
-              <div className="text-[8px] font-black text-ink-faded uppercase tracking-widest mb-2">RAW_DATA_INPUT</div>
+              <div className="text-[8px] font-black text-ink-faded uppercase tracking-widest mb-2">SAMPLE_DATA_INPUT</div>
               <div className="flex gap-1 overflow-hidden h-4 items-end">
                 {[1,2,3,4,5].map(i => (
                   <div key={i} className={`w-1.5 bg-ink/20 animate-pulse`} style={{height: `${Math.random()*100}%`, animationDelay: `${i*0.2}s`}}></div>
@@ -118,7 +123,7 @@
             {/* 3. Market Calibrator (对冲天平) */}
             <div className={`w-64 h-32 border-2 border-ink/5 flex items-center justify-around transition-all duration-700 ${phase >= 2 ? 'bg-white' : 'opacity-10'}`}>
                <div className="flex flex-col items-center gap-2">
-                 <div className="text-[7px] font-black opacity-40">MARKET</div>
+                 <div className="text-[7px] font-black opacity-40">MARKET SNAPSHOT</div>
                  <div className="w-8 h-12 bg-ink/10 rounded-sm overflow-hidden flex items-end">
                    <div className="w-full bg-ink/20" style={{height: '60%'}}></div>
                  </div>
@@ -127,7 +132,7 @@
                <div className="text-xl font-serif italic text-accent">vs</div>
 
                <div className="flex flex-col items-center gap-2">
-                 <div className="text-[7px] font-black text-accent">MODEL</div>
+                 <div className="text-[7px] font-black text-accent">MODEL ESTIMATE</div>
                  <div className="w-8 h-12 bg-accent/10 rounded-sm overflow-hidden flex items-end">
                    <div className={`w-full bg-accent transition-all duration-1000`} style={{height: phase >= 2 ? '85%' : '0%'}}></div>
                  </div>
@@ -141,20 +146,19 @@
 
             {/* 4. Final Verdict Seal */}
             <div className={`w-40 h-24 flex items-center justify-center transition-all duration-1000 ${phase >= 3 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
-               <div className="stamp text-3xl">VERIFIED</div>
+               <div className="stamp text-2xl">CALIBRATED</div>
             </div>
 
           </div>
 
-          {/* 实时参数仪表盘 */}
           <div className="mt-20 w-full grid grid-cols-2 gap-4">
              <div className="p-4 bg-ink/5 rounded-sm">
                 <div className="text-[8px] font-black opacity-30 uppercase mb-1">Inference Power</div>
                 <div className="text-xs font-mono">1.2 TFLOPS</div>
              </div>
              <div className="p-4 bg-ink/5 rounded-sm">
-                <div className="text-[8px] font-black opacity-30 uppercase mb-1">Market Drift</div>
-                <div className="text-xs font-mono text-accent" x-text="phase >= 2 ? 'ANOMALY LOCK' : 'SCANNING'">{phase >= 2 ? 'ANOMALY LOCK' : 'SCANNING'}</div>
+                <div className="text-[8px] font-black opacity-30 uppercase mb-1">Calibration Drift</div>
+                <div className="text-xs font-mono text-accent" x-text="phase >= 2 ? 'STABLE' : 'SCANNING'">{phase >= 2 ? 'STABLE' : 'SCANNING'}</div>
              </div>
           </div>
         </div>
@@ -178,20 +182,20 @@
       const [currentStep, setCurrentStep] = useState(0);
       const steps = [
         {
-          title: "海量原始数据摄取",
+          title: "样本数据采集",
           description: "同步全球 200+ 级联赛数据源，抓取 Elo 战力、历史对阵等 3.1 万场赛事底稿。"
         },
         {
-          title: "48-维度特征交叉推演",
-          description: "利用 StackingNet 4.5 神经网络，对进攻转化率、防守抗压等 48 个动态变量进行求和与非线性激活运算。"
+          title: "多维特征特征建模",
+          description: "利用 StackingNet 4.5 神经网络，对进攻转化率、防守抗压等 48 个动态变量进行交叉校准运算。"
         },
         {
-          title: "市场定价与真实概率博弈",
-          description: "计算模型测算的‘概率溢价 (Edge)’。当 AI 估值显著偏离机构定价时，捕捉获利机会点。"
+          title: "概率校准与偏差分析",
+          description: "计算模型测算的概率估值。当模型估值偏离市场快照时，生成客观的模型偏差分析。"
         },
         {
-          title: "终极量化研判输出",
-          description: "由 AI 将硬核数学数据转化为高置信度的情报档案，输出最终预测方向。"
+          title: "校准报告输出",
+          description: "由 AI 将数学数据转化为可复现的研究报告，输出最终校准概率。"
         }
       ];
 
@@ -208,7 +212,7 @@
             <header className="mb-32">
               <h1 className="text-6xl sm:text-8xl font-serif hero-text tracking-tighter mb-8" style={{color: 'var(--ink)'}}>How it works.</h1>
               <p className="text-lg text-ink/60 font-serif italic max-w-xl">
-                这不是文字游戏，这是一场基于物理规则的数据流动。
+                这不是结果预测，这是一场基于数学概率的数据校准。
               </p>
             </header>
 
@@ -235,7 +239,7 @@
             </div>
             
             <div className="mt-40 text-center">
-               <a href="/static/index.html" className="text-xs font-black uppercase tracking-widest text-accent border-b-2 border-accent pb-2 hover:text-ink hover:border-ink transition-all">返回量化终端</a>
+               <a href="/static/index.html" className="text-xs font-black uppercase tracking-widest text-accent border-b-2 border-accent pb-2 hover:text-ink hover:border-ink transition-all">返回研究终端</a>
             </div>
           </div>
         </div>

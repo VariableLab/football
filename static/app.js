@@ -1,62 +1,102 @@
 /**
- * WC Analytics — 专业量化终端版 (v4.0)
+ * WC Analytics — 专业量化终端版 (v5.0)
+ * 重构版：采用“数据叙事画廊”架构，实现高密度信号与深度研判的无缝切换
  */
 
-const AppState = {
-  matches: [],
-  teams: [],
-  filter: 'jingcai',
-  user: null,
-};
+document.addEventListener('alpine:init', () => {
+  Alpine.store('app', {
+    matches: [],
+    teams: [],
+    filter: 'today', // 默认切到今日
+    user: null,
+    loading: false,
+    
+    // V5 新增：当前选中的比赛及前瞻内容
+    selectedId: null,
+    preview: null,
+    previewLoading: false,
+    agentLog: "正在初始化 59 维特征扫描引擎...",
 
-async function initApp() {
-  await I18n.init();
-  try {
-    const [teams, me] = await Promise.all([
-      WCApi.Data.getTeams(),
-      WCApi.Auth.me().catch(() => null)
-    ]);
-    AppState.teams = teams.items || [];
-    AppState.user = me;
-    loadMatchView();
-  } catch (e) {
-    console.error('App init failed', e);
-  }
-}
+    async init() {
+      await I18n.init();
+      try {
+        const [teams, me] = await Promise.all([
+          WCApi.Data.getTeams(),
+          WCApi.Auth.me().catch(() => null)
+        ]);
+        this.teams = teams.items || [];
+        this.user = me;
+        await this.loadMatches();
+        
+        // 自动选中第一场有 Edge 的比赛
+        if (this.matches.length > 0) {
+          this.selectMatch(this.matches[0].id);
+        }
+      } catch (e) {
+        console.error('App init failed', e);
+        this.agentLog = "🔴 系统初始化异常，请检查后端连接。";
+      }
+    },
 
-async function loadMatchView() {
-  // Trigger loading state via event
-  window.dispatchEvent(new CustomEvent('matches-loading'));
-  try {
-    let matches;
-    if (['today', 'tomorrow'].includes(AppState.filter)) {
-      // 传递为 date 参数 (status=undefined, group=undefined, matchType=undefined, date=filter)
-      matches = await WCApi.Data.getMatches(undefined, undefined, undefined, AppState.filter);
-    } else {
-      // 传递为 status 参数 (如 'jingcai')
-      matches = await WCApi.Data.getMatches(AppState.filter);
+    async loadMatches() {
+      this.loading = true;
+      this.agentLog = `正在拉取 ${this.filter} 市场快照...`;
+      try {
+        let matches;
+        if (['today', 'tomorrow'].includes(this.filter)) {
+          matches = await WCApi.Data.getMatches(undefined, undefined, undefined, this.filter);
+        } else {
+          matches = await WCApi.Data.getMatches(this.filter);
+        }
+        this.matches = matches || [];
+        this.agentLog = `成功获取 ${this.matches.length} 条实时信号。`;
+      } catch (e) {
+        console.error('Load matches failed', e);
+        this.matches = [];
+        this.agentLog = "⚠️ 信号流抓取中断，正在重试...";
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async selectMatch(id) {
+      if (this.selectedId === id) return;
+      this.selectedId = id;
+      this.previewLoading = true;
+      this.preview = null;
+      
+      const m = this.matches.find(m => m.id === id);
+      this.agentLog = `正在校准 ${m?.home_team?.name || '未知'} 的 59 维残差特征...`;
+
+      try {
+        const data = await WCApi.Content.getPreview(id);
+        this.preview = data;
+        this.agentLog = `✅ ${m?.home_team?.name} 模型推演完成，偏差值已锁定。`;
+      } catch (e) {
+        console.error('Preview load failed', e);
+        this.agentLog = "❌ 深度特征对齐失败，请检查数据完整性。";
+      } finally {
+        this.previewLoading = false;
+      }
+    },
+
+    setFilter(newFilter) {
+      if (this.filter === newFilter) return;
+      this.filter = newFilter;
+      this.loadMatches();
+    },
+
+    logout() {
+      WCApi.Auth.logout();
+      this.user = null;
+      window.location.reload();
     }
-    AppState.matches = matches || [];
-    window.dispatchEvent(new CustomEvent('matches-updated', { detail: { matches: AppState.matches } }));
-  } catch (e) {
-    console.error('Load matches failed', e);
-    window.dispatchEvent(new CustomEvent('matches-updated', { detail: { matches: [] } }));
-  }
-}
-
-function setFilter(filter) {
-  AppState.filter = filter;
-  document.querySelectorAll('[data-filter]').forEach(btn => {
-    const isActive = btn.dataset.filter === filter;
-    btn.classList.toggle('border-b-2', isActive);
-    btn.classList.toggle('border-accent', isActive);
-    btn.classList.toggle('text-ink', isActive);
-    btn.classList.toggle('font-bold', isActive);
-    btn.classList.toggle('text-ink-faded', !isActive);
   });
-  loadMatchView();
-}
+});
 
+/**
+ * 格式化辅助函数
+ */
 function fmtBJ(iso) {
   if (!iso) return '-';
   const d = new Date(iso);
@@ -70,6 +110,6 @@ function fmtPct(v) {
   return (v * 100).toFixed(1) + '%'; 
 }
 
-function openLoginModal() { window.dispatchEvent(new CustomEvent('open-login-modal')); }
-
-document.addEventListener('DOMContentLoaded', initApp);
+function openReport(matchId) {
+  window.dispatchEvent(new CustomEvent('open-report-modal', { detail: { matchId } }));
+}

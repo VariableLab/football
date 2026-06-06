@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Visual Prototype - Sky Sports Style</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #050A14;
+            --card-bg: rgba(16, 24, 39, 0.8);
+            --accent-blue: #00D4FF;
+            --accent-red: #FF4136;
+            --text-gold: #FFCC00;
+        }
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Roboto Condensed', sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        #root {
+            width: 1200px;
+            height: 800px;
+            background: radial-gradient(circle at center, #0B172A 0%, #050A14 100%);
+            position: relative;
+            border: 1px solid #1F2937;
+            box-shadow: 0 0 100px rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const SkySportsCard = () => {
+            return (
+                <div style={{ padding: '40px', height: '100%', boxSizing: 'border-box', position: 'relative' }}>
+                    {/* Header */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                            <div style={{ color: var('--text-gold'), fontSize: '14px', fontWeight: 'bold', letterSpacing: '4px', marginBottom: '8px' }}>
+                                FIFA WORLD CUP 2026
+                            </div>
+                            <div style={{ fontFamily: 'Montserrat', fontSize: '48px', fontWeight: '900', lineHeight: '1' }}>
+                                MATCH <span style={{ color: var('--accent-blue') }}>INTELLIGENCE</span>
+                            </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '12px', color: '#6B7280' }}>LIVE LAB SIMULATION</div>
+                            <div style={{ fontSize: '20px', fontWeight: 'bold' }}>v3.0.4 PRO</div>
+                        </div>
+                    </div>
+
+                    {/* Main Content Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '40px', marginTop: '60px' }}>
+                        
+                        {/* Left: Tactical Pitch (Visualized) */}
+                        <div style={{ position: 'relative' }}>
+                            <div style={{ 
+                                background: 'rgba(255,255,255,0.03)', 
+                                borderRadius: '12px', 
+                                padding: '20px', 
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                height: '450px',
+                                position: 'relative',
+                                overflow: 'hidden'
+                            }}>
+                                {/* Pitch Map SVG */}
+                                <svg viewBox="0 0 100 150" style={{ width: '100%', height: '100%', opacity: 0.3 }}>
+                                    <rect x="0" y="0" width="100" height="150" fill="none" stroke="#374151" strokeWidth="0.5" />
+                                    <circle cx="50" cy="75" r="15" fill="none" stroke="#374151" strokeWidth="0.5" />
+                                    <line x1="0" y1="75" x2="100" y2="75" stroke="#374151" strokeWidth="0.5" />
+                                    <rect x="20" y="0" width="60" height="20" fill="none" stroke="#374151" strokeWidth="0.5" />
+                                    <rect x="20" y="130" width="60" height="20" fill="none" stroke="#374151" strokeWidth="0.5" />
+                                </svg>
+
+                                {/* Danger Zone - Neon Blur */}
+                                <div style={{ 
+                                    position: 'absolute', top: '10%', left: '20%', width: '60%', height: '25%',
+                                    background: 'radial-gradient(circle, rgba(255,65,54,0.4) 0%, transparent 70%)',
+                                    filter: 'blur(20px)',
+                                    borderRadius: '50%'
+                                }}></div>
+                                <div style={{ position: 'absolute', top: '15%', left: '50%', transform: 'translateX(-50%)', color: '#FF4136', fontSize: '12px', fontWeight: 'bold' }}>
+                                    TARGET EXPLOIT ZONE
+                                </div>
+
+                                {/* Attack Arrows - Gradient Bezier */}
+                                <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+                                    <defs>
+                                        <linearGradient id="arrowGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                                            <stop offset="0%" style={{ stopColor: 'var(--accent-blue)', stopOpacity: 0 }} />
+                                            <stop offset="100%" style={{ stopColor: 'var(--accent-blue)', stopOpacity: 0.8 }} />
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M 30 400 Q 30 250 45 100" fill="none" stroke="url(#arrowGrad)" strokeWidth="4" strokeDasharray="5,5" />
+                                    <path d="M 70 400 Q 70 250 55 100" fill="none" stroke="url(#arrowGrad)" strokeWidth="4" />
+                                </svg>
+                            </div>
+                            <div style={{ marginTop: '16px', display: 'flex', gap: '20px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ width: '12px', height: '12px', backgroundColor: var(--accent-blue) }}></div>
+                                    <span style={{ fontSize: '12px', color: '#9CA3AF' }}>PORTUGAL WING PENETRATION</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right: Data HUD */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                            {/* Win Probs */}
+                            <div style={{ display: 'flex', gap: '4px', height: '100px' }}>
+                                <div style={{ flex: 45, background: 'linear-gradient(90deg, #0074D9, #00D4FF)', borderRadius: '4px 0 0 4px', padding: '15px', position: 'relative' }}>
+                                    <div style={{ fontSize: '12px', fontWeight: 'bold' }}>POR WIN</div>
+                                    <div style={{ fontSize: '32px', fontFamily: 'Montserrat', fontWeight: '900' }}>45%</div>
+                                </div>
+                                <div style={{ flex: 28, background: '#374151', padding: '15px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                                    <div style={{ fontSize: '10px', color: '#9CA3AF' }}>DRAW</div>
+                                    <div style={{ fontSize: '20px', fontWeight: 'bold' }}>28%</div>
+                                </div>
+                                <div style={{ flex: 27, background: 'linear-gradient(90deg, #FF4136, #85144b)', borderRadius: '0 4px 4px 0', padding: '15px', textAlign: 'right' }}>
+                                    <div style={{ fontSize: '12px', fontWeight: 'bold' }}>COL WIN</div>
+                                    <div style={{ fontSize: '32px', fontFamily: 'Montserrat', fontWeight: '900' }}>27%</div>
+                                </div>
+                            </div>
+
+                            {/* Metrics - High Tech Bars */}
+                            <div style={{ background: var(--card-bg), borderRadius: '12px', padding: '24px', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ color: var(--text-gold'), fontSize: '12px', fontWeight: 'bold', marginBottom: '20px' }}>TACTICAL DISRUPTION INDEX</div>
+                                {[
+                                    { label: 'TRANSITION SPEED', val: 88, color: '#00D4FF' },
+                                    { label: 'PRESSING INTENSITY', val: 72, color: '#00D4FF' },
+                                    { label: 'AERIAL DOMINANCE', val: 64, color: '#9CA3AF' },
+                                    { label: 'LOW BLOCK STABILITY', val: 91, color: '#FF4136' },
+                                ].map((item, idx) => (
+                                    <div key={idx} style={{ marginBottom: '18px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px', fontWeight: 'bold' }}>
+                                            <span>{item.label}</span>
+                                            <span>{item.val}%</span>
+                                        </div>
+                                        <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                                            <div style={{ width: `${item.val}%`, height: '100%', background: item.color, boxShadow: `0 0 10px ${item.color}` }}></div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* AI Verdict */}
+                            <div style={{ borderLeft: `4px solid var(--accent-blue)`, paddingLeft: '20px', marginTop: '10px' }}>
+                                <div style={{ fontSize: '12px', color: var(--accent-blue), fontWeight: 'bold' }}>AI VERDICT</div>
+                                <div style={{ fontSize: '16px', fontStyle: 'italic', lineHeight: '1.4', color: '#D1D5DB' }}>
+                                    "Portugal's verticality in the final third creates 2.4x more high-value chances than Colombia's central setup."
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer Branding */}
+                    <div style={{ position: 'absolute', bottom: '40px', left: '40px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '30px', height: '30px', background: var(--accent-blue), borderRadius: '4px' }}></div>
+                        <div style={{ fontSize: '14px', fontWeight: 'bold', letterSpacing: '1px' }}>WC-ANALYTICS <span style={{ color: '#6B7280', fontWeight: 'normal' }}>RESEARCH</span></div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SkySportsCard />);
+    </script>
+</body>
+</html>
