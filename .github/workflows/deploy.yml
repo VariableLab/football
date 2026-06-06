@@ -64,26 +64,25 @@ jobs:
             cd backend
             export PYTHONPATH=$PYTHONPATH:$(pwd)
             ./venv/bin/python3 -c "
-from database.models import SessionLocal
-from ingestion.data_cleaner import DataCleaner
-from core.prediction_engine import PredictionEngine, build_context_from_match
-from database.models import Match, Prediction, MatchStatus
-db = SessionLocal()
-print('Cleaning teams...')
-DataCleaner(db).clean(dry_run=False)
-print('Recalculating predictions...')
-engine = PredictionEngine(db_session=db)
-matches = db.query(Match).filter(Match.status != MatchStatus.FINISHED).all()
-for m in matches:
-    db.query(Prediction).filter(Prediction.match_id == m.id).delete()
-    try:
-        res = engine.predict(build_context_from_match(m))
-        for p in res.to_db_payload():
-            db.add(Prediction(match_id=m.id, play_type=p['play_type'], probabilities=p['probabilities'], confidence=res.confidence))
-    except: continue
-db.commit()
-print('Server recap finished.')
-"
+            from database.models import SessionLocal
+            from ingestion.data_cleaner import DataCleaner
+            from core.prediction_engine import PredictionEngine, build_context_from_match
+            from database.models import Match, Prediction, MatchStatus
+            db = SessionLocal()
+            print('Cleaning teams...')
+            DataCleaner(db).clean(dry_run=False)
+            print('Recalculating predictions...')
+            engine = PredictionEngine(db_session=db)
+            matches = db.query(Match).filter(Match.status != MatchStatus.FINISHED).all()
+            for m in matches:
+                db.query(Prediction).filter(Prediction.match_id == m.id).delete()
+                try:
+                    res = engine.predict(build_context_from_match(m))
+                    for p in res.to_db_payload():
+                        db.add(Prediction(match_id=m.id, play_type=p['play_type'], probabilities=p['probabilities'], confidence=res.confidence))
+                except: continue
+            db.commit()
+            print('Server recap finished.')"
             
             # 最终健康检查
             echo "📊 Verifying service status..."
