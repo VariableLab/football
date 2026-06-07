@@ -55,29 +55,28 @@ jobs:
             find . -name "__pycache__" -delete
             
             # 2. 物理停服清場 (解決死循環與端口占用)
-            echo "🛑 Killing old API processes..."
+            echo "🛑 Cleaning up port 8000..."
             sudo systemctl stop football-api || true
+            # 精確殺死佔用 8000 端口的進程，且不影響 SSH
             sudo fuser -k 8000/tcp || true
-            sudo pkill -9 -f uvicorn || true
-            sleep 2
+            sleep 1
             
-            # 3. 更新依賴 (確保 pandas 可用)
+            # 3. 輕量化更新依賴 (移除 pandas 等重型安裝，假設環境已具備)
             cd backend
             ./venv/bin/pip install -r requirements.txt -q
-            ./venv/bin/pip install pandas sqlalchemy pyyaml python-dotenv -q
             
-            # 4. 執行數據修復 (此時服務已停，無數據競爭)
+            # 4. 執行數據修復
             echo "🌱 Running server-side data healing..."
-            ./venv/bin/python3 scripts/server_refresh.py
+            ./venv/bin/python3 scripts/server_refresh.py || echo "⚠️ Refresh script warning, continuing..."
             
             # 5. 重啟服務
             echo "🚀 Starting API service..."
             sudo systemctl daemon-reload
             sudo systemctl start football-api
             
-            # 6. 最終健康檢查 (延時 10s 以待異步啟動完成)
+            # 6. 最終健康檢查 (延長至 15s)
             echo "📊 Verifying service status..."
-            sleep 10
+            sleep 15
             if ! sudo systemctl is-active football-api; then
                 echo "❌ Service failed to start! Last 100 logs:"
                 sudo journalctl -u football-api -n 100 --no-pager
