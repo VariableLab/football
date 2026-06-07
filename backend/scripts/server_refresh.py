@@ -2,41 +2,47 @@
 import sys
 import os
 
-# 将 backend 加入路径
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# 💡 强力路径定位：确保在服务器脚本执行时能找到所有模块
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+_backend_root = os.path.dirname(_current_dir)
+if _backend_root not in sys.path:
+    sys.path.insert(0, _backend_root)
 
 from database.models import SessionLocal, Match, Prediction, MatchStatus
 from ingestion.data_cleaner import DataCleaner
 from core.prediction_engine import PredictionEngine, build_context_from_match
 
 def main():
-    # 💡 强力加载本地环境配置
     from dotenv import load_dotenv
-    env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    env_path = os.path.join(_backend_root, ".env")
     if os.path.exists(env_path):
         load_dotenv(env_path)
-        print(f"Loaded config from {env_path}")
     
     db = SessionLocal()
     try:
         print('--- Server-Side Healing Started ---')
         
-        # 1. 清洗数据 (合并重复记录)
-        print('Step 1: Cleaning teams...')
+        # 1. 清洗数据
         cleaner = DataCleaner(db)
         cleaner.clean(dry_run=False)
         
-        # 2. 刷新预测 (应用新逻辑)
-        print('Step 2: Recalculating predictions...')
+        # 2. 刷新预测
         engine = PredictionEngine(db_session=db)
         matches = db.query(Match).filter(Match.status != MatchStatus.FINISHED).all()
         
+        success_count = 0
+        total_count = len(matches)
+        
+        print(f'Processing {total_count} matches...')
+        
         for m in matches:
-            # 删除旧预测
-            db.query(Prediction).filter(Prediction.match_id == m.id).delete()
             try:
                 ctx = build_context_from_match(m)
                 res = engine.predict(ctx)
+                
+                # 只有生成成功才删除并重写 (防止全库变空)
+                db.query(Prediction).filter(Prediction.match_id == m.id).delete()
+                
                 for p in res.to_db_payload():
                     db.add(Prediction(
                         match_id=m.id, 
@@ -44,14 +50,17 @@ def main():
                         probabilities=p["probabilities"],
                         confidence=res.confidence
                     ))
+                success_count += 1
             except Exception as e:
-                import traceback
                 print(f'  Error on match {m.id}: {e}')
-                traceback.print_exc()
                 continue
                 
-        db.commit()
-        print('--- Server-Side Healing Finished ---')
+        if success_count > 0:
+            db.commit()
+            print(f'--- Server-Side Healing Finished: {success_count}/{total_count} success ---')
+        else:
+            print('--- CRITICAL: 0 matches processed. Rolling back... ---')
+            db.rollback()
     finally:
         db.close()
 
