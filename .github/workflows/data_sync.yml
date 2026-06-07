@@ -25,17 +25,21 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
+          if [ -z "${{ secrets.SERVER_IP }}" ]; then
+            echo "❌ SERVER_IP secret is missing!"
+            exit 1
+          fi
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
       - name: Run Sync Script
         env:
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
-          REMOTE_USER: ${{ secrets.REMOTE_USER || 'ubuntu' }}
-          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          REMOTE_PROJECT: ${{ secrets.REMOTE_PROJECT || '/home/ubuntu/Github/football' }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY || secrets.TEST_SECRET_KEY }}
+          ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY || secrets.TEST_ADMIN_API_KEY }}
+          REMOTE_USER: ${{ secrets.SERVER_USER || 'ubuntu' }}
+          REMOTE_HOST: ${{ secrets.SERVER_IP }}
+          REMOTE_PROJECT: /home/${{ secrets.SERVER_USER || 'ubuntu' }}/Github/football
           PYTHONPATH: ${{ github.workspace }}/backend
         run: |
           cd backend/ingestion
