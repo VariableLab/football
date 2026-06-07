@@ -4,7 +4,7 @@ from sqlalchemy import text
 
 from database.models import get_db
 from schemas import HealthCheck
-from api.auth import _verify_admin_key
+from api.auth import verify_admin_key
 
 router = APIRouter(prefix="/api", tags=["System"])
 

@@ -5,14 +5,14 @@ import hmac
 from database.config import get_settings
 from database.models import get_db, Match
 from odds_collector import OddsCollector
-from api.auth import _verify_admin_key
+from api.auth import verify_admin_key
 
 settings = get_settings()
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 @router.post("/odds/refresh")
 def admin_refresh_all_odds(
-    authorized: bool = Depends(_verify_admin_key),
+    authorized: bool = Depends(verify_admin_key),
     db: Session = Depends(get_db),
 ):
     """手动触发全部 upcoming 比赛的赔率刷新。"""
@@ -36,7 +36,7 @@ def admin_refresh_all_odds(
 @router.post("/odds/refresh/{match_id}")
 def admin_refresh_match_odds(
     match_id: int,
-    authorized: bool = Depends(_verify_admin_key),
+    authorized: bool = Depends(verify_admin_key),
     db: Session = Depends(get_db),
 ):
     """手动触发单场比赛的赔率刷新。"""
@@ -67,7 +67,7 @@ def admin_refresh_match_odds(
 
 @router.get("/odds/status")
 def admin_odds_status(
-    authorized: bool = Depends(_verify_admin_key),
+    authorized: bool = Depends(verify_admin_key),
     db: Session = Depends(get_db),
 ):
     """查看当前赔率数据覆盖情况。"""
@@ -88,7 +88,7 @@ def admin_odds_status(
 
 @router.get("/data-quality")
 def data_quality_report(
-    authorized: bool = Depends(_verify_admin_key),
+    authorized: bool = Depends(verify_admin_key),
     db: Session = Depends(get_db),
 ):
     """数据质量审计报告 (只读)。"""
@@ -114,7 +114,7 @@ def data_quality_report(
 @router.post("/api/admin/data-clean")
 def data_clean(
     dry_run: bool = True,
-    authorized: bool = Depends(_verify_admin_key),
+    authorized: bool = Depends(verify_admin_key),
     db: Session = Depends(get_db),
 ):
     """执行数据清洗。"""

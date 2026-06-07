@@ -28,7 +28,7 @@ _live_feed: Optional[LiveOddsFeed] = None
 _live_hedge: Optional[LiveHedgeEngine] = None
 _live_feed_lock = asyncio.Lock()
 
-from api.auth import _verify_admin_key
+from api.auth import verify_admin_key
 
 @router.get("/live-odds/stream")
 async def live_odds_sse(request: Request):
@@ -93,7 +93,7 @@ def get_all_live_odds():
 
 
 @router.post("/live-odds/start", response_model=StatusResponse)
-def start_live_feed(_: bool = Depends(_verify_admin_key)):
+def start_live_feed(_: bool = Depends(verify_admin_key)):
     """启动滚球赔率采集。"""
     global _live_feed, _live_hedge
 
@@ -123,7 +123,7 @@ def start_live_feed(_: bool = Depends(_verify_admin_key)):
 
 
 @router.post("/live-odds/stop", response_model=StatusResponse)
-def stop_live_feed(_: bool = Depends(_verify_admin_key)):
+def stop_live_feed(_: bool = Depends(verify_admin_key)):
     """停止滚球赔率采集。"""
     global _live_feed, _live_hedge
 
@@ -174,7 +174,7 @@ def add_hedge_position(
     odds: float,
     stake: float,
     db: Session = Depends(get_db),
-    _: bool = Depends(_verify_admin_key),
+    _: bool = Depends(verify_admin_key),
 ):
     """添加已有仓位用于滚球对冲计算。"""
     global _live_hedge

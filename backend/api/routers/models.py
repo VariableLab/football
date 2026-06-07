@@ -6,7 +6,7 @@ from database.models import get_db
 from schemas import (
     BetNNStatusResponse, BetNNPredictResponse, BetNNTrainResponse
 )
-from api.auth import _verify_admin_key
+from api.auth import verify_admin_key
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -26,7 +26,7 @@ def bet_nn_predict(match_id: int):
 
 @router.post("/bet-nn/train", response_model=BetNNTrainResponse)
 @limiter.limit("2/hour")
-def bet_nn_train(request: Request, _: bool = Depends(_verify_admin_key)):
+def bet_nn_train(request: Request, _: bool = Depends(verify_admin_key)):
     return {"status": "skipped", "message": "训练样本不足"}
 
 # ────────────────────────────
@@ -46,7 +46,7 @@ def sub_models_status():
 
 @router.post("/sub-models/train/{model_name}")
 @limiter.limit("2/hour")
-def sub_model_train(request: Request, model_name: str, _: bool = Depends(_verify_admin_key)):
+def sub_model_train(request: Request, model_name: str, _: bool = Depends(verify_admin_key)):
     return {"status": "skipped", "model": model_name}
 
 @router.get("/predictions/{match_id}/report")

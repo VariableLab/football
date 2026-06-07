@@ -17,16 +17,14 @@ document.addEventListener('alpine:init', () => {
     previewLoading: false,
     agentLog: "正在初始化 59 维特征扫描引擎...",
 
-    async init() {
-      await I18n.init();
-      try {
-        // 並行加載基礎數據與用戶信息，確保狀態一致
-        const [teamsResult, me] = await Promise.all([
+        // 並行加載基礎數據與用戶信息
+        // WCApi.Data.getTeams 已在內部解包 items
+        const [teamsArray, me] = await Promise.all([
           WCApi.Data.getTeams(),
           WCApi.Auth.me().catch(() => null)
         ]);
         
-        this.teams = teamsResult?.items || [];
+        this.teams = teamsArray?.items || teamsArray || [];
         this.user = me;
         
         await this.loadMatches();
@@ -51,7 +49,8 @@ document.addEventListener('alpine:init', () => {
         } else {
           resp = await WCApi.Data.getMatches(this.filter);
         }
-        this.matches = resp.items || [];
+        // WCApi.Data.getMatches 已在內部使用 unwrapItems
+        this.matches = resp || [];
         this.agentLog = `成功获取 ${this.matches.length} 条实时信号。`;
       } catch (e) {
         console.error('Load matches failed', e);

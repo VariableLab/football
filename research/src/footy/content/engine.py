@@ -82,6 +82,8 @@ class WorldCupContentEngine:
         away_xg = away.avg_xg
         home_elo = home.elo
         away_elo = away.elo
+        elo_diff = (home_elo or 1500) - (away_elo or 1500)
+        has_full_data = (home_xg is not None and home_xg > 0) and (home_elo is not None)
 
         # 3. 球员洞察
         home_stars = self._get_top_players(home.id)

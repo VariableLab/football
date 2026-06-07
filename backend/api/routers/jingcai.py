@@ -11,7 +11,7 @@ from schemas import (
     OptimalComboResponse
 )
 from utils.logger import get_logger
-from api.auth import _verify_admin_key
+from api.auth import verify_admin_key
 
 logger = get_logger("jingcai_router")
 
@@ -192,7 +192,7 @@ def _auto_close_expired_issues(db: Session) -> int:
 # ────────────────────────────
 
 @router.post("/issues/auto-close")
-def auto_close_issues(_: bool = Depends(_verify_admin_key), db: Session = Depends(get_db)):
+def auto_close_issues(_: bool = Depends(verify_admin_key), db: Session = Depends(get_db)):
     """手动触发过期期号自动关闭。"""
     count = _auto_close_expired_issues(db)
     return {"closed": count}
@@ -235,7 +235,7 @@ def get_jingcai_issue(
 def create_jingcai_issue(
     data: JingcaiIssueCreate,
     db: Session = Depends(get_db),
-    _: bool = Depends(_verify_admin_key),
+    _: bool = Depends(verify_admin_key),
 ):
     """创建足彩期号并关联比赛"""
     from core.jingcai_predictor import create_issue
@@ -257,7 +257,7 @@ def create_jingcai_issue(
 def predict_jingcai_issue(
     issue_id: str,
     db: Session = Depends(get_db),
-    _: bool = Depends(_verify_admin_key),
+    _: bool = Depends(verify_admin_key),
 ):
     """为整期足彩生成预测"""
     from core.jingcai_predictor import predict_issue
@@ -273,7 +273,7 @@ def record_jingcai_result(
     issue_id: str,
     data: JingcaiIssueResultIn,
     db: Session = Depends(get_db),
-    _: bool = Depends(_verify_admin_key),
+    _: bool = Depends(verify_admin_key),
 ):
     """录入开奖结果"""
     from core.jingcai_predictor import record_draw_result
@@ -290,7 +290,7 @@ def record_jingcai_result(
 def verify_jingcai_issue(
     issue_id: str,
     db: Session = Depends(get_db),
-    _: bool = Depends(_verify_admin_key),
+    _: bool = Depends(verify_admin_key),
 ):
     """验证模型预测 vs 开奖结果"""
     from core.jingcai_predictor import verify_issue
