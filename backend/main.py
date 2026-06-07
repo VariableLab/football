@@ -94,7 +94,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Application starting up", extra={"extra_data": {"version": "0.2.0-quant-fixed"}})
+    logger.info("Application starting up", extra={"extra_data": {"version": "0.2.1-diag"}})
     
     # 生产环境安全守卫
     if settings.DEBUG and os.getenv("ENVIRONMENT") == "production":
@@ -108,15 +108,26 @@ async def lifespan(app: FastAPI):
     stop_scheduler()
     logger.info("Application shutting down")
 
-
 app = FastAPI(
     title=settings.APP_NAME,
-    version="0.1.0",
+    version="0.2.1-diag",
     lifespan=lifespan,
     docs_url=None if not settings.DEBUG else "/docs",
     redoc_url=None if not settings.DEBUG else "/redoc",
     openapi_url=None if not settings.DEBUG else "/openapi.json",
 )
+
+@app.get("/api/diag/db-stats")
+def db_stats(db: Session = Depends(get_db)):
+    """診斷：返回資料庫統計數據"""
+    from database.models import Match, Team, Prediction
+    return {
+        "matches": db.query(Match).count(),
+        "teams": db.query(Team).count(),
+        "predictions": db.query(Prediction).count(),
+        "upcoming_matches": db.query(Match).filter(Match.status != "finished").count(),
+        "db_url_redacted": str(settings.DATABASE_URL).split("@")[-1] if "@" in str(settings.DATABASE_URL) else "local/sqlite"
+    }
 
 # Rate limiting
 from slowapi import Limiter, _rate_limit_exceeded_handler
