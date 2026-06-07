@@ -1388,46 +1388,46 @@ class PredictionEngine:
         # 2. 融合胜平负 ── 优先使用 LR 逻辑回归融合 (v2)
         lr_spf = None
         weights = self._get_lr_weights_for_match(ctx.competition)
-        # 💡 逻辑自愈：如果缺失市场赔率，LR 模型会因为 market_win 权重过大而导致结果趋同
-        # 因此，在无赔率场景下，强制降级到 v1.0 线性融合以保持预测的区分度
-        if weights and market_out is not None:
+        
+        # 💡 逻辑加固：如果赔率来源是合成的 (synthetic)，则视为无赔率，强制降级到战力优先模式
+        real_market = market_out if ctx.odds_source != "synthetic" else None
+        
+        if weights and real_market is not None:
             lr_spf = self._predict_with_lr(
-                ctx, elo_out, poisson_out, players_factor, market_out, weights
+                ctx, elo_out, poisson_out, players_factor, real_market, weights
             )
 
         if lr_spf is not None:
             fused_spf = lr_spf
             trace.add_step("逻辑回归基准", f"使用 {ctx.competition or '全球'} 48维特征模型计算出的初始概率分布", fused_spf)
-            # 💡 核心改进：混合市场信号 (50/50) 以提升基准准确率
-            if market_out:
+            if real_market:
                 fused_spf = {
-                    k: 0.5 * fused_spf[k] + 0.5 * market_out[k]
+                    k: 0.5 * fused_spf[k] + 0.5 * real_market[k]
                     for k in ["home", "draw", "away"]
                 }
-                trace.add_step("市场共识校准", "将模型预测与机构赔率隐含概率按 50:50 融合，平滑非理性波动", fused_spf)
+                trace.add_step("市场共识校准", "将模型预测与机构赔率隐含概率按 50:50 融合", fused_spf)
         else:
             # fallback: 旧4参数线性加权 (EnsembleFusion)
-            # 💡 强力校准：如果有实验室 Elo，则在该模式下赋予其绝对主导地位 (90%)
-            # 防止平庸的基础泊松模型抹平实力差
-            current_elo = elo_out
-            if lab_elo_spf:
-                # 这种情况下，我们认为 expert elo 远比 fallback poisson 可信
-                fused_spf = {
-                    k: 0.9 * lab_elo_spf[k] + 0.1 * poisson_out["spf"][k]
-                    for k in ["home", "draw", "away"]
-                }
-                # 归一化
-                s = sum(fused_spf.values()); fused_spf = {k: v/s for k, v in fused_spf.items()}
-                trace.add_step("专家Elo主导融合", "检测到实验室Elo权重，采用 90:10 强力偏置以保留实力区分度", fused_spf)
-            else:
-                fused_spf = self.fusion.fuse_spf(
-                    elo=elo_out,
-                    poisson=poisson_out["spf"],
-                    players=players_factor,
-                    market=market_out,
-                    ctx=ctx,
-                )
-                trace.add_step("线性加权基准", "由于缺少专属权重，使用基础 Elo+泊松 4 参数融合", fused_spf)
+            fused_spf = self.fusion.fuse_spf(
+                elo=elo_out,
+                poisson=poisson_out["spf"],
+                players=players_factor,
+                market=real_market,
+                ctx=ctx,
+            )
+            trace.add_step("线性加权基准", "由于缺少真实赔率，使用基础 Elo+泊松 4 参数融合", fused_spf)
+
+        # 💡 强力校准 (全局覆盖)：如果有实验室专家 Elo，则强制赋予其 90% 的权重
+        # 无论之前是 LR 还是 Ensemble，专家数据必须作为真相源
+        if lab_elo_spf:
+            fused_spf = {
+                k: 0.9 * lab_elo_spf[k] + 0.1 * fused_spf[k]
+                for k in ["home", "draw", "away"]
+            }
+            # 归一化
+            s_val = sum(fused_spf.values())
+            fused_spf = {k: v / s_val for k, v in fused_spf.items()}
+            trace.add_step("专家Elo主导校准", "检测到实验室Elo权重，采用 90:10 强力偏置以保留实力区分度", fused_spf)
 
         # 2b. 临场跳水修正 (New!)
         old_spf = fused_spf.copy()
