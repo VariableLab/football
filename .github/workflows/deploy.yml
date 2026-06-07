@@ -48,38 +48,38 @@ jobs:
           script: |
             cd /home/${{ secrets.SERVER_USER }}/Github/football
             # 1. 物理重置環境
-            echo "🧹 Hard resetting repository..."
+            echo "🧹 Hard resetting..."
             git fetch --all
             git reset --hard origin/master
-            find . -name "*.pyc" -delete
-            find . -name "__pycache__" -delete
             
-            # 2. 物理停服清場 (解決死循環與端口占用)
-            echo "🛑 Cleaning up port 8000..."
+            # 2. 徹底殺死所有競爭對手 (解決 Address already in use)
+            echo "🛑 Emergency stopping all API services..."
             sudo systemctl stop football-api || true
-            # 精確殺死佔用 8000 端口的進程，且不影響 SSH
+            sudo systemctl stop wc-analytics || true
+            sudo systemctl disable wc-analytics || true
             sudo fuser -k 8000/tcp || true
-            sleep 1
+            sudo pkill -9 -f uvicorn || true
+            sleep 3
             
-            # 3. 輕量化更新依賴 (移除 pandas 等重型安裝，假設環境已具備)
+            # 3. 確保依賴完整
             cd backend
             ./venv/bin/pip install -r requirements.txt -q
             
-            # 4. 執行數據修復
-            echo "🌱 Running server-side data healing..."
-            ./venv/bin/python3 scripts/server_refresh.py || echo "⚠️ Refresh script warning, continuing..."
+            # 4. 數據已經在上一輪刷好 (149/149)，此處跳過以節省內存
+            # ./venv/bin/python3 scripts/server_refresh.py
             
-            # 5. 重啟服務
-            echo "🚀 Starting API service..."
+            # 5. 重啟唯一的服務
+            echo "🚀 Starting clean API service..."
             sudo systemctl daemon-reload
             sudo systemctl start football-api
             
-            # 6. 最終健康檢查 (延長至 15s)
+            # 6. 最終健康檢查 (15s 延時)
             echo "📊 Verifying service status..."
             sleep 15
+            sudo systemctl status football-api --no-pager
             if ! sudo systemctl is-active football-api; then
-                echo "❌ Service failed to start! Last 100 logs:"
-                sudo journalctl -u football-api -n 100 --no-pager
+                echo "❌ Service failed. Check port 8000 owner:"
+                sudo lsof -i :8000 || echo "Port 8000 is free"
                 exit 1
             fi
             echo "✅ Service is running successfully."
