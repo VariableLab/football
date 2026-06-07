@@ -17,6 +17,9 @@ document.addEventListener('alpine:init', () => {
     previewLoading: false,
     agentLog: "正在初始化 59 维特征扫描引擎...",
 
+    async init() {
+      await I18n.init();
+      try {
         // 並行加載基礎數據與用戶信息
         // WCApi.Data.getTeams 已在內部解包 items
         const [teamsArray, me] = await Promise.all([
@@ -24,7 +27,7 @@ document.addEventListener('alpine:init', () => {
           WCApi.Auth.me().catch(() => null)
         ]);
         
-        this.teams = teamsArray?.items || teamsArray || [];
+        this.teams = teamsArray || [];
         this.user = me;
         
         await this.loadMatches();
