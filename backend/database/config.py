@@ -5,12 +5,17 @@ from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 
+# 💡 物理定位 backend 根目錄，確保不論在哪執行都能找到 .env
+_CUR_DIR = os.path.dirname(os.path.abspath(__file__))
+_BACKEND_ROOT = os.path.dirname(_CUR_DIR)
+_ENV_PATH = os.path.join(_BACKEND_ROOT, ".env")
+
 class Settings(BaseSettings):
-    # 💡 允许额外字段，彻底解决 ValidationError
+    # 💡 使用絕對路徑加載 .env，且忽略額外字段
     model_config = SettingsConfigDict(
         extra='ignore', 
         case_sensitive=True,
-        env_file=".env",
+        env_file=_ENV_PATH,
         env_file_encoding='utf-8'
     )
 
@@ -46,11 +51,7 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def get_settings() -> Settings:
-    # 强制进入 backend 目录寻找 .env
-    _cur_dir = os.path.dirname(os.path.abspath(__file__))
-    _backend_dir = os.path.dirname(_cur_dir)
-    os.chdir(_backend_dir)
-    
+    # 💡 移除 os.chdir，改為純淨的配置讀取
     s = Settings()
     
     import sys
@@ -61,7 +62,7 @@ def get_settings() -> Settings:
 
     # 确保 Key 长度符合加密要求
     if len(s.SECRET_KEY) < 32:
-        s.SECRET_KEY = (s.SECRET_KEY + "padding_logic_to_ensure_32_chars_long")[:48]
+        s.SECRET_KEY = (str(s.SECRET_KEY) + "padding_logic_to_ensure_32_chars_long")[:48]
 
     return s
 
