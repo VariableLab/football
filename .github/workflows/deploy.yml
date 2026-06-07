@@ -76,7 +76,7 @@ jobs:
             # 5. 最終校驗
             echo "📊 Verifying version and port..."
             sleep 10
-            if ! curl -s http://localhost:8000/api/health | grep "0.2.1-diag"; then
+            if ! curl -s http://localhost:8000/api/health | grep "0.3.0"; then
                 echo "❌ CRITICAL: Server is still running OLD code!"
                 sudo systemctl status football --no-pager
                 exit 1
