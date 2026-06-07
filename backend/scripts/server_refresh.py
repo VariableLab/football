@@ -22,11 +22,32 @@ def main():
     try:
         print('--- Server-Side Healing Started ---')
         
+        # 0. 强制修补核心球队数据
+        print('Step 0: Fixing core team data...')
+        from backend.database.models import Team
+        CORE_DATA = {
+            "巴西": {"code": "BRA", "name_en": "Brazil", "elo": 1950, "avg_xg": 2.10},
+            "德国": {"code": "GER", "name_en": "Germany", "elo": 1820, "avg_xg": 1.95},
+            "阿根廷": {"code": "ARG", "name_en": "Argentina", "elo": 2010, "avg_xg": 1.85},
+            "法国": {"code": "FRA", "name_en": "France", "elo": 1980, "avg_xg": 2.20},
+            "英格兰": {"code": "ENG", "name_en": "England", "elo": 1940, "avg_xg": 2.05},
+            "日本": {"code": "JPN", "name_en": "Japan", "elo": 1720, "avg_xg": 1.65},
+            "埃及": {"code": "EGY", "name_en": "Egypt", "elo": 1620, "avg_xg": 1.25},
+        }
+        for name, data in CORE_DATA.items():
+            t = db.query(Team).filter(Team.name == name).first()
+            if t:
+                t.code = data["code"]; t.name_en = data["name_en"]
+                t.elo = data["elo"]; t.avg_xg = data["avg_xg"]
+        db.commit()
+
         # 1. 清洗数据
+        print('Step 1: Cleaning teams...')
         cleaner = DataCleaner(db)
         cleaner.clean(dry_run=False)
         
         # 2. 刷新预测
+        print('Step 2: Recalculating predictions...')
         engine = PredictionEngine(db_session=db)
         matches = db.query(Match).filter(Match.status != MatchStatus.FINISHED).all()
         
@@ -40,7 +61,7 @@ def main():
                 ctx = build_context_from_match(m)
                 res = engine.predict(ctx)
                 
-                # 只有生成成功才删除并重写 (防止全库变空)
+                # 只有生成成功才删除并重写
                 db.query(Prediction).filter(Prediction.match_id == m.id).delete()
                 
                 for p in res.to_db_payload():
@@ -48,6 +69,7 @@ def main():
                         match_id=m.id, 
                         play_type=p["play_type"], 
                         probabilities=p["probabilities"],
+                        model_version=res.model_version,
                         confidence=res.confidence
                     ))
                 success_count += 1

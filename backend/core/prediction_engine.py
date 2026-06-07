@@ -1407,14 +1407,27 @@ class PredictionEngine:
                 trace.add_step("市场共识校准", "将模型预测与机构赔率隐含概率按 50:50 融合，平滑非理性波动", fused_spf)
         else:
             # fallback: 旧4参数线性加权 (EnsembleFusion)
-            fused_spf = self.fusion.fuse_spf(
-                elo=elo_out,
-                poisson=poisson_out["spf"],
-                players=players_factor,
-                market=market_out,
-                ctx=ctx,
-            )
-            trace.add_step("线性加权基准", "由于缺少专属权重，使用基础 Elo+泊松 4 参数融合", fused_spf)
+            # 💡 强力校准：如果有实验室 Elo，则在该模式下赋予其绝对主导地位 (90%)
+            # 防止平庸的基础泊松模型抹平实力差
+            current_elo = elo_out
+            if lab_elo_spf:
+                # 这种情况下，我们认为 expert elo 远比 fallback poisson 可信
+                fused_spf = {
+                    k: 0.9 * lab_elo_spf[k] + 0.1 * poisson_out["spf"][k]
+                    for k in ["home", "draw", "away"]
+                }
+                # 归一化
+                s = sum(fused_spf.values()); fused_spf = {k: v/s for k, v in fused_spf.items()}
+                trace.add_step("专家Elo主导融合", "检测到实验室Elo权重，采用 90:10 强力偏置以保留实力区分度", fused_spf)
+            else:
+                fused_spf = self.fusion.fuse_spf(
+                    elo=elo_out,
+                    poisson=poisson_out["spf"],
+                    players=players_factor,
+                    market=market_out,
+                    ctx=ctx,
+                )
+                trace.add_step("线性加权基准", "由于缺少专属权重，使用基础 Elo+泊松 4 参数融合", fused_spf)
 
         # 2b. 临场跳水修正 (New!)
         old_spf = fused_spf.copy()
