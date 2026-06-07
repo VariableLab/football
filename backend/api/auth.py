@@ -48,7 +48,7 @@ def decode_token(token: str) -> Optional[dict]:
 
 import hmac
 
-def verify_admin_key(x_api_key: str = Header(..., alias="X-Api-Key")) -> bool:
+def verify_admin_key(x_api_key: str = Header(alias="X-Api-Key")) -> bool:
     """验证 Admin API Key — Header 传递，常量时间比较"""
     if not hmac.compare_digest(x_api_key, settings.ADMIN_API_KEY):
         raise HTTPException(status_code=403, detail="Invalid admin key")
