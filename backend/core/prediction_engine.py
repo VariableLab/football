@@ -1324,13 +1324,21 @@ class PredictionEngine:
         lab_poisson_spf = None
         lab_elo_spf = None
         try:
-            from core.research_poisson import PoissonPredictor as LabPoisson
-            from core.research_elo import EloPredictor as LabElo
-            import os
+            # 使用绝对寻址确保万无一失
+            _cur_dir = os.path.dirname(os.path.abspath(__file__))
+            _b_root = os.path.dirname(_cur_dir)
             
-            _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            p_weight_path = os.path.join(_root, "data", "weights", "research", "poisson_expert_weights.json")
-            e_weight_path = os.path.join(_root, "data", "weights", "research", "elo_expert_weights.json")
+            # 导入实验室模型
+            try:
+                from core.research_poisson import PoissonPredictor as LabPoisson
+                from core.research_elo import EloPredictor as LabElo
+            except ImportError:
+                # 兼容测试环境下的不同导入路径
+                from research_poisson import PoissonPredictor as LabPoisson
+                from research_elo import EloPredictor as LabElo
+
+            p_weight_path = os.path.join(_b_root, "data", "weights", "research", "poisson_expert_weights.json")
+            e_weight_path = os.path.join(_b_root, "data", "weights", "research", "elo_expert_weights.json")
             
             # 1. Lab Poisson
             if os.path.exists(p_weight_path):

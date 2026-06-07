@@ -26,11 +26,13 @@ jobs:
           
       - name: Run Tests
         env:
-          SECRET_KEY: ${{ secrets.TEST_SECRET_KEY || 'test-secret-key-at-least-32-characters-long' }}
+          PYTHONPATH: ${{ github.workspace }}/backend
+          SECRET_KEY: ${{ secrets.TEST_SECRET_KEY || 'test-secret-key-at-least-32-characters-long-for-pytest' }}
           ADMIN_API_KEY: ${{ secrets.TEST_ADMIN_API_KEY || 'test-admin-key-long-enough' }}
           DATABASE_URL: sqlite:///./backend/database.sqlite
         run: |
           pytest backend/tests
+
 
   deploy:
     needs: test
