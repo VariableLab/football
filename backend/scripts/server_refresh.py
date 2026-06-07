@@ -1,13 +1,13 @@
 import sys
 import os
 
-# 💡 强力路径定位
+# 💡 物理路径定位：确保在任何环境下都能找到 backend
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 _backend_root = os.path.dirname(_current_dir)
 if _backend_root not in sys.path:
     sys.path.insert(0, _backend_root)
 
-# 强制加载环境
+# 强制加载环境，不再依赖外部 export
 from dotenv import load_dotenv
 load_dotenv(os.path.join(_backend_root, ".env"))
 
@@ -18,7 +18,7 @@ from core.prediction_engine import PredictionEngine, build_context_from_match
 def main():
     db = SessionLocal()
     try:
-        print('--- Server-Side Healing Started (v0.3.0) ---')
+        print('--- Server-Side Healing Started (v0.3.0-Strong) ---')
         
         # 0. 强效修补核心球队数据
         print('Step 0: Fixing core team data...')
@@ -41,7 +41,7 @@ def main():
         cleaner = DataCleaner(db)
         cleaner.clean(dry_run=False)
         
-        # 2. 刷新预测
+        # 2. 刷新预测 (应用 90% Elo 权重)
         print('Step 2: Recalculating predictions...')
         engine = PredictionEngine(db_session=db)
         matches = db.query(Match).filter(Match.status != MatchStatus.FINISHED).all()
@@ -49,9 +49,7 @@ def main():
         success = 0
         for m in matches:
             try:
-                # 核心修正：跳过没有球队关联的脏数据
                 if not m.home_team or not m.away_team: continue
-                
                 ctx = build_context_from_match(m)
                 res = engine.predict(ctx)
                 db.query(Prediction).filter(Prediction.match_id == m.id).delete()
@@ -63,7 +61,8 @@ def main():
                         confidence=res.confidence
                     ))
                 success += 1
-            except: continue
+            except Exception as e:
+                continue
                 
         db.commit()
         print(f'--- Finished: {success}/{len(matches)} success ---')
