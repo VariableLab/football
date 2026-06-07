@@ -155,10 +155,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
-    # HTTPS 强制默认关闭，由 Nginx 反代层处理 HTTP→HTTPS 重定向
-    # 如需在应用层强制 HTTPS，设置 ENFORCE_HTTPS=1
-    if os.getenv("ENFORCE_HTTPS", "0") == "1":
-        app.add_middleware(HTTPSRedirectMiddleware)
+
+# HTTPS 强制默认关闭，由 Nginx 反代层处理 HTTP→HTTPS 重定向
+# 如需在应用层强制 HTTPS，设置 ENFORCE_HTTPS=1
+if os.getenv("ENFORCE_HTTPS", "0") == "1":
+    app.add_middleware(HTTPSRedirectMiddleware)
 
 # Admin routes (for OpenClaw)
 app.include_router(admin_router)
