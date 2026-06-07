@@ -11,6 +11,7 @@ _PRODUCTION = os.getenv("WC_ENV", "").lower() in ("production", "prod")
 class Settings(BaseSettings):
     # 基础配置
     PROJECT_NAME: str = "WC Analytics"
+    APP_NAME: str = "WC Analytics"
     DEBUG: bool = os.getenv("DEBUG", "0") == "1"
     
     # 安全配置 (这些在生产环境必须被环境变量覆盖)
@@ -19,6 +20,14 @@ class Settings(BaseSettings):
     
     # 数据库配置
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./backend/database.sqlite")
+    DB_POOL_SIZE: int = int(os.getenv("DB_POOL_SIZE", "20"))
+    DB_MAX_OVERFLOW: int = int(os.getenv("DB_MAX_OVERFLOW", "10"))
+    DB_POOL_TIMEOUT: int = int(os.getenv("DB_POOL_TIMEOUT", "30"))
+
+    # 外部集成
+    TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    TELEGRAM_CHAT_ID: str = os.getenv("TELEGRAM_CHAT_ID", "")
+    LIVE_ODDS_POLL_INTERVAL: int = int(os.getenv("LIVE_ODDS_POLL_INTERVAL", "300"))
     
     class Config:
         case_sensitive = True
