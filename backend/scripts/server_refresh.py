@@ -10,6 +10,13 @@ from ingestion.data_cleaner import DataCleaner
 from core.prediction_engine import PredictionEngine, build_context_from_match
 
 def main():
+    # 💡 强力加载本地环境配置
+    from dotenv import load_dotenv
+    env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    if os.path.exists(env_path):
+        load_dotenv(env_path)
+        print(f"Loaded config from {env_path}")
+    
     db = SessionLocal()
     try:
         print('--- Server-Side Healing Started ---')
