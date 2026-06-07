@@ -71,6 +71,7 @@
         <div class="text-[9px] font-black uppercase tracking-[0.2em] text-ink/40">WC Analytics · Vol. 5.0</div>
       </div>
       <div class="flex gap-4 mb-1">
+          <button @click="$store.app.setFilter('upcoming')" :class="$store.app.filter==='upcoming' ? 'text-accent font-bold':'text-ink/30'" class="text-[10px] uppercase tracking-widest">全部</button>
           <button @click="$store.app.setFilter('today')" :class="$store.app.filter==='today' ? 'text-accent font-bold':'text-ink/30'" class="text-[10px] uppercase tracking-widest">今日</button>
           <button @click="$store.app.setFilter('tomorrow')" :class="$store.app.filter==='tomorrow' ? 'text-accent font-bold':'text-ink/30'" class="text-[10px] uppercase tracking-widest">明日</button>
       </div>

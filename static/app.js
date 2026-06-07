@@ -7,7 +7,7 @@ document.addEventListener('alpine:init', () => {
   Alpine.store('app', {
     matches: [],
     teams: [],
-    filter: 'today', // 默认切到今日
+    filter: 'upcoming', // 默认切到全部
     user: null,
     loading: false,
     
@@ -49,6 +49,8 @@ document.addEventListener('alpine:init', () => {
         let resp;
         if (['today', 'tomorrow'].includes(this.filter)) {
           resp = await WCApi.Data.getMatches(undefined, undefined, undefined, this.filter);
+        } else if (this.filter === 'upcoming') {
+          resp = await WCApi.Data.getMatches('upcoming');
         } else {
           resp = await WCApi.Data.getMatches(this.filter);
         }
