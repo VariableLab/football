@@ -49,36 +49,36 @@ jobs:
             cd /home/${{ secrets.SERVER_USER }}/Github/football
             # 1. 物理清場
             echo "🛑 Killing all python processes..."
-            sudo systemctl stop football-api || true
+            sudo systemctl stop football || true
             sudo pkill -9 python3 || true
             sudo pkill -9 uvicorn || true
             sudo fuser -k 8000/tcp || true
             sleep 2
-
+            
             # 2. 強制更新代碼
             echo "🧹 Force resetting code..."
             cd /home/${{ secrets.SERVER_USER }}/Github/football
             git fetch --all
             git reset --hard origin/master
             find . -name "__pycache__" -exec rm -rf {} + || true
-
+            
             # 3. 執行數據重算 (此時無進程競爭)
             echo "🌱 Recalculating with NEW logic..."
             cd backend
             export PYTHONPATH=$PYTHONPATH:$(pwd)
             ./venv/bin/python3 scripts/server_refresh.py
-
+            
             # 4. 啟動服務
             echo "🚀 Starting fresh service..."
             sudo systemctl daemon-reload
-            sudo systemctl start football-api
-
+            sudo systemctl start football
+            
             # 5. 最終校驗
             echo "📊 Verifying version and port..."
             sleep 10
             if ! curl -s http://localhost:8000/api/health | grep "0.2.1-diag"; then
                 echo "❌ CRITICAL: Server is still running OLD code!"
-                sudo systemctl status football-api --no-pager
+                sudo systemctl status football --no-pager
                 exit 1
             fi
             echo "✅ Deployment Success! Logic and Data are now correctly updated."
