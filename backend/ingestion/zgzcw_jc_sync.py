@@ -258,7 +258,21 @@ def sync_jc_matches(db_path: str = None) -> Dict:
     if not matches:
         return {"matches": 0, "created": 0, "updated": 0, "errors": 0, "issues_linked": 0}
 
-    db = SessionLocal()
+    # 💡 支持自定义数据库路径（用于本地同步脚本）
+    if db_path:
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+        # 确保是绝对路径
+        if not db_path.startswith("sqlite:///"):
+            db_url = f"sqlite:///{os.path.abspath(db_path)}"
+        else:
+            db_url = db_path
+        engine = create_engine(db_url)
+        db_session_factory = sessionmaker(bind=engine)
+        db = db_session_factory()
+    else:
+        db = SessionLocal()
+
     created = 0
     updated = 0
     errors = 0
