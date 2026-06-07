@@ -60,11 +60,12 @@ def main():
         print('Step 1: Recalculating predictions...')
         engine = PredictionEngine(db_session=db)
         matches = db.query(Match).filter(Match.status != MatchStatus.FINISHED).all()
-        
         success = 0
         for m in matches:
             try:
-                if not m.home_team or not m.away_team: continue
+                if not m.home_team or not m.away_team: 
+                    print(f"  Match {m.id} skipped: missing team data")
+                    continue
                 ctx = build_context_from_match(m)
                 res = engine.predict(ctx)
                 db.query(Prediction).filter(Prediction.match_id == m.id).delete()
@@ -72,12 +73,15 @@ def main():
                     db.add(Prediction(
                         match_id=m.id, play_type=p["play_type"], 
                         probabilities=p["probabilities"],
-                        model_version="v2.0-quant-fixed",
+                        model_version=res.model_version, # 💡 使用 engine 返回的真实版本号
                         confidence=res.confidence
                     ))
                 success += 1
-            except: continue
-                
+            except Exception as e:
+                if success < 5: # 只打印前 5 个错误以防刷屏
+                    print(f"  Error on match {m.id} ({m.match_code}): {str(e)}")
+                continue
+
         db.commit()
         print(f'--- Finished: {success}/{len(matches)} success ---')
     except Exception as e:

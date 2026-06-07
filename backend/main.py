@@ -97,7 +97,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Application starting up", extra={"extra_data": {"version": "0.3.0-final-fix"}})
+    logger.info("Application starting up", extra={"extra_data": {"version": "0.3.0"}})
     
     # 生产环境安全守卫
     if settings.DEBUG and os.getenv("ENVIRONMENT") == "production":

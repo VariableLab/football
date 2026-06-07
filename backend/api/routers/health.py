@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api", tags=["System"])
 
 @router.get("/health", response_model=HealthCheck)
 def health(db: Session = Depends(get_db)):
-    checks = {"status": "ok", "version": "0.1.0", "checks": {}}
+    checks = {"status": "ok", "version": "0.3.0", "checks": {}}
 
     try:
         db.execute(text("SELECT 1"))
