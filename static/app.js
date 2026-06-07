@@ -50,7 +50,7 @@ document.addEventListener('alpine:init', () => {
         if (['today', 'tomorrow'].includes(this.filter)) {
           resp = await WCApi.Data.getMatches(undefined, undefined, undefined, this.filter);
         } else if (this.filter === 'upcoming') {
-          resp = await WCApi.Data.getMatches('upcoming');
+          resp = await WCApi.Data.getMatches('future');
         } else {
           resp = await WCApi.Data.getMatches(this.filter);
         }

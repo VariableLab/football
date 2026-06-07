@@ -92,6 +92,9 @@ def list_matches(
     if status == "jingcai":
         from database.models import JingcaiIssueMatch
         q = q.join(JingcaiIssueMatch, Match.id == JingcaiIssueMatch.match_id)
+    elif status == "future":
+        # 💡 特殊状态：所有未完赛场次
+        q = q.filter(Match.status != "finished")
     elif status:
         q = q.filter(Match.status == status)
 
