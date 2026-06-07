@@ -20,16 +20,19 @@ document.addEventListener('alpine:init', () => {
     async init() {
       await I18n.init();
       try {
-        const [teams, me] = await Promise.all([
+        // 並行加載基礎數據與用戶信息，確保狀態一致
+        const [teamsResult, me] = await Promise.all([
           WCApi.Data.getTeams(),
           WCApi.Auth.me().catch(() => null)
         ]);
-        this.teams = teams.items || [];
+        
+        this.teams = teamsResult?.items || [];
         this.user = me;
+        
         await this.loadMatches();
         
         // 自动选中第一场有 Edge 的比赛
-        if (this.matches.length > 0) {
+        if (this.matches && this.matches.length > 0) {
           this.selectMatch(this.matches[0].id);
         }
       } catch (e) {
@@ -42,13 +45,13 @@ document.addEventListener('alpine:init', () => {
       this.loading = true;
       this.agentLog = `正在拉取 ${this.filter} 市场快照...`;
       try {
-        let matches;
+        let resp;
         if (['today', 'tomorrow'].includes(this.filter)) {
-          matches = await WCApi.Data.getMatches(undefined, undefined, undefined, this.filter);
+          resp = await WCApi.Data.getMatches(undefined, undefined, undefined, this.filter);
         } else {
-          matches = await WCApi.Data.getMatches(this.filter);
+          resp = await WCApi.Data.getMatches(this.filter);
         }
-        this.matches = matches || [];
+        this.matches = resp.items || [];
         this.agentLog = `成功获取 ${this.matches.length} 条实时信号。`;
       } catch (e) {
         console.error('Load matches failed', e);

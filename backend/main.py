@@ -51,7 +51,10 @@ from odds_tracker import OddsTracker
 from hedge_engine import HedgeEngine
 from live_odds_feed import LiveOddsFeed, OddsBus, get_odds_bus, live_odds_update_to_dict
 from live_hedge_engine import LiveHedgeEngine
-from auth import get_password_hash, verify_password, create_access_token, get_current_active_user, get_optional_user
+from auth import (
+    get_password_hash, verify_password, create_access_token, 
+    get_current_active_user, get_optional_user, verify_admin_key
+)
 from license_manager import redeem_license_key
 from api.admin import router as admin_router
 from api.routers.matches import router as matches_router
@@ -118,8 +121,11 @@ app = FastAPI(
 )
 
 @app.get("/api/diag/db-stats")
-def db_stats(db: Session = Depends(get_db)):
-    """診斷：返回資料庫統計數據"""
+def db_stats(
+    db: Session = Depends(get_db),
+    _: bool = Depends(verify_admin_key),
+):
+    """診斷：返回資料庫統計數據 (受管理員密鑰保護)"""
     from database.models import Match, Team, Prediction
     return {
         "matches": db.query(Match).count(),
