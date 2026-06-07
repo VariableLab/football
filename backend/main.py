@@ -96,43 +96,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 async def lifespan(app: FastAPI):
     logger.info("Application starting up", extra={"extra_data": {"version": "0.1.0"}})
     
-    # 💡 核心注入：系统自我修复逻辑 (Auto-Heal)
-    # 确保每次重启都能自动处理脏数据并同步最新模型预测
-    try:
-        from database.models import SessionLocal
-        from ingestion.data_cleaner import DataCleaner
-        from core.prediction_engine import PredictionEngine, build_context_from_match
-        from database.models import Match, Prediction, MatchStatus
-        
-        logger.info("[Auto-Heal] Starting system cleanup and recalibration...")
-        db = SessionLocal()
-        
-        # 1. 清洗数据 (合并重复记录)
-        cleaner = DataCleaner(db)
-        clean_res = cleaner.clean(dry_run=False)
-        logger.info(f"[Auto-Heal] Data cleaner finished: {clean_res.fixed}")
-        
-        # 2. 刷新预测 (仅针对未开始的比赛)
-        if not settings.DEBUG: # 生产环境才自动重刷，防止本地调试过慢
-            engine = PredictionEngine(db_session=db)
-            matches = db.query(Match).filter(Match.status != MatchStatus.FINISHED).all()
-            for m in matches:
-                db.query(Prediction).filter(Prediction.match_id == m.id).delete()
-                try:
-                    res = engine.predict(build_context_from_match(m))
-                    for p in res.to_db_payload():
-                        db.add(Prediction(
-                            match_id=m.id, play_type=p["play_type"], 
-                            probabilities=p["probabilities"], confidence=res.confidence
-                        ))
-                except: continue
-            db.commit()
-            logger.info(f"[Auto-Heal] Refreshed predictions for {len(matches)} matches.")
-        
-        db.close()
-    except Exception as e:
-        logger.error(f"[Auto-Heal] Failed: {e}")
-
     # 生产环境安全守卫
     if settings.DEBUG and os.getenv("ENVIRONMENT") == "production":
         raise RuntimeError("DEBUG=True is not allowed in production")

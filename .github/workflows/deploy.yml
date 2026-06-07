@@ -57,20 +57,24 @@ jobs:
             # 针对 ARM 架构注入补丁
             ./venv/bin/python3 -c "from utils.scraper_patch import patch_soccerdata; patch_soccerdata()"
             
-            # 重启系统服务
-            echo "🚀 Restarting WC Analytics services..."
+            # 重启系统服务 (💡 兼容多版本服务名)
+            echo "🚀 Restarting API services..."
             sudo systemctl daemon-reload
-            sudo systemctl restart wc-analytics
+            sudo systemctl restart football-api || true
+            sudo systemctl restart wc-analytics || true
             
-            # 💡 强力重刷：执行数据清洗和预测重算脚本
+            # 💡 强力重刷：执行数据清洗和预测重算脚本 (带上环境变量)
             echo "🧹 Running server-side data healing..."
+            export SECRET_KEY=${{ secrets.TEST_SECRET_KEY }}
+            export ADMIN_API_KEY=${{ secrets.TEST_ADMIN_API_KEY }}
             ./venv/bin/python3 scripts/server_refresh.py
             
-            # 最终健康检查 (增加延迟)
+            # 最终健康检查
             echo "📊 Verifying service status..."
             sleep 5
-            if ! sudo systemctl is-active wc-analytics; then
-                echo "❌ Service failed to start! Printing logs:"
+            if ! (sudo systemctl is-active football-api || sudo systemctl is-active wc-analytics); then
+                echo "❌ Service failed to start!"
+                sudo journalctl -u football-api -n 50 --no-pager
                 sudo journalctl -u wc-analytics -n 50 --no-pager
                 exit 1
             fi

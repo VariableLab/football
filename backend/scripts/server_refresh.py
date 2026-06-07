@@ -38,7 +38,9 @@ def main():
                         confidence=res.confidence
                     ))
             except Exception as e:
+                import traceback
                 print(f'  Error on match {m.id}: {e}')
+                traceback.print_exc()
                 continue
                 
         db.commit()
