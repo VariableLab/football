@@ -59,14 +59,19 @@ jobs:
             sudo lsof -t -i:8000 | xargs sudo kill -9 || true
             sleep 2
 
-            # 3. 重啟服務
+            # 3. 重啟服務 (先起服務確保基礎環境對齊)
             echo "🚀 Starting service..."
             sudo systemctl daemon-reload
             sudo systemctl start football-api
-
-            # 4. 健康檢查
+            sleep 5
+            
+            # 4. 💡 物理重刷：數據刷新腳本 (應用 35% Elo 權重邏輯)
+            echo "🌱 Recalculating 149 matches with new logic..."
+            ./venv/bin/python3 scripts/server_refresh.py
+            
+            # 5. 最終健康檢查
             echo "📊 Verifying..."
-            sleep 10
+            sleep 5
             sudo systemctl is-active football-api
-            echo "✅ Deployment finished."
+            echo "✅ Data logic activated."
 
