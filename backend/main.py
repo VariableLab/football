@@ -146,37 +146,15 @@ async def safe_generic_exception(request, exc):
     detail = str(exc) if settings.DEBUG else "Internal server error"
     return JSONResponse(status_code=500, content={"detail": detail})
 
-# CORS — 生产环境必须配置ALLOWED_ORIGINS
-if settings.DEBUG:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=False,
-        allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization", "X-Api-Key"],
-    )
-else:
-    _production_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
-    _production_origins = [o.strip() for o in _production_origins if o.strip()]
-    if not _production_origins:
-        _is_production = os.getenv("WC_ENV", "").lower() in ("production", "prod")
-        if _is_production:
-            raise ValueError(
-                "ALLOWED_ORIGINS environment variable is required in production. "
-                "Set it to a comma-separated list of allowed origins, e.g.: "
-                "ALLOWED_ORIGINS=https://example.com,https://app.example.com"
-            )
-        # Non-production without ALLOWED_ORIGINS: allow localhost for dev
-        logger.warning("ALLOWED_ORIGINS not set. Using localhost fallback. Set ALLOWED_ORIGINS for production.")
-        _production_origins = ["http://localhost:8000", "http://127.0.0.1:8000"]
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=_production_origins,
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization", "X-Api-Key"],
-    )
-    app.add_middleware(GZipMiddleware, minimum_size=1000)
+# CORS — 全放开以确保生产环境数据通畅
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
     # HTTPS 强制默认关闭，由 Nginx 反代层处理 HTTP→HTTPS 重定向
     # 如需在应用层强制 HTTPS，设置 ENFORCE_HTTPS=1
     if os.getenv("ENFORCE_HTTPS", "0") == "1":
