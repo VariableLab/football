@@ -25,6 +25,27 @@ Morocco: 摩洛哥
 Senegal: 塞内加尔
 Egypt: 埃及
 Nigeria: 尼日利亚
+Peru: 秘鲁
+Uruguay: 乌拉圭
+Switzerland: 瑞士
+Denmark: 丹麦
+Serbia: 塞尔维亚
+Chile: 智利
+Colombia: 哥伦比亚
+Ecuador: 厄瓜多尔
+Finland: 芬兰
+Iceland: 冰岛
+Singapore: 新加坡
+Mongolia: 蒙古
+Norway: 挪威
+Sweden: 瑞典
+Austria: 奥地利
+Poland: 波兰
+Ukraine: 乌克兰
+Scotland: 苏格兰
+Wales: 威尔士
+Northern Ireland: 北爱尔兰
+Ireland: 爱尔兰
 
 # ─── 常见简称/变体 ───
 阿根廷 (ARG): 阿根廷
@@ -34,10 +55,20 @@ Nigeria: 尼日利亚
 日本 (JPN): 日本
 英格兰 (ENG): 英格兰
 埃及 (EGY): 埃及
+西班牙 (ESP): 西班牙
+荷兰 (NED): 荷兰
+葡萄牙 (POR): 葡萄牙
+意大利 (ITA): 意大利
+比利时 (BEL): 比利时
+秘鲁 (PER): 秘鲁
+北爱尔: 北爱尔兰
+北爱尔兰 (NIR): 北爱尔兰
+乌兹别克: 乌兹别克斯坦
+乌兹别克斯坦 (UZB): 乌兹别克斯坦
+安道尔 (AND): 安道尔
 卡塔尔 (QAT): 卡塔尔
 爱尔兰 (IRL): 爱尔兰
 俄罗斯 (RUS): 俄罗斯
-安道尔 (AND): 安道尔
 
 # ─── 抓取源特定名称 ───
 Rep. of Ireland: 爱尔兰
