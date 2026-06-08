@@ -281,11 +281,57 @@ class ListResponse(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
+class MatchListItem(BaseModel):
+    id: int
+    match_code: str
+    home_team: TeamOut
+    away_team: TeamOut
+    kickoff_at: Optional[datetime]
+    kickoff_bj: Optional[str] = None
+    group: Optional[str]
+    stage: Optional[str] = None
+    match_type: Optional[str] = None
+    competition: Optional[str]
+    status: str
+    odds_home: Optional[float]
+    odds_draw: Optional[float]
+    odds_away: Optional[float]
+    odds_source: Optional[str] = None
+    confidence: Optional[str] = None
+    odds_degraded: Optional[bool] = False
+    updated_at: Optional[datetime] = None
+
+    venue_type: Optional[str] = None
+    weather: Optional[str] = None
+    temperature: Optional[float] = None
+    pitch_condition: Optional[str] = None
+    schedule_density: Optional[str] = None
+
+    actual_home_goals: Optional[int]
+    actual_away_goals: Optional[int]
+    actual_outcome: Optional[str]
+
+    model_config = ConfigDict(protected_namespaces=(), from_attributes=True)
+
+    @field_validator('kickoff_bj', mode='before')
+    @classmethod
+    def compute_bj_time(cls, v, info):
+        kickoff = info.data.get('kickoff_at') if hasattr(info, 'data') else None
+        if kickoff and v is None:
+            from datetime import timezone, timedelta
+            try:
+                bj = kickoff.astimezone(timezone(timedelta(hours=8)))
+                return bj.strftime("%m月%d日 %H:%M")
+            except Exception:
+                return None
+        return v
+
 class MatchListResponse(BaseModel):
     total: int
     offset: int
     limit: int
-    items: List[MatchOut]
+    items: List[MatchListItem]
+
 
 
 class JingcaiIssueListResponse(BaseModel):

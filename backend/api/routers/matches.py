@@ -85,8 +85,7 @@ def list_matches(
     # 使用 selectinload 优化集合加载性能
     q = db.query(Match).options(
         joinedload(Match.home_team),
-        joinedload(Match.away_team),
-        selectinload(Match.predictions)
+        joinedload(Match.away_team)
     )
 
     if status == "jingcai":
@@ -147,7 +146,7 @@ def get_strategy(
         raise HTTPException(status_code=404, detail="Match not found")
 
     is_finished = match.status == MatchStatus.FINISHED
-    TEST_MODE = os.getenv("TEST_MODE", "true").lower() == "true"
+    TEST_MODE = os.getenv("TEST_MODE", "false").lower() == "true"
     
     if not is_finished and not TEST_MODE:
         if user is None or not user.is_paid:
