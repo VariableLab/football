@@ -17,7 +17,7 @@ from utils.cache import cached_api
 
 router = APIRouter(prefix="/api/matches", tags=["matches"])
 
-_VALID_STATUSES = {"upcoming", "live", "finished", "postponed", "cancelled"}
+_VALID_STATUSES = {"upcoming", "live", "finished", "postponed", "cancelled", "future"}
 _VALID_MATCH_TYPES = {"world_cup", "friendly", "warm_up", "qualifier"}
 
 def _enrich_rationale(pick, match) -> str:
