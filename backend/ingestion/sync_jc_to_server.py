@@ -51,27 +51,37 @@ def step(name: str) -> None:
 
 def run_local_sync() -> bool:
     step("1/3 本地 zgzcw 同步")
-    # 💡 确保本地 DB 目录存在且已初始化
-    from database.models import Base
-    from sqlalchemy import create_engine
-    
-    db_url = f"sqlite:///{os.path.abspath(DB_PATH)}"
-    engine = create_engine(db_url)
-    print(f"  Initializing local schema at {DB_PATH}...")
-    Base.metadata.create_all(bind=engine)
+    # 💡 确保能够找到 backend 根目录模块
+    _backend_dir = os.path.dirname(PROJECT_ROOT)
+    if _backend_dir not in sys.path:
+        sys.path.insert(0, _backend_dir)
+        
+    try:
+        from database.models import Base
+        from sqlalchemy import create_engine
+        
+        db_url = f"sqlite:///{os.path.abspath(DB_PATH)}"
+        engine = create_engine(db_url)
+        print(f"  Initializing local schema at {DB_PATH}...")
+        Base.metadata.create_all(bind=engine)
 
-    from ingestion.zgzcw_jc_sync import sync_jc_matches
-    result = sync_jc_matches(DB_PATH)
-    log(f"同步结果: {result['matches']} 场, 新增 {result['created']}, 更新 {result['updated']}, 关联 {result.get('issues_linked', 0)}")
-    
-    if result.get("errors", 0) > 0:
-        log(f"⚠️ 同步过程中出现 {result['errors']} 个错误")
-        if result["created"] == 0 and result["updated"] == 0:
-            log("❌ 同步完全失败")
-            return False
-            
-    log("✅ 本地同步步骤完成")
-    return True
+        from ingestion.zgzcw_jc_sync import sync_jc_matches
+        result = sync_jc_matches(DB_PATH)
+        log(f"同步结果: {result['matches']} 场, 新增 {result['created']}, 更新 {result['updated']}, 关联 {result.get('issues_linked', 0)}")
+        
+        if result.get("errors", 0) > 0:
+            log(f"⚠️ 同步过程中出现 {result['errors']} 个错误")
+            if result["created"] == 0 and result["updated"] == 0:
+                log("❌ 同步完全失败")
+                return False
+                
+        log("✅ 本地同步步骤完成")
+        return True
+    except Exception as e:
+        import traceback
+        log(f"❌ 初始化或同步失败: {e}")
+        traceback.print_exc()
+        return False
 
 
 def dump_sync_sql() -> str:
