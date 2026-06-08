@@ -9,14 +9,27 @@ import enum
 from database.config import get_settings
 
 settings = get_settings()
+
+_engine_kwargs = {
+    "pool_pre_ping": True
+}
+if "sqlite" in settings.DATABASE_URL:
+    _engine_kwargs["connect_args"] = {"check_same_thread": False}
+    # SQLite SingletonThreadPool does not support pool_size, max_overflow, pool_timeout
+    # Only set them for PostgreSQL or other DBs
+    if settings.DATABASE_URL == "sqlite:///:memory:":
+        from sqlalchemy.pool import StaticPool
+        _engine_kwargs["poolclass"] = StaticPool
+else:
+    _engine_kwargs["pool_size"] = settings.DB_POOL_SIZE
+    _engine_kwargs["max_overflow"] = settings.DB_MAX_OVERFLOW
+    _engine_kwargs["pool_timeout"] = settings.DB_POOL_TIMEOUT
+
 engine = create_engine(
     settings.DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {},
-    pool_size=settings.DB_POOL_SIZE,
-    max_overflow=settings.DB_MAX_OVERFLOW,
-    pool_timeout=settings.DB_POOL_TIMEOUT,
-    pool_pre_ping=True,
+    **_engine_kwargs
 )
+
 
 
 @event.listens_for(engine, "connect")

@@ -1389,8 +1389,10 @@ class PredictionEngine:
         lr_spf = None
         weights = self._get_lr_weights_for_match(ctx.competition)
         
-        # 💡 逻辑加固：如果赔率来源是合成的 (synthetic)，则视为无赔率，强制降级到战力优先模式
-        real_market = market_out if ctx.odds_source != "synthetic" else None
+        # 💡 逻辑加固：如果赔率来源是合成的 (synthetic) ，则视为无赔率，强制降级到战力优先模式
+        _odds_source = getattr(ctx, 'odds_source', getattr(ctx.odds, 'source', '')) if hasattr(ctx, 'odds') and ctx.odds else getattr(ctx, 'odds_source', '')
+        real_market = market_out if _odds_source != "synthetic" else None
+
         
         if weights and real_market is not None:
             lr_spf = self._predict_with_lr(

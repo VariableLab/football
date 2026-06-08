@@ -59,11 +59,19 @@ def get_settings() -> Settings:
     if is_testing:
         s.SECRET_KEY = "test-secret-key-at-least-32-characters-long-for-pytest"
         s.ADMIN_API_KEY = "test-admin-api-key-at-least-16-chars"
+        # 💡 测试环境下使用内存数据库，避免文件路径问题导致 unable to open database file
+        s.DATABASE_URL = "sqlite:///:memory:"
 
     # 确保 Key 长度符合加密要求
     if len(s.SECRET_KEY) < 32:
         s.SECRET_KEY = (str(s.SECRET_KEY) + "padding_logic_to_ensure_32_chars_long")[:48]
 
+    # 💡 强制 SQLite 物理文件使用绝对路径，避免 CWD 漂移导致 unable to open database file
+    if s.DATABASE_URL.startswith("sqlite:///./backend/"):
+        db_filename = s.DATABASE_URL.replace("sqlite:///./backend/", "")
+        abs_path = os.path.join(_BACKEND_ROOT, db_filename)
+        s.DATABASE_URL = f"sqlite:///{abs_path}"
+        
     return s
 
 def get_db_url():
