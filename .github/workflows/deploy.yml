@@ -72,6 +72,7 @@ jobs:
             echo "🚀 Starting fresh service..."
             sudo systemctl daemon-reload
             sudo systemctl start football
+            sudo systemctl restart nginx
             
             # 5. 最終校驗
             echo "📊 Verifying version and port..."

@@ -129,3 +129,8 @@ h1, h2, .font-serif {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* 自定义滚动条 */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
