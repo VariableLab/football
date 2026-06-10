@@ -684,7 +684,7 @@ def jingcai_auto_verify_wrapper():
 
         # 自动关闭所有已过期但未关闭的期号
         try:
-            from main import _auto_close_expired_issues
+            from api.routers.jingcai import _auto_close_expired_issues
             closed = _auto_close_expired_issues(db)
             if closed:
                 logger.info(f"[jingcai-verify] 自动关闭 {closed} 个过期期号")
@@ -1255,7 +1255,7 @@ def start_scheduler():
                     logger.info(f"[jingcai-realtime] 同步 {synced} 场赛果")
 
                 # 2. 检查在售期号中所有比赛已完赛的，自动关期
-                from main import _auto_close_expired_issues
+                from api.routers.jingcai import _auto_close_expired_issues
                 closed = _auto_close_expired_issues(db)
                 if closed:
                     logger.info(f"[jingcai-realtime] 自动关期 {closed} 个")
