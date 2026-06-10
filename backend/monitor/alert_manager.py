@@ -96,10 +96,10 @@ def fire_alert(source: str, level: str, message: str) -> None:
         "time": datetime.now(timezone.utc).isoformat(),
     }
     alerts = _load_alerts()
-    #去重：同 source+message 5分钟内不重复
+    #去重：同 source 30分钟内不重复，防止消息微小差异导致的轰炸
     recent = [a for a in alerts
-              if a["source"] == source and a["message"] == message
-              and a["ts"] > alert["ts"] - 300]
+              if a["source"] == source
+              and a["ts"] > alert["ts"] - 1800]
     if not recent:
         alerts.append(alert)
         _save_alerts(alerts)
