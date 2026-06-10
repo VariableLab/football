@@ -56,6 +56,23 @@
         letter-spacing: 0.2em;
     }
     [x-cloak] { display: none !important; }
+
+    /* 自定义滚动条修复 */
+    .custom-scrollbar {
+        overflow-y: auto !important;
+        scrollbar-width: thin !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px !important;
+        display: block !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.15) !important;
+        border-radius: 10px !important;
+    }
   </style>
 </head>
 <body x-data x-init="$store.app.init()">
@@ -79,7 +96,7 @@
     </div>
 
     <!-- Signal Stream -->
-    <div class="flex-1 overflow-y-auto custom-scrollbar h-full max-h-full">
+    <div class="flex-1 overflow-y-auto custom-scrollbar min-h-0">
       <div class="px-6 md:px-8 py-4 text-[9px] font-black uppercase tracking-widest text-ink/30 border-b border-black/5 flex justify-between bg-black/[0.01]">
         <span>Market Signal Stream</span>
         <span class="text-accent animate-pulse">● LIVE</span>

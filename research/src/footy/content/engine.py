@@ -89,7 +89,22 @@ class WorldCupContentEngine:
         home_stars = self._get_top_players(home.id)
         away_stars = self._get_top_players(away.id)
 
-        # 4. 智能文案生成逻辑 (AI Powered)
+        # 4. 智能文案生成逻辑 (AI Powered + Robust Headline)
+        home_win_p = probs["home"]
+        away_win_p = probs["away"]
+
+        # 生成基础标题 (Headline)
+        if home_win_p > 0.65:
+            headline = f"{home.name} 展现统治级实力优势"
+        elif home_win_p > 0.50:
+            headline = f"模型看好 {home.name} 主场取胜"
+        elif away_win_p > 0.50:
+            headline = f"系统预警 {away.name} 具有爆冷潜力"
+        elif abs(home_win_p - away_win_p) < 0.10:
+            headline = "强强对话：均势博弈局面"
+        else:
+            headline = "实力均衡的深度对决"
+
         try:
             from footy.content.ai_service import AIService
             ai = AIService()
@@ -108,7 +123,6 @@ class WorldCupContentEngine:
             if ai_insight and "维护" not in ai_insight:
                 insight = f"【AI 战术前瞻】{ai_insight}\n\n[量化基准] 基于 {model_version} 模型，主胜期望为 {home_win_p:.1%}。Elo 实力分差 {abs(elo_diff or 0)} 揭示了双方的长期战力阶梯。"
             else:
-                # Fallback to template if AI fails
                 insight = (
                     f"基于 {model_version} 引擎分析，本场比赛 {home.name} 对阵 {away.name}。 "
                     f"AI 模型计算出的主胜概率为 {home_win_p:.1%}，"
@@ -117,10 +131,9 @@ class WorldCupContentEngine:
         except Exception as e:
             import logging
             logging.getLogger("content_engine").warning(f"AI Insight integration failed: {e}")
-            insight = f"正在通过 {model_version} 引擎计算深度特征向量..."
+            insight = f"基于 {model_version} 引擎分析，主胜概率 {home_win_p:.1%}。Elo 实力分差 {abs(elo_diff or 0)}。正在同步更多维度特征..."
 
-        # 5. 构造标准卡片 JSON (确保不返回 None 给前端)
-
+        # 5. 构造标准卡片 JSON
         card_data = {
             "match_info": {
                 "id": match.id,
