@@ -28,31 +28,37 @@ class AIService:
                 json={
                     "model": self.model,
                     "messages": [
+                        {"role": "system", "content": "你是一位拥有20年经验的足球战术评论员。你说话风格犀利、深刻，善于从赔率和xG数据中洞察真相。"},
                         {"role": "user", "content": prompt}
                     ],
-                    "temperature": 0.7,
-                    "max_tokens": 500
+                    "temperature": 0.5, # 降低随机性，减少废话
+                    "max_tokens": 150
                 },
-                timeout=60 
+                timeout=30 
             )
             res_json = response.json()
             
             if 'choices' in res_json and len(res_json['choices']) > 0:
-                msg = res_json['choices'][0]['message']
-                # 兼容性处理：模型可能直接输出在 content，也可能输出在 reasoning 中
-                content = msg.get('content')
-                reasoning = msg.get('reasoning')
+                text = res_json['choices'][0]['message'].get('content', "").strip()
                 
-                final_text = content or reasoning or ""
-                if final_text:
-                    # 如果返回的是冗长的推理过程，截取前 100 字作为战术金句
-                    return final_text[:200].strip() + "..."
+                # ─── 核心修复：输出清洗逻辑 ───
+                import re
+                # 1. 剔除常见的 AI 引言 (e.g. "好的", "当然", "这场比赛...")
+                text = re.sub(r"^(好的|当然|作为.*?|根据数据|这里是|总结如下[:：])", "", text)
+                # 2. 剔除任何包含指令的 meta-talk (如 We need to respond in Chinese)
+                if "respond in" in text or "provide a" in text:
+                    text = text.split('.')[-1].strip() # 尝试截取最后一句，或者丢弃
+                
+                # 3. 剔除引号
+                text = text.replace('"', '').replace('“', '').replace('”', '')
+                
+                if len(text) > 5:
+                    return text[:120] # 限制长度，保持精炼
             
-            return "战术分析正在实时同步中 (Analysis Syncing...)"
+            return "战术分析正在实时同步中..."
             
         except Exception as e:
-            print(f"⚠️ AI Analysis failed: {e}")
-            return "战术分析模块正在维护 (Service Maintenance...)"
+            return "战术分析模块正在维护..."
 
     def _build_prompt(self, data: dict, lang: str) -> str:
         pairing = data['match_info']['pairing']
@@ -60,11 +66,23 @@ class AIService:
         a_xg = data['stats']['avg_xg']['away']
         h_win = data['prediction_ref']['home_win']
         a_win = data['prediction_ref']['away_win']
+
+        # 💡 数据语境化处理：如果 xG 为 0，不告诉 AI 它是 0，而是说“样本重构中”
+        h_desc = f"{h_xg:.2f}" if h_xg > 0 else "样本重构中"
+        a_desc = f"{a_xg:.2f}" if a_xg > 0 else "战术重组中"
         
         if lang == 'zh':
-            return f"你是一位顶尖足球解说员。请对这场比赛进行一句话战术总结：{pairing}。数据：主队历史 xG {h_xg}，客队历史 xG {a_xg}。模型预测主胜概率 {h_win:.1%}，客胜概率 {a_win:.1%}。要求：字数 60 字内，辛辣、专业。"
+            return (
+                f"任务：对比赛【{pairing}】进行一句辛辣、极具战术深度的点评。\n"
+                f"参考数据：主队xG({h_desc})，客队xG({a_desc})。模型预测主胜概率 {h_win:.1%}。\n"
+                f"要求：\n"
+                f"1. 禁止出现英语，禁止复述我的指令。\n"
+                f"2. 直接给出结论，不要说‘好的’或‘这场比赛’等废话。\n"
+                f"3. 风格要像顶级评论员（如詹俊或黄健翔），针对实力差距或xG趋势进行点评。\n"
+                f"4. 字数控制在 40-60 字。"
+            )
         else:
-            return f"Match: {pairing}. Data: Home xG {h_xg}, Away xG {a_xg}. Probabilities: Home {h_win:.1%}, Away {a_win:.1%}. Give a 40-word tactical verdict."
+            return f"Match: {pairing}. Give a sharp, 30-word tactical verdict based on xG({h_desc} vs {a_desc}) and win prob {h_win:.1%}. Directly give the output."
 
 if __name__ == "__main__":
     service = AIService()
