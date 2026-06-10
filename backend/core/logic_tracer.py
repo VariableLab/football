@@ -13,12 +13,12 @@ class LogicChain(BaseModel):
     match_id: int
     steps: List[TraceStep] = []
 
-    def add_step(self, name: str, desc: str, current_spf: Dict[str, float], delta: Dict[str, float] = None):
+    def add_step(self, name: str, desc: str, current_spf: Dict[str, Any], delta: Dict[str, float] = None):
         self.steps.append(TraceStep(
             name=name,
             description=desc,
-            impact_home=current_spf["home"],
-            impact_draw=current_spf["draw"],
-            impact_away=current_spf["away"]
+            impact_home=current_spf.get("home", 0.0),
+            impact_draw=current_spf.get("draw", 0.0),
+            impact_away=current_spf.get("away", 0.0)
         ))
 
