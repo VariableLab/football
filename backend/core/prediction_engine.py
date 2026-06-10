@@ -1385,14 +1385,19 @@ class PredictionEngine:
         players_factor = PlayerAdjustmentModel.predict(ctx)
         market_out = MarketModel.predict(ctx)
 
+        # 💡 数据反脆弱核心逻辑：识别并处理降级状态 (Degraded Mode)
+        # 如果赔率来源是合成的 (synthetic) 或数据完全缺失，则视为处于断流状态
+        is_degraded = False
+        _odds_source = getattr(ctx, 'odds_source', getattr(ctx.odds, 'source', '')) if hasattr(ctx, 'odds') and ctx.odds else getattr(ctx, 'odds_source', '')
+        if _odds_source == "synthetic" or market_out is None:
+            is_degraded = True
+            trace.add_step("数据断流预警", "检测到赔率数据源失效，系统自动进入 [反脆弱降级模式]：优先信任物理实力模型 (Elo/Poisson)", {"mode": "degraded", "source": _odds_source})
+
         # 2. 融合胜平负 ── 优先使用 LR 逻辑回归融合 (v2)
         lr_spf = None
         weights = self._get_lr_weights_for_match(ctx.competition)
         
-        # 💡 逻辑加固：如果赔率来源是合成的 (synthetic) ，则视为无赔率，强制降级到战力优先模式
-        _odds_source = getattr(ctx, 'odds_source', getattr(ctx.odds, 'source', '')) if hasattr(ctx, 'odds') and ctx.odds else getattr(ctx, 'odds_source', '')
-        real_market = market_out if _odds_source != "synthetic" else None
-
+        real_market = market_out if not is_degraded else None
         
         if weights and real_market is not None:
             lr_spf = self._predict_with_lr(
@@ -1417,19 +1422,21 @@ class PredictionEngine:
                 market=real_market,
                 ctx=ctx,
             )
-            trace.add_step("线性加权基准", "由于缺少真实赔率，使用基础 Elo+泊松 4 参数融合", fused_spf)
+            mode_desc = "基础混合融合" if not is_degraded else "纯物理实力降级融合"
+            trace.add_step(mode_desc, "使用 Elo + 泊松 4 参数模型生成预测基准", fused_spf)
 
         # 💡 强力校准 (全局覆盖)：如果有实验室专家 Elo，则强制赋予其 90% 的权重
-        # 无论之前是 LR 还是 Ensemble，专家数据必须作为真相源
+        # 在降级模式下，这 90% 的权重保证了预测的物理准确性
         if lab_elo_spf:
+            weight_factor = 0.95 if is_degraded else 0.90
             fused_spf = {
-                k: 0.9 * lab_elo_spf[k] + 0.1 * fused_spf[k]
+                k: weight_factor * lab_elo_spf[k] + (1-weight_factor) * fused_spf[k]
                 for k in ["home", "draw", "away"]
             }
             # 归一化
             s_val = sum(fused_spf.values())
             fused_spf = {k: v / s_val for k, v in fused_spf.items()}
-            trace.add_step("专家Elo主导校准", "检测到实验室Elo权重，采用 90:10 强力偏置以保留实力区分度", fused_spf)
+            trace.add_step("专家Elo降级增强", f"降级模式下将实力权重提升至 {weight_factor:.0%}", fused_spf)
 
         # 2b. 临场跳水修正 (New!)
         old_spf = fused_spf.copy()
