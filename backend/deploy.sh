@@ -100,49 +100,53 @@ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 sudo tee /etc/nginx/sites-available/wc-analytics > /dev/null <<EOF
 # HTTP -> HTTPS redirect
 server {
-    listen 80;
-    server_name _;
-    return 301 https://\$host\$request_uri;
+listen 80;
+server_name _;
+return 301 https://\\$host\\$request_uri;
 }
 
 # HTTPS
 server {
-    listen 443 ssl http2;
-    server_name _;
+listen 443 ssl http2;
+server_name _;
 
-    ssl_certificate /etc/ssl/certs/nginx-selfsigned.pem;
-    ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-    ssl_prefer_server_ciphers on;
+ssl_certificate /etc/ssl/certs/nginx-selfsigned.pem;
+ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_ciphers HIGH:!aNULL:!MD5;
+ssl_prefer_server_ciphers on;
 
-    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
-    add_header X-Content-Type-Options "nosniff" always;
+add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+add_header X-Content-Type-Options "nosniff" always;
 
-    location / {
-        root $PROJECT_DIR/static;
-        index index.html;
-        try_files \$uri \$uri/ /index.html;
-    }
+location / {
+    root \$PROJECT_DIR/static;
+    index index.html;
+    try_files \\$uri \\$uri/ /index.html;
+    # 确保 index.html 不被长期缓存，以便即时获取新资源
+    add_header Cache-Control "no-cache, no-store, must-revalidate";
+}
 
-    location /api/ {
-        proxy_pass http://127.0.0.1:8000/api/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
-        proxy_cache_bypass \$http_upgrade;
-    }
+location /api/ {
+    proxy_pass http://127.0.0.1:8000/api/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade \\$http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host \\$host;
+    proxy_set_header X-Real-IP \\$remote_addr;
+    proxy_set_header X-Forwarded-For \\$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_cache_bypass \\$http_upgrade;
+}
 
-    location /static/ {
-        alias $PROJECT_DIR/static/;
-        expires 1d;
-    }
+location /static/ {
+    alias \$PROJECT_DIR/static/;
+    expires 1h;
+    add_header Cache-Control "public";
+}
 }
 EOF
+
 server {
     listen 80;
     server_name _;  # 接受所有域名，或填入你的域名

@@ -344,9 +344,23 @@ def run_self_heal_cycle(reason: str = "manual") -> dict:
     # 冷却期检查：距上次自愈不足6小时则跳过
     prev_state = _load_self_heal_state()
     if prev_state.get("status") == "running":
-        logger.warning("[self-heal] 上次自愈仍在运行，跳过")
-        _self_heal_lock.release()
-        return {"status": "skipped", "reason": "previous_still_running", "started_at": started_at}
+        # 检查是否由于崩溃导致的僵尸锁（超过4小时认为失效）
+        prev_start = prev_state.get("started_at")
+        if prev_start:
+            try:
+                prev_dt = datetime.fromisoformat(prev_start)
+                if (datetime.now(timezone.utc) - prev_dt) > timedelta(hours=4):
+                    logger.warning(f"[self-heal] 发现过期僵尸锁(开始于{prev_start})，强制解锁并继续")
+                else:
+                    logger.warning("[self-heal] 上次自愈仍在运行，跳过")
+                    _self_heal_lock.release()
+                    return {"status": "skipped", "reason": "previous_still_running", "started_at": started_at}
+            except (ValueError, TypeError):
+                pass
+        else:
+            logger.warning("[self-heal] 上次自愈仍在运行(无时间戳)，跳过")
+            _self_heal_lock.release()
+            return {"status": "skipped", "reason": "previous_still_running_no_ts", "started_at": started_at}
 
     last_run = prev_state.get("last_run")
     if last_run:
