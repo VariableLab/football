@@ -631,3 +631,17 @@ class MatchAIReport(Base):
     content = Column(Text, nullable=False)
     input_checksum = Column(String(64), nullable=True) # 用于感知赔率变化以更新报告
     generated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+# ────────────────────────────
+# Betting Exchange Volume（必发交易所资金冷热监控数据）
+# ────────────────────────────
+class BettingExchangeVolume(Base):
+    __tablename__ = "betting_exchange_volumes"
+    id = Column(Integer, primary_key=True)
+    match_id = Column(Integer, ForeignKey("matches.id", ondelete="CASCADE"), unique=True, index=True)
+    total_volume = Column(Float, default=0.0)
+    home_ratio = Column(Float, default=0.0)
+    draw_ratio = Column(Float, default=0.0)
+    away_ratio = Column(Float, default=0.0)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
