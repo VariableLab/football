@@ -36,21 +36,8 @@ def get_match_preview(
         match = db.query(Match).filter(Match.id == match_id).first()
         if not match:
             raise HTTPException(status_code=404, detail="Match not found")
-            
-        is_finished = match.status == MatchStatus.FINISHED
-        TEST_MODE = os.getenv("TEST_MODE", "false").lower() == "true"
-        
-        # 验证付费权限
-        has_access = is_finished or TEST_MODE
-        if not has_access and user and user.is_paid:
-            if user.paid_until:
-                from datetime import timezone as _tz
-                paid_until = user.paid_until.replace(tzinfo=_tz.utc) if user.paid_until.tzinfo is None else user.paid_until
-                if paid_until >= datetime.now(_tz.utc):
-                    has_access = True
-                else:
-                    user.is_paid = False
-                    db.commit()
+        # 验证付费权限 (开源免验证：默认解锁全部内容)
+        has_access = True
 
         engine = WorldCupContentEngine(db)
         preview = engine.generate_match_preview(match_id)

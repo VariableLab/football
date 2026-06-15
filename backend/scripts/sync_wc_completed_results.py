@@ -40,7 +40,12 @@ def main():
         (1, 1, 'draw', 'FINISHED', 'JC-20260614-卡塔尔-瑞士'),
         (1, 1, 'draw', 'FINISHED', 'JC-20260614-巴西-摩洛哥'),
         (0, 1, 'away', 'FINISHED', 'JC-20260614-海地-苏格兰'),
-        (2, 0, 'home', 'FINISHED', 'JC-20260614-澳大利-土耳其')
+        (2, 0, 'home', 'FINISHED', 'JC-20260614-澳大利-土耳其'),
+        # 4. 补录 6月15日世界杯完赛结果 (打完但卡在 SCHEDULED 或 LIVE)
+        (7, 1, 'home', 'FINISHED', 'JC-20260615-德国-库拉索'),
+        (2, 2, 'draw', 'FINISHED', 'JC-20260615-荷兰-日本'),
+        (1, 0, 'home', 'FINISHED', 'JC-20260615-科特迪-厄瓜多'),
+        (5, 1, 'home', 'FINISHED', 'JC-20260615-瑞典-突尼斯')
     ]
     
     print("\n=== 开始执行数据库数据更新 ===")
