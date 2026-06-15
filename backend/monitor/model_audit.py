@@ -14,8 +14,20 @@ Model Audit — 每日复盘 + 自愈闭环
   # 调度器会自动调用，也可手动执行
 """
 
-import json
+import sys
 import os
+
+# Ensure backend and scripts are in sys.path
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+_backend_root = os.path.dirname(_current_dir)
+for d in ["api", "core", "features", "ingestion", "database", "strategy", "monitor", "utils", "scripts"]:
+    _path = os.path.join(_backend_root, d)
+    if _path not in sys.path:
+        sys.path.append(_path)
+if _backend_root not in sys.path:
+    sys.path.append(_backend_root)
+
+import json
 import threading
 from datetime import datetime, timezone, timedelta
 from dataclasses import dataclass, field
