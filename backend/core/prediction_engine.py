@@ -270,7 +270,8 @@ class EloModel:
 
     @classmethod
     def predict(cls, ctx: MatchContext) -> Dict[str, float]:
-        diff = ctx.home_team.elo - ctx.away_team.elo + HOME_ADVANTAGE_ELO
+        home_advantage = 0 if ctx.venue_type == "neutral" else HOME_ADVANTAGE_ELO
+        diff = ctx.home_team.elo - ctx.away_team.elo + home_advantage
 
         # 基础胜率
         p_win = cls.win_prob(diff)
@@ -1316,6 +1317,105 @@ class PredictionEngine:
             
         return spf
 
+    def _recalibrate_scores(self, raw_score: Dict[str, float], fused_spf: Dict[str, float]) -> Dict[str, float]:
+        """使用最终融合的胜平负概率，对比分预测进行贝叶斯校准"""
+        calibrated = {}
+        by_outcome = {"home": {}, "draw": {}, "away": {}}
+        
+        for score_key, prob in raw_score.items():
+            try:
+                parts = score_key.split(':')
+                h = int(parts[0].replace('+', ''))
+                a = int(parts[1].replace('+', ''))
+                if h > a:
+                    outcome = "home"
+                elif h < a:
+                    outcome = "away"
+                else:
+                    outcome = "draw"
+            except:
+                outcome = "draw"
+            by_outcome[outcome][score_key] = prob
+            
+        sums = {k: sum(v.values()) for k, v in by_outcome.items()}
+        
+        for outcome, group in by_outcome.items():
+            target_prob = fused_spf.get(outcome, 0.33)
+            current_sum = sums[outcome]
+            if current_sum > 0:
+                for score_key, prob in group.items():
+                    calibrated[score_key] = (prob / current_sum) * target_prob
+            elif target_prob > 0:
+                common_scores = {
+                    "home": ["1:0", "2:0", "2:1"],
+                    "draw": ["1:1", "0:0", "2:2"],
+                    "away": ["0:1", "0:2", "1:2"]
+                }[outcome]
+                for cs in common_scores:
+                    calibrated[cs] = target_prob / len(common_scores)
+                    
+        total = sum(calibrated.values())
+        if total > 0:
+            calibrated = {k: round(v / total, 4) for k, v in calibrated.items() if (v / total) >= 0.005}
+        return calibrated
+
+    def _recalibrate_goals(self, recal_score: Dict[str, float]) -> Dict[str, float]:
+        """依据校准后的比分概率，重新生成总进球概率"""
+        goals = {}
+        for g in range(7):
+            goals[str(g)] = 0.0
+        goals["7+"] = 0.0
+        
+        for score_key, prob in recal_score.items():
+            try:
+                parts = score_key.split(':')
+                h = int(parts[0].replace('+', ''))
+                a = int(parts[1].replace('+', ''))
+                total_g = h + a
+                if total_g >= 7:
+                    goals["7+"] += prob
+                else:
+                    goals[str(total_g)] += prob
+            except:
+                pass
+                
+        total = sum(goals.values())
+        if total > 0:
+            goals = {k: round(v / total, 4) for k, v in goals.items() if (v / total) > 0.002}
+        return goals
+
+    def _recalibrate_half(self, raw_half: Dict[str, float], fused_spf: Dict[str, float]) -> Dict[str, float]:
+        """依据融合后的胜平负概率，校准半全场转移概率"""
+        outcome_map = {
+            "主主": "home", "平主": "home", "客主": "home",
+            "主平": "draw", "平平": "draw", "客平": "draw",
+            "主客": "away", "平客": "away", "客客": "away"
+        }
+        
+        by_ft = {"home": {}, "draw": {}, "away": {}}
+        for key, prob in raw_half.items():
+            ft = outcome_map.get(key, "draw")
+            by_ft[ft][key] = prob
+            
+        sums = {k: sum(v.values()) for k, v in by_ft.items()}
+        calibrated = {}
+        
+        for ft, group in by_ft.items():
+            target_prob = fused_spf.get(ft, 0.33)
+            current_sum = sums[ft]
+            if current_sum > 0:
+                for key, prob in group.items():
+                    calibrated[key] = (prob / current_sum) * target_prob
+            elif target_prob > 0:
+                common = [k for k, v in outcome_map.items() if v == ft]
+                for c in common:
+                    calibrated[c] = target_prob / len(common)
+                    
+        total = sum(calibrated.values())
+        if total > 0:
+            calibrated = {k: round(v / total, 4) for k, v in calibrated.items()}
+        return calibrated
+
     def predict(self, ctx: MatchContext) -> PredictionResult:
         from core.logic_tracer import LogicChain
         trace = LogicChain(match_id=ctx.match_id)
@@ -1349,7 +1449,8 @@ class PredictionEngine:
                 a_name = ctx.away_team.name_en or ctx.away_team.name
                 df_mock = pd.DataFrame([{"HomeTeam": h_name, "AwayTeam": a_name}])
                 lab_p_res = lab_p.predict_proba(df_mock)
-                if lab_p_res[0] is not None:
+                # 防御性修复：防止 lab_p_res 为 None 或空
+                if lab_p_res is not None and len(lab_p_res) > 0 and lab_p_res[0] is not None:
                     lab_poisson_spf = {"home": lab_p_res[0][0], "draw": lab_p_res[0][1], "away": lab_p_res[0][2]}
                     trace.add_step("Lab-Expert Poisson", "使用实验室 Dixon-Coles 泊松参数", lab_poisson_spf)
                 else:
@@ -1365,8 +1466,10 @@ class PredictionEngine:
                 a_name = ctx.away_team.name_en or ctx.away_team.name
                 df_mock = pd.DataFrame([{"HomeTeam": h_name, "AwayTeam": a_name}])
                 lab_e_res = lab_e.predict_proba(df_mock)
-                lab_elo_spf = {"home": lab_e_res[0][0], "draw": lab_e_res[0][1], "away": lab_e_res[0][2]}
-                trace.add_step("Lab-Expert Elo", "使用实验室百年历史基准 Elo 参数", lab_elo_spf)
+                # 防御性修复：防止 lab_e_res 为 None 或空
+                if lab_e_res is not None and len(lab_e_res) > 0 and lab_e_res[0] is not None:
+                    lab_elo_spf = {"home": lab_e_res[0][0], "draw": lab_e_res[0][1], "away": lab_e_res[0][2]}
+                    trace.add_step("Lab-Expert Elo", "使用实验室百年历史基准 Elo 参数", lab_elo_spf)
 
         except Exception as e:
             import logging
@@ -1467,10 +1570,10 @@ class PredictionEngine:
         total = sum(rq.values())
         rq = {k: v / total for k, v in rq.items()}
 
-        # 4. 比分 / 总进球 / 半全场：直接取泊松输出（这些玩法的概率结构由泊松天然生成）
-        score = poisson_out["score"]
-        goals = poisson_out["goals"]
-        half = poisson_out["half"]
+        # 4. 比分 / 总进球 / 半全场：在降级模式或 SPF 融合校准后，对比分/衍生玩法进行贝叶斯概率对齐
+        score = self._recalibrate_scores(poisson_out["score"], fused_spf)
+        goals = self._recalibrate_goals(score)
+        half = self._recalibrate_half(poisson_out["half"], fused_spf)
 
         # 5. 置信度判断
         confidence = self._compute_confidence(fused_spf, market_out, ctx)

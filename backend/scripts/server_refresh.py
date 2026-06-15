@@ -31,6 +31,13 @@ def main():
             "英格兰": {"code": "ENG", "name_en": "England", "elo": 1940, "avg_xg": 2.05},
             "日本": {"code": "JPN", "name_en": "Japan", "elo": 1720, "avg_xg": 1.65},
             "西班牙": {"code": "ESP", "name_en": "Spain", "elo": 1910, "avg_xg": 2.00},
+            "乌拉圭": {"code": "URU", "name_en": "Uruguay", "elo": 1830, "avg_xg": 1.52},
+            "沙特": {"code": "KSA", "name_en": "Saudi Arabia", "elo": 1622, "avg_xg": 1.10},
+            "比利时": {"code": "BEL", "name_en": "Belgium", "elo": 1790, "avg_xg": 1.80},
+            "埃及": {"code": "EGY", "name_en": "Egypt", "elo": 1610, "avg_xg": 1.25},
+            "伊朗": {"code": "IRN", "name_en": "Iran", "elo": 1640, "avg_xg": 1.30},
+            "新西兰": {"code": "NZL", "name_en": "New Zealand", "elo": 1420, "avg_xg": 1.05},
+            "佛得角": {"code": "CPV", "name_en": "Cape Verde", "elo": 1510, "avg_xg": 1.15},
         }
 
         for name, data in CORE_DATA.items():
