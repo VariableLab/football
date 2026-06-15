@@ -3,8 +3,15 @@ import os
 import json
 from datetime import datetime, timedelta, timezone
 
-# Ensure we can import from backend
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Ensure we can import from backend and all subfolders
+_cwd = os.getcwd()
+_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if not os.path.exists(os.path.join(_root, 'database')):
+    _root = os.path.join(_cwd, 'backend')
+
+for d in ["api", "core", "features", "ingestion", "database", "strategy", "monitor", "utils", "api/routers"]:
+    sys.path.append(os.path.join(_root, d))
+sys.path.append(_root)
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

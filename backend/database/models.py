@@ -328,6 +328,10 @@ class Match(Base):
     ht_home_goals = Column(Integer, nullable=True)
     ht_away_goals = Column(Integer, nullable=True)
 
+    # ─── AI Content ───
+    poster_url = Column(String(500), nullable=True)  # AI 生成的赛事海报链接
+    is_broadcasted = Column(Boolean, default=False)  # 是否已执行社交媒体自动播报
+
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

@@ -139,8 +139,9 @@ def validate(db: Session, play_type: str, league: str | None = None,
         return {"total": 0, "correct": 0, "accuracy": 0.0}
 
     match_ids = list(match_by_id.keys())
+    # Handle case-insensitive play_type
     preds = (db.query(Prediction)
-             .filter(Prediction.play_type == play_type,
+             .filter(Prediction.play_type.in_([play_type.lower(), play_type.upper()]),
                      Prediction.match_id.in_(match_ids))
              .all())
 

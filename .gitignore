@@ -57,5 +57,5 @@ backend/test_*.db*
 backend/.odds_api_budget.json
 backend/nohup.out
 
-# Remotion promo video source — only the rendered demo.mp4 is tracked
 promo-video/
+server_key

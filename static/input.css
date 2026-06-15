@@ -126,11 +126,31 @@ h1, h2, .font-serif {
   to { opacity: 1; }
 }
 
+/* 临时注释，排查完成后按需恢复
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+*/
 
-/* 自定义滚动条 */
+/* 强制为自定义滚动区域显示滚动条 */
+.custom-scrollbar {
+  overflow-y: auto !important;
+  scrollbar-width: thin !important; /* 火狐浏览器 */
+  -ms-overflow-style: scrollbar !important; /* IE/Edge */
+}
+.custom-scrollbar::-webkit-scrollbar {
+  display: block !important;
+  width: 6px !important;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2) !important;
+  border-radius: 10px !important;
+}
+
+/* 全局自定义滚动条 (作为兜底) */
 ::-webkit-scrollbar { width: 4px !important; }
 ::-webkit-scrollbar-track { background: transparent !important; }
 ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1) !important; border-radius: 10px !important; }

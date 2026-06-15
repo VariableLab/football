@@ -69,6 +69,7 @@ class AuditReport:
     low_prob_correct: int = 0
     low_prob_accuracy: float = 0.0
     brier_score: float = 0.0
+    rps_score: float = 0.0            # 学术评估指标: Ranked Probability Score
     per_outcome: Dict[str, Dict] = field(default_factory=dict)
     entries: List[AuditEntry] = field(default_factory=list)
     weight_adjustment: Optional[Dict] = None
@@ -88,6 +89,7 @@ class AuditReport:
             "low_prob_correct": self.low_prob_correct,
             "low_prob_accuracy": round(self.low_prob_accuracy, 4),
             "brier_score": round(self.brier_score, 4),
+            "rps_score": round(self.rps_score, 4),
             "per_outcome": self.per_outcome,
             "weight_adjustment": self.weight_adjustment,
             "self_heal_triggered": self.self_heal_triggered,
@@ -121,6 +123,7 @@ class ModelAuditor:
 
             entries: List[AuditEntry] = []
             brier_sum = 0.0
+            rps_sum = 0.0
 
             for match in finished:
                 pred = session.query(Prediction).filter(
@@ -138,6 +141,22 @@ class ModelAuditor:
                 max_prob = max(probs.values())
                 actual = match.actual_outcome
                 correct = predicted == actual
+
+                # RPS (Ranked Probability Score) 计算
+                p_h = probs.get("home", 0.0)
+                p_d = probs.get("draw", 0.0)
+                p_a = probs.get("away", 0.0)
+                
+                o_h = 1.0 if actual == "home" else 0.0
+                o_d = 1.0 if actual == "draw" else 0.0
+                o_a = 1.0 if actual == "away" else 0.0
+                
+                cum_p1 = p_h
+                cum_o1 = o_h
+                cum_p2 = p_h + p_d
+                cum_o2 = o_h + o_d
+                
+                rps_sum += 0.5 * ((cum_p1 - cum_o1) ** 2 + (cum_p2 - cum_o2) ** 2)
 
                 for sel in ["home", "draw", "away"]:
                     p = probs.get(sel, 0)
@@ -163,7 +182,7 @@ class ModelAuditor:
                 logger.info("[audit] No predictions found for finished matches")
                 return None
 
-            report = self._build_report(entries, brier_sum)
+            report = self._build_report(entries, brier_sum, rps_sum)
             self._check_drift(report)
             self._persist_report(report)
 
@@ -184,7 +203,7 @@ class ModelAuditor:
                 self._persist_report(report)
         return report
 
-    def _build_report(self, entries: List[AuditEntry], brier_sum: float) -> AuditReport:
+    def _build_report(self, entries: List[AuditEntry], brier_sum: float, rps_sum: float = 0.0) -> AuditReport:
         total = len(entries)
         correct = sum(1 for e in entries if e.correct)
         high = [e for e in entries if e.is_high_prob]
@@ -212,6 +231,7 @@ class ModelAuditor:
             low_prob_total=len(low),
             low_prob_correct=sum(1 for e in low if e.correct),
             brier_score=brier_sum / (total * 3) if total > 0 else 0,
+            rps_score=rps_sum / total if total > 0 else 0,
             per_outcome=per_outcome,
             entries=entries,
         )

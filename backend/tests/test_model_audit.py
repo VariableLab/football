@@ -86,8 +86,18 @@ class TestAuditReport:
                 brier += (p - o) ** 2
         auditor = ModelAuditor()
         with patch.object(auditor, '_check_drift'):
-            report = auditor._build_report(entries, brier)
+            report = auditor._build_report(entries, brier, rps_sum=0.0)
         assert report.brier_score == 0.0
+
+    def test_rps_score_calculation(self):
+        # 预测为 home [0.6, 0.3, 0.1]，实际为 home。
+        # cum_p1 = 0.6, cum_o1 = 1.0 -> (0.6 - 1.0)^2 = 0.16
+        # cum_p2 = 0.9, cum_o2 = 1.0 -> (0.9 - 1.0)^2 = 0.01
+        # RPS = 0.5 * (0.16 + 0.01) = 0.085
+        e = AuditEntry(1, "A", "home", "home", 0.6, True, 0.6, 0.3, 0.1, True)
+        auditor = ModelAuditor()
+        report = auditor._build_report([e], brier_sum=0.17, rps_sum=0.085)
+        assert abs(report.rps_score - 0.085) < 1e-6
 
 
 class TestSelfHealCycle:

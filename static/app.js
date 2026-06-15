@@ -13,9 +13,13 @@ document.addEventListener('alpine:init', () => {
     
     // V5 新增：当前选中的比赛及前瞻内容
     selectedId: null,
+    selectedMatch: null, // 存储完整 match 对象
     preview: null,
     previewLoading: false,
     agentLog: "正在初始化 59 维特征扫描引擎...",
+    
+    // 移动端视图控制: 'list' | 'detail'
+    mobileView: 'list',
 
     async init() {
       await I18n.init();
@@ -67,12 +71,17 @@ document.addEventListener('alpine:init', () => {
     },
 
     async selectMatch(id) {
-      if (this.selectedId === id) return;
+      if (this.selectedId === id) {
+        this.mobileView = 'detail';
+        return;
+      }
       this.selectedId = id;
+      this.selectedMatch = this.matches.find(m => m.id === id);
+      this.mobileView = 'detail';
       this.previewLoading = true;
       this.preview = null;
       
-      const m = this.matches.find(m => m.id === id);
+      const m = this.selectedMatch;
       this.agentLog = `正在校准 ${m?.home_team?.name || '未知'} 的 59 维残差特征...`;
 
       try {
@@ -85,6 +94,10 @@ document.addEventListener('alpine:init', () => {
       } finally {
         this.previewLoading = false;
       }
+    },
+
+    backToList() {
+      this.mobileView = 'list';
     },
 
     setFilter(newFilter) {

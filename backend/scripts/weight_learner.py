@@ -234,24 +234,82 @@ class WeightLearner:
             .filter(Match.actual_home_goals.isnot(None))
             .filter(Match.actual_away_goals.isnot(None))
             .filter(Match.id.in_(spf_match_ids))
+            .order_by(Match.kickoff_at.asc())  # 确保按时间线从旧到新排序，防止时序泄露
         )
         if stage and stage != "all":
             query = query.filter(Match.stage == stage)
 
         matches = query.all()
+
+        # 时序状态追踪器
+        elo_tracker = {}       # {team_id: elo}
+        results_tracker = {}   # {team_id: recent_results_str}
+
+        def _get_elo(tid: int) -> int:
+            return elo_tracker.get(tid, 1500)
+
+        def _get_recent(tid: int) -> str:
+            return results_tracker.get(tid, "")
+
+        def _expected_score(r_a: float, r_b: float) -> float:
+            return 1.0 / (1.0 + 10.0 ** ((r_b - r_a) / 400.0))
+
+        def _update_trackers(h_id: int, a_id: int, outcome: str):
+            curr_h_elo = _get_elo(h_id)
+            curr_a_elo = _get_elo(a_id)
+
+            if outcome == "home":
+                s_h, s_a = 1.0, 0.0
+                char_h, char_a = "W", "L"
+            elif outcome == "away":
+                s_h, s_a = 0.0, 1.0
+                char_h, char_a = "L", "W"
+            else:  # draw
+                s_h, s_a = 0.5, 0.5
+                char_h, char_a = "D", "D"
+
+            e_h = _expected_score(curr_h_elo, curr_a_elo)
+            e_a = 1.0 - e_h
+
+            # 更新 Elo Rating (K-factor = 32)
+            elo_tracker[h_id] = round(curr_h_elo + 32.0 * (s_h - e_h))
+            elo_tracker[a_id] = round(curr_a_elo + 32.0 * (s_a - e_a))
+
+            # 更新 Recent Results (最多保留最近10场)
+            results_tracker[h_id] = (_get_recent(h_id) + char_h)[-10:]
+            results_tracker[a_id] = (_get_recent(a_id) + char_a)[-10:]
+
         training = []
 
         for match in matches:
-            ctx = self._reconstruct_context(match)
+            h_id = match.home_team_id
+            a_id = match.away_team_id
+
+            # 提取赛前历史快照，防止未来泄露
+            h_elo_pre = _get_elo(h_id)
+            a_elo_pre = _get_elo(a_id)
+            h_recent_pre = _get_recent(h_id)
+            a_recent_pre = _get_recent(a_id)
+
+            ctx = self._reconstruct_context(
+                match,
+                home_elo=h_elo_pre,
+                away_elo=a_elo_pre,
+                home_recent=h_recent_pre,
+                away_recent=a_recent_pre,
+            )
             if ctx is None:
                 continue
 
             if elo_diff_range and elo_diff_range != "all":
                 tier = _elo_diff_tier(ctx.home_team.elo, ctx.away_team.elo)
                 if tier != elo_diff_range:
+                    # 即使当前样本不加入该 range 的训练集，也必须更新状态追踪器以保持时间线演进
+                    _update_trackers(h_id, a_id, match.actual_outcome)
                     continue
 
             training.append((ctx, match.actual_outcome))
+            _update_trackers(h_id, a_id, match.actual_outcome)
 
         logger.info(
             f"[weight-learner] Fetched {len(training)} training samples"
@@ -259,8 +317,15 @@ class WeightLearner:
         )
         return training
 
-    def _reconstruct_context(self, match: Match) -> Optional[MatchContext]:
-        """从 Match + Team 重建 MatchContext（用于重新跑预测）"""
+    def _reconstruct_context(
+        self,
+        match: Match,
+        home_elo: int = 1500,
+        away_elo: int = 1500,
+        home_recent: str = "",
+        away_recent: str = "",
+    ) -> Optional[MatchContext]:
+        """从 Match + Team 重建 MatchContext（使用无泄露的时序快照 Elo 与近况）"""
         home = match.home_team
         away = match.away_team
         if not home or not away:
@@ -271,7 +336,7 @@ class WeightLearner:
             home_team=TeamContext(
                 team_id=home.id,
                 name=home.name,
-                elo=home.elo or 1500,
+                elo=home_elo,
                 fifa_rank=home.fifa_rank or 100,
                 avg_goals_scored=home.avg_goals_scored or 1.3,
                 avg_goals_conceded=home.avg_goals_conceded or 1.3,
@@ -284,12 +349,12 @@ class WeightLearner:
                 coach_rating=home.coach_rating or 0.5,
                 home_away_factor=home.home_away_factor or 1.0,
                 weather_adaptability=home.weather_adaptability or 1.0,
-                recent_results=home.recent_results or "",
+                recent_results=home_recent,
             ),
             away_team=TeamContext(
                 team_id=away.id,
                 name=away.name,
-                elo=away.elo or 1500,
+                elo=away_elo,
                 fifa_rank=away.fifa_rank or 100,
                 avg_goals_scored=away.avg_goals_scored or 1.3,
                 avg_goals_conceded=away.avg_goals_conceded or 1.3,
@@ -302,7 +367,7 @@ class WeightLearner:
                 coach_rating=away.coach_rating or 0.5,
                 home_away_factor=away.home_away_factor or 1.0,
                 weather_adaptability=away.weather_adaptability or 1.0,
-                recent_results=away.recent_results or "",
+                recent_results=away_recent,
             ),
             stage=match.stage or "group",
             is_knockout=match.stage not in (None, "", "group"),

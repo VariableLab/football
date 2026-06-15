@@ -76,7 +76,7 @@ class StackingTrainer:
 
     def build_training_data(self):
         """
-        从数据库构建全量特征训练集。
+        从数据库构建全量特征训练集（已按时间升序排列以防泄露）。
         """
         from database.models import Match, MatchStatus, Prediction, PlayType
         from core.prediction_engine import build_context_from_match
@@ -86,34 +86,49 @@ class StackingTrainer:
         try:
             builder = FeatureBuilder(use_interactions=True)
             
-            # 1. 查历史已完成比赛 (带赔率)
+            # 1. 查历史已完成比赛 (带赔率)，必须按 kickoff_at 升序排列
             finished = s.query(Match).filter(
                 Match.status == MatchStatus.FINISHED,
                 Match.actual_outcome.isnot(None),
                 Match.closing_odds_home.isnot(None)
-            ).order_by(Match.kickoff_at.desc()).limit(5000).all()
+            ).order_by(Match.kickoff_at.asc()).limit(5000).all()
             
             if len(finished) < 100: return None
+            
+            # 初始化临时预测引擎以求解无泄露的真实 LR 融合值
+            from core.prediction_engine import PredictionEngine
+            engine = PredictionEngine(db_session=s)
             
             X, Y = [], []
             for m in finished:
                 try:
                     ctx = build_context_from_match(m)
-                    # 这里的特征构建要与 PredictionEngine 保持 100% 对齐
-                    # 简化：仅使用 Elo, Poisson, Market 基准，暂不依赖 DB 查询以免过慢
+                    
                     from features import EloModel, PoissonModel, MarketModel
                     elo = EloModel.predict(ctx)
                     poisson = PoissonModel.predict(ctx)
                     market = MarketModel.predict(ctx)
                     
+                    if market is None:
+                        continue
+                    
                     base_feats = builder.build(elo, poisson, 1.0, market, None, None, ctx)
                     
-                    # 组合最终输入：[48维特征] + [Market 3维] + [Dummy placeholder for LR 3维]
-                    # 注意：训练时如果没有 LR 记录，可以用 Market 占位
-                    lr_dummy = np.array([market.get('home', 0.33), market.get('draw', 0.33), market.get('away', 0.33)], dtype=np.float32)
+                    # 求解真实的 LR 概率，消除 Train-Test Discrepancy
+                    weights = engine._get_lr_weights_for_match(ctx.competition)
+                    if weights:
+                        lr_spf = engine._predict_with_lr(ctx, elo, poisson, 1.0, market, weights)
+                    else:
+                        lr_spf = None
+                        
+                    if lr_spf is None:
+                        # 无法求解真实 LR 的数据不能加入 StackingTrainer 训练集
+                        continue
+                    
+                    lr_arr = np.array([lr_spf.get('home', 0.33), lr_spf.get('draw', 0.33), lr_spf.get('away', 0.33)], dtype=np.float32)
                     mkt_probs = np.array([market.get('home', 0.33), market.get('draw', 0.33), market.get('away', 0.33)], dtype=np.float32)
                     
-                    full_vec = np.concatenate([base_feats, lr_dummy, mkt_probs])
+                    full_vec = np.concatenate([base_feats, lr_arr, mkt_probs])
                     
                     o2i = {"home":0, "draw":1, "away":2}
                     label = o2i.get(m.actual_outcome)
@@ -131,13 +146,11 @@ class StackingTrainer:
         if data is None: return None
         X, Y = data
         
-        # 分离验证集
-        idx = np.random.permutation(len(X))
+        # 时序截断划分验证集 (前 80% 作为训练，后 20% 作为验证)
         split = int(len(X) * 0.8)
-        tr_idx, va_idx = idx[:split], idx[split:]
         
-        tr_x, tr_y = torch.FloatTensor(X[tr_idx]), torch.LongTensor(Y[tr_idx])
-        va_x, va_y = torch.FloatTensor(X[va_idx]), torch.LongTensor(Y[va_idx])
+        tr_x, tr_y = torch.FloatTensor(X[:split]), torch.LongTensor(Y[:split])
+        va_x, va_y = torch.FloatTensor(X[split:]), torch.LongTensor(Y[split:])
         
         tl = DataLoader(list(zip(tr_x, tr_y)), batch_size=BATCH_SIZE, shuffle=True)
         vl = DataLoader(list(zip(va_x, va_y)), batch_size=BATCH_SIZE)

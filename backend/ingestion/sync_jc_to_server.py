@@ -21,12 +21,15 @@ import tempfile
 from datetime import datetime, timezone
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(PROJECT_ROOT, "database.sqlite")
+# 💡 修正路径：使用 backend/database.sqlite 而不是 ingestion/ 下的
+_BACKEND_DIR = os.path.dirname(PROJECT_ROOT)
+DB_PATH = os.path.join(_BACKEND_DIR, "database.sqlite")
 
 # 需要同步的表（注意顺序：先 teams 再 matches，避免外键冲突）
 SYNC_TABLES = [
     "teams",
     "matches",
+    "predictions",
     "jingcai_issues",
     "jingcai_issue_matches",
     "odds_history",
@@ -64,6 +67,12 @@ def run_local_sync() -> bool:
         engine = create_engine(db_url)
         print(f"  Initializing local schema at {DB_PATH}...")
         Base.metadata.create_all(bind=engine)
+
+        # 💡 额外修复：确保 core 和其他目录在路径中，供 zgzcw_jc_sync 使用
+        for d in ["core", "features", "database", "utils"]:
+            _d_path = os.path.join(_backend_dir, d)
+            if _d_path not in sys.path:
+                sys.path.append(_d_path)
 
         from ingestion.zgzcw_jc_sync import sync_jc_matches
         result = sync_jc_matches(DB_PATH)
@@ -200,6 +209,7 @@ def verify_server() -> bool:
 def main():
     parser = argparse.ArgumentParser(description="本地同步竞彩数据到服务器")
     parser.add_argument("--sync-only", action="store_true", help="只同步本地，不推送")
+    parser.add_argument("--no-sync", action="store_true", help="跳过本地同步，直接推送当前数据库内容")
     parser.add_argument("--dry-run", action="store_true", help="生成 SQL 但不执行推送")
     parser.add_argument("--ssh-key", default="~/.ssh/server_key", help="SSH 私钥路径")
     args = parser.parse_args()
@@ -213,9 +223,12 @@ def main():
     print(f"  本地 → {SSH_USER}@{SSH_HOST}")
     print(f"{'#'*50}")
 
-    ok = run_local_sync()
-    if not ok:
-        sys.exit(1)
+    if not args.no_sync:
+        ok = run_local_sync()
+        if not ok:
+            sys.exit(1)
+    else:
+        log("⏭️  --no-sync 模式，跳过本地同步，准备推送当前数据库...")
 
     if args.sync_only:
         log("\n⏭️  --sync-only 模式，跳过推送")

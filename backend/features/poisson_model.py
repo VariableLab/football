@@ -26,10 +26,34 @@ from features.adjustment_models import (
     SquadAvailabilityModel,
 )
 
-# ─── 常量 ───
-MAX_GOALS = 8
-DIXON_COLES_RHO = 0.0092       # 5330场联赛walk-forward MLE校准
-DRAW_INFLATION_FACTOR = 1.27    # 平局概率修正系数
+# ─── 常量 (支持 YAML 动态热加载) ───
+import os
+import yaml
+
+_CONFIG_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "model_config.yaml"
+)
+
+def load_poisson_config():
+    cfg = {
+        "MAX_GOALS": 8,
+        "DIXON_COLES_RHO": 0.0092,
+        "DRAW_INFLATION_FACTOR": 1.27
+    }
+    if os.path.exists(_CONFIG_PATH):
+        try:
+            with open(_CONFIG_PATH, "r", encoding="utf-8") as f:
+                external_cfg = yaml.safe_load(f)
+                if external_cfg:
+                    cfg.update(external_cfg)
+        except Exception:
+            pass
+    return cfg
+
+_POISSON_CFG = load_poisson_config()
+MAX_GOALS = _POISSON_CFG["MAX_GOALS"]
+DIXON_COLES_RHO = _POISSON_CFG["DIXON_COLES_RHO"]
+DRAW_INFLATION_FACTOR = _POISSON_CFG["DRAW_INFLATION_FACTOR"]
 
 
 class PoissonModel:

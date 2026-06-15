@@ -158,6 +158,7 @@ class MatchOut(BaseModel):
     odds_source: Optional[str] = None
     confidence: Optional[str] = None
     odds_degraded: Optional[bool] = False
+    poster_url: Optional[str] = None
     updated_at: Optional[datetime] = None
 
     # ─── 比赛环境 ───
@@ -299,6 +300,7 @@ class MatchListItem(BaseModel):
     odds_source: Optional[str] = None
     confidence: Optional[str] = None
     odds_degraded: Optional[bool] = False
+    poster_url: Optional[str] = None
     updated_at: Optional[datetime] = None
 
     venue_type: Optional[str] = None

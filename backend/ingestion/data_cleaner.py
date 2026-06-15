@@ -87,9 +87,11 @@ def resolve_team_db(db, raw_name: str) -> Optional[int]:
     team = db.query(Team).filter(Team.name_en == raw_name).first()
     if team:
         return team.id
-    team = db.query(Team).filter(Team.code == raw_name.upper()[:3]).first()
-    if team:
-        return team.id
+    # 💡 只有当 raw_name 恰好是 3 字符时，才允许通过 Team.code 精确对齐，防止 Brescia 撞上 BRE 国家队代码
+    if len(raw_name) == 3:
+        team = db.query(Team).filter(Team.code == raw_name.upper()).first()
+        if team:
+            return team.id
     # 最后尝试子串匹配 (name_en), 最小5字符
     if len(raw_name) >= 5:
         team = db.query(Team).filter(Team.name_en.ilike(f"%{raw_name}%")).first()
@@ -250,17 +252,30 @@ class DataCleaner:
 
     def _audit_odds_duplicates(self) -> List[AuditFinding]:
         findings = []
-        # PostgreSQL 兼容性修复: 5分钟 slot 的计算 (1天=86400秒)
-        dup_count_query = text("""
-            SELECT COUNT(*) FROM (
-                SELECT match_id, source,
-                       (extract(epoch from recorded_at)::bigint / 300) as slot,
-                       COUNT(*) as cnt
-                FROM odds_history
-                GROUP BY match_id, source, slot
-                HAVING COUNT(*) > 1
-            ) sub
-        """)
+        # Multi-DB 兼容性修复 (SQLite vs PostgreSQL): 5分钟 slot 的计算 (1天=86400秒)
+        dialect = self.db.bind.dialect.name
+        if dialect == "sqlite":
+            dup_count_query = text("""
+                SELECT COUNT(*) FROM (
+                    SELECT match_id, source,
+                           (cast(strftime('%s', recorded_at) as integer) / 300) as slot,
+                           COUNT(*) as cnt
+                    FROM odds_history
+                    GROUP BY match_id, source, slot
+                    HAVING COUNT(*) > 1
+                ) sub
+            """)
+        else:
+            dup_count_query = text("""
+                SELECT COUNT(*) FROM (
+                    SELECT match_id, source,
+                           (extract(epoch from recorded_at)::bigint / 300) as slot,
+                           COUNT(*) as cnt
+                    FROM odds_history
+                    GROUP BY match_id, source, slot
+                    HAVING COUNT(*) > 1
+                ) sub
+            """)
         try:
             dup_count = self.db.execute(dup_count_query).scalar() or 0
             if dup_count > 0:
@@ -455,18 +470,32 @@ class DataCleaner:
 
     def _fix_odds_duplicates(self, dry_run: bool) -> int:
         """删除 OddsHistory 重复行 (同 match_id/source/5min 窗口只保留最新一条)。"""
-        # PostgreSQL 兼容性修复
-        dup_ids_query = text("""
-            SELECT id FROM (
-                SELECT id,
-                       ROW_NUMBER() OVER (
-                           PARTITION BY match_id, source, (extract(epoch from recorded_at)::bigint / 300)
-                           ORDER BY recorded_at DESC, id DESC
-                       ) as rn
-                FROM odds_history
-            ) sub
-            WHERE rn > 1
-        """)
+        # Multi-DB 兼容性修复 (SQLite vs PostgreSQL)
+        dialect = self.db.bind.dialect.name
+        if dialect == "sqlite":
+            dup_ids_query = text("""
+                SELECT id FROM (
+                    SELECT id,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY match_id, source, (cast(strftime('%s', recorded_at) as integer) / 300)
+                               ORDER BY recorded_at DESC, id DESC
+                           ) as rn
+                    FROM odds_history
+                ) sub
+                WHERE rn > 1
+            """)
+        else:
+            dup_ids_query = text("""
+                SELECT id FROM (
+                    SELECT id,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY match_id, source, (extract(epoch from recorded_at)::bigint / 300)
+                               ORDER BY recorded_at DESC, id DESC
+                           ) as rn
+                    FROM odds_history
+                ) sub
+                WHERE rn > 1
+            """)
         try:
             dup_ids = self.db.execute(dup_ids_query).fetchall()
             delete_ids = [row[0] for row in dup_ids]
@@ -600,12 +629,9 @@ class DataCleaner:
                         self.db.query(Match).filter(Match.home_team_id == dupe.id).update({Match.home_team_id: primary.id})
                         self.db.query(Match).filter(Match.away_team_id == dupe.id).update({Match.away_team_id: primary.id})
                         
-                        # 2. 迁移预测
-                        self.db.query(Prediction).filter(Prediction.match_id.in_(
-                            self.db.query(Match.id).filter(
-                                (Match.home_team_id == primary.id) | (Match.away_team_id == primary.id)
-                            )
-                        )).update({"id": Prediction.id}, synchronize_session=False) # 只是标记需要刷新
+                        # 2. 迁移球员数据 (PlayerStats) - 防止外键约束报错崩溃
+                        from database.models import PlayerStats
+                        self.db.query(PlayerStats).filter(PlayerStats.team_id == dupe.id).update({PlayerStats.team_id: primary.id})
                         
                         # 3. 删除重复记录
                         self.db.delete(dupe)
