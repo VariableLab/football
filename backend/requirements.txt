@@ -33,3 +33,6 @@ soccerdata>=1.9.0
 
 # SSE — Server-Sent Events for live odds push
 sse-starlette>=1.6.5
+
+# Google GenAI SDK for Gemini API
+google-genai>=2.8.0
