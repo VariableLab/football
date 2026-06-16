@@ -24,7 +24,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from database.models import SessionLocal, Match, MatchStatus, PredictionSnapshot
-from prediction_engine import PredictionEngine, build_context_from_match
+from core.prediction_engine import PredictionEngine, build_context_from_match
 from utils.logger import get_logger
 
 logger = get_logger("prediction_snapshot")

@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 import numpy as np
 import pytest
 
-from prediction_engine import PredictionEngine
+from core.prediction_engine import PredictionEngine
 
 
 def make_mock_team(name="TeamA", elo=1500):
@@ -61,16 +61,16 @@ def make_mock_ctx():
 @pytest.fixture
 def mock_submodels():
     patches = [
-        patch("prediction_engine.EloModel.predict", return_value={"home": 0.5, "draw": 0.28, "away": 0.22}),
-        patch("prediction_engine.PoissonModel.predict", return_value={
+        patch("core.prediction_engine.EloModel.predict", return_value={"home": 0.5, "draw": 0.28, "away": 0.22}),
+        patch("core.prediction_engine.PoissonModel.predict", return_value={
             "lambda_home": 1.5, "lambda_away": 1.0,
             "spf": {"home": 0.42, "draw": 0.28, "away": 0.30},
             "rq": {"home": 0.38, "draw": 0.28, "away": 0.34},
             "score": {"0-0": 0.1}, "goals": {"0": 0.2}, "half": {"hh": 0.15},
         }),
-        patch("prediction_engine.PlayerAdjustmentModel.predict", return_value=1.0),
-        patch("prediction_engine.MarketModel.predict", return_value={"home": 0.45, "draw": 0.30, "away": 0.25}),
-        patch("prediction_engine.DrawDetectionModel.predict", side_effect=lambda spf, ctx, m: spf),
+        patch("core.prediction_engine.PlayerAdjustmentModel.predict", return_value=1.0),
+        patch("core.prediction_engine.MarketModel.predict", return_value={"home": 0.45, "draw": 0.30, "away": 0.25}),
+        patch("core.prediction_engine.DrawDetectionModel.predict", side_effect=lambda spf, ctx, m: spf),
     ]
     for p in patches:
         p.start()

@@ -244,7 +244,7 @@ def lock_predictions_job():
 
             # 调用预测引擎（使用 closing_odds 作为市场输入，消除循环引用）
             try:
-                from prediction_engine import PredictionEngine, build_context_from_match
+                from core.prediction_engine import PredictionEngine, build_context_from_match
                 ctx = build_context_from_match(match)
                 engine = PredictionEngine(db_session=db)
                 result = engine.predict(ctx)
@@ -445,8 +445,8 @@ def sync_results_job():
 # Task 5: 数据库备份（每日凌晨）
 # ────────────────────────────
 def backup_database_job(
-    backup_dir: str = "./backup",
-    db_path: str = "./database.sqlite",
+    backup_dir: str = None,
+    db_path: str = None,
     keep_daily: int = 7,
     keep_weekly: int = 4,
     max_size_gb: float = 5.0,
@@ -472,6 +472,32 @@ def backup_database_job(
     import sqlite3
     import hashlib
     import re
+
+    # 💡 动态解析绝对路径，防止 CWD 漂移导致找不到数据库
+    try:
+        from database.config import get_settings, _BACKEND_ROOT
+        settings = get_settings()
+    except Exception:
+        settings = None
+        _BACKEND_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    if db_path is None:
+        if settings and settings.DATABASE_URL.startswith("sqlite:///"):
+            db_path = settings.DATABASE_URL.replace("sqlite:///", "")
+        else:
+            db_path = os.path.join(_BACKEND_ROOT, "database.sqlite")
+    else:
+        # 如果传入了相对路径，尝试基于 backend 根定位
+        if not os.path.isabs(db_path):
+            abs_candidate = os.path.abspath(os.path.join(_BACKEND_ROOT, db_path.replace("./", "")))
+            if os.path.exists(abs_candidate) or not os.path.exists(db_path):
+                db_path = abs_candidate
+
+    if backup_dir is None:
+        backup_dir = os.path.join(_BACKEND_ROOT, "backup")
+    else:
+        if not os.path.isabs(backup_dir):
+            backup_dir = os.path.abspath(os.path.join(_BACKEND_ROOT, backup_dir.replace("./", "")))
 
     os.makedirs(backup_dir, exist_ok=True)
 
@@ -1283,7 +1309,7 @@ def start_scheduler():
         
         注意：已存在 lock 记录的预测不会覆写，保留赛前原始值。
         """
-        from prediction_engine import PredictionEngine, build_context_from_match
+        from core.prediction_engine import PredictionEngine, build_context_from_match
         with DBSession() as db:
             matches = db.query(Match).filter(
                 Match.status == MatchStatus.FINISHED,

@@ -170,7 +170,7 @@ def get_strategy(
     # 如果数据库中没有预测，则即时生成（实时计算模式）
     if not preds:
         try:
-            from prediction_engine import PredictionEngine, build_context_from_match
+            from core.prediction_engine import PredictionEngine, build_context_from_match
             ctx = build_context_from_match(match)
             engine = PredictionEngine(db_session=db)
             result = engine.predict(ctx)

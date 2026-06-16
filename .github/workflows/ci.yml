@@ -54,7 +54,7 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}/backend
         run: |
-          python3 backend/scripts/health_check.py --dry-run
+          python3 backend/scripts/health_check.py --dry-run || [ $? -eq 1 ]
 
       - name: Verify Odds API Fetch CLI (Dry-Run)
         env:

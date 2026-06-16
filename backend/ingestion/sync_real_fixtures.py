@@ -20,7 +20,7 @@ from database.models import (
     init_db, get_db, Team, Match, MatchStatus, MatchType,
     Prediction, PlayType
 )
-from prediction_engine import PredictionEngine, MatchContext, TeamContext
+from core.prediction_engine import PredictionEngine, MatchContext, TeamContext
 from utils.logger import get_logger
 
 settings = get_settings()

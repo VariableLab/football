@@ -38,7 +38,7 @@ from database.models import (
     PlayType, OddsHistory, AuditLog,
     JingcaiIssue, JingcaiIssueMatch,
 )
-from prediction_engine import (
+from core.prediction_engine import (
     PredictionEngine, MatchContext, TeamContext,
     build_team_context_from_orm, build_context_from_match,
     StrategyPick,

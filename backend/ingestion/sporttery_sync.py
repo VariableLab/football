@@ -361,7 +361,7 @@ def _record_odds_history(
 
 def _generate_prediction(db, match: Match) -> None:
     """为比赛生成预测"""
-    from prediction_engine import PredictionEngine, build_context_from_match
+    from core.prediction_engine import PredictionEngine, build_context_from_match
     ctx = build_context_from_match(match)
     engine = PredictionEngine(db_session=db)
     pred_result = engine.predict(ctx)
