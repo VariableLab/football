@@ -130,12 +130,14 @@ def _resolve_key_matches(db, hours: int, league: Optional[str], max_matches: int
     按开赛时间升序, 取前 max_matches 场。
     """
     from database.models import Match, MatchStatus, OddsHistory
+    from sqlalchemy.orm import joinedload
 
     now = datetime.utcnow()
     deadline = now + timedelta(hours=hours)
 
     q = (
         db.query(Match)
+        .options(joinedload(Match.home_team), joinedload(Match.away_team))
         .filter(Match.kickoff_at >= now)
         .filter(Match.kickoff_at <= deadline)
         .filter(Match.status == MatchStatus.SCHEDULED)
@@ -232,106 +234,106 @@ def main() -> int:
 
     try:
         matches = _resolve_key_matches(db, args.hours, args.league, args.max_matches)
-    finally:
-        db.close()
 
-    if not matches:
-        msg = f"未来 {args.hours}h 内无关键比赛需要补齐"
-        if args.json:
-            print(json.dumps({
-                "status": "skipped", "reason": "no_key_matches",
-                "hours_window": args.hours, "league": args.league,
+        if not matches:
+            msg = f"未来 {args.hours}h 内无关键比赛需要补齐"
+            if args.json:
+                print(json.dumps({
+                    "status": "skipped", "reason": "no_key_matches",
+                    "hours_window": args.hours, "league": args.league,
+                    "started_at": started,
+                }, ensure_ascii=False, indent=2))
+            else:
+                print(f"SKIP: {msg}")
+            return 2
+
+        # ── dry-run ──
+        if args.dry_run:
+            result = {
+                "status": "dry_run",
+                "matches_planned": len(matches),
+                "credits_planned": 1,
+                "league": args.league,
+                "hours_window": args.hours,
+                "remaining_credits": remaining,
                 "started_at": started,
-            }, ensure_ascii=False, indent=2))
-        else:
-            print(f"SKIP: {msg}")
-        return 2
+                "matches": [
+                    {
+                        "id": m.id,
+                        "home": m.home_team.name if m.home_team else "?",
+                        "away": m.away_team.name if m.away_team else "?",
+                        "kickoff_at": m.kickoff_at.isoformat() if m.kickoff_at else None,
+                        "competition": m.competition,
+                    }
+                    for m in matches
+                ],
+            }
+            if args.json:
+                print(json.dumps(result, ensure_ascii=False, indent=2))
+            else:
+                print(f"[DRY-RUN] 将调 Odds API 1 次, 补齐 {len(matches)} 场:")
+                for m in matches:
+                    home = m.home_team.name if m.home_team else "?"
+                    away = m.away_team.name if m.away_team else "?"
+                    ko = m.kickoff_at.strftime("%m-%d %H:%M") if m.kickoff_at else "?"
+                    print(f"  - [{m.id}] {home} vs {away} @ {ko} ({m.competition})")
+            return 3
 
-    # ── dry-run ──
-    if args.dry_run:
+        # ── 实际调 ──
+        try:
+            from ingestion.odds_collector import OddsApiSource
+            odds = OddsApiSource(api_key=api_key)
+        except Exception as e:
+            print(f"FATAL: 加载 OddsApiSource 失败: {e}", file=sys.stderr)
+            return 1
+
+        if not args.json:
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] 开始调 Odds API, "
+                  f"目标 {len(matches)} 场, 当前剩余 {remaining} credits")
+
+        snapshots = odds.fetch_batch(matches)
+        if not budget.spend(1):
+            print("WARN: budget.spend 失败, 但 API 已调, 记录到日志", file=sys.stderr)
+
+        # ── 写回 DB ──
+        updated = 0
+        try:
+            from database.models import SessionLocal
+            db2 = SessionLocal()
+            try:
+                for snap in snapshots:
+                    snap.source = "oddsapi-manual"
+                    db2.add(snap)
+                db2.commit()
+                updated = len(snapshots)
+            except Exception as e:
+                print(f"ERROR: 写回 DB 失败: {e}", file=sys.stderr)
+                db2.rollback()
+            finally:
+                db2.close()
+        except Exception as e:
+            print(f"ERROR: 打开 DB 失败: {e}", file=sys.stderr)
+
         result = {
-            "status": "dry_run",
-            "matches_planned": len(matches),
-            "credits_planned": 1,
-            "league": args.league,
-            "hours_window": args.hours,
-            "remaining_credits": remaining,
+            "status": "ok" if updated > 0 else "no_data",
+            "requested": len(matches),
+            "updated": updated,
+            "credits_used": 1,
+            "credits_remaining": 500 - budget._data.get("used", 0),
             "started_at": started,
-            "matches": [
-                {
-                    "id": m.id,
-                    "home": m.home_team.name if m.home_team else "?",
-                    "away": m.away_team.name if m.away_team else "?",
-                    "kickoff_at": m.kickoff_at.isoformat() if m.kickoff_at else None,
-                    "competition": m.competition,
-                }
-                for m in matches
-            ],
+            "finished_at": datetime.utcnow().isoformat(),
         }
+
         if args.json:
             print(json.dumps(result, ensure_ascii=False, indent=2))
         else:
-            print(f"[DRY-RUN] 将调 Odds API 1 次, 补齐 {len(matches)} 场:")
-            for m in matches:
-                home = m.home_team.name if m.home_team else "?"
-                away = m.away_team.name if m.away_team else "?"
-                ko = m.kickoff_at.strftime("%m-%d %H:%M") if m.kickoff_at else "?"
-                print(f"  - [{m.id}] {home} vs {away} @ {ko} ({m.competition})")
-        return 3
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] 完成: "
+                  f"请求 {len(matches)} 场, 补齐 {updated} 场, "
+                  f"credits {remaining} -> {result['credits_remaining']}")
 
-    # ── 实际调 ──
-    try:
-        from ingestion.odds_collector import OddsApiSource
-        odds = OddsApiSource(api_key=api_key)
-    except Exception as e:
-        print(f"FATAL: 加载 OddsApiSource 失败: {e}", file=sys.stderr)
-        return 1
-
-    if not args.json:
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] 开始调 Odds API, "
-              f"目标 {len(matches)} 场, 当前剩余 {remaining} credits")
-
-    snapshots = odds.fetch_batch(matches)
-    if not budget.spend(1):
-        print("WARN: budget.spend 失败, 但 API 已调, 记录到日志", file=sys.stderr)
-
-    # ── 写回 DB ──
-    updated = 0
-    try:
-        from database.models import SessionLocal
-        db = SessionLocal()
-        try:
-            for snap in snapshots:
-                snap.source = "oddsapi-manual"
-                db.add(snap)
-            db.commit()
-            updated = len(snapshots)
-        except Exception as e:
-            print(f"ERROR: 写回 DB 失败: {e}", file=sys.stderr)
-            db.rollback()
-        finally:
-            db.close()
-    except Exception as e:
-        print(f"ERROR: 打开 DB 失败: {e}", file=sys.stderr)
-
-    result = {
-        "status": "ok" if updated > 0 else "no_data",
-        "requested": len(matches),
-        "updated": updated,
-        "credits_used": 1,
-        "credits_remaining": 500 - budget._data.get("used", 0),
-        "started_at": started,
-        "finished_at": datetime.utcnow().isoformat(),
-    }
-
-    if args.json:
-        print(json.dumps(result, ensure_ascii=False, indent=2))
-    else:
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] 完成: "
-              f"请求 {len(matches)} 场, 补齐 {updated} 场, "
-              f"credits {remaining} -> {result['credits_remaining']}")
-
-    return 0 if updated > 0 else 1
+        return 0 if updated > 0 else 1
+    finally:
+        db.close()
 
 
 if __name__ == "__main__":
