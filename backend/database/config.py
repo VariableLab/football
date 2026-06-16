@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "WC Analytics"
     APP_NAME: str = "WC Analytics"
     DEBUG: bool = False
+    TEST_MODE: bool = False
     
     # 安全配置
     SECRET_KEY: str = "fallback_secret_key_at_least_32_chars_long"
@@ -53,6 +54,9 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     # 💡 移除 os.chdir，改為純淨的配置讀取
     s = Settings()
+    
+    # 💡 强行同步到 os.environ，解决第三方模块或特定 router 通过 os.getenv 读不到 Pydantic env 的问题
+    os.environ["TEST_MODE"] = str(s.TEST_MODE).lower()
     
     import sys
     is_testing = "PYTEST_CURRENT_TEST" in os.environ or "pytest" in sys.modules

@@ -444,36 +444,198 @@ def sync_results_job():
 # ────────────────────────────
 # Task 5: 数据库备份（每日凌晨）
 # ────────────────────────────
-def backup_database_job():
+def backup_database_job(
+    backup_dir: str = "./backup",
+    db_path: str = "./database.sqlite",
+    keep_daily: int = 7,
+    keep_weekly: int = 4,
+    max_size_gb: float = 5.0,
+):
     """
-    每日备份 SQLite 数据库到 backup/ 目录
-    使用 SQLite backup API 确保一致性（避免 WAL 模式下 copy 损坏）
-    保留最近7天备份
+    每日备份 SQLite 数据库到 backup/ 目录。
+
+    修复记录 (2026-06-16):
+      - P0 修复: 加入保留策略,避免 backup/ 无限累积
+                (5-27 一天生成 11 个,长期累积 40 个 ~2.1GB)
+      - P1 修复: 路径从相对路径改为可注入参数,兼容 systemd / cron
+      - P1 修复: 修复 'db' 未定义的 finally bug (原代码 src.close()/dst.close())
+      - P2 优化: 同一天内若 db 哈希未变,跳过备份
+      - P2 优化: 每周日的备份额外保留 4 周作为周备
+
+    保留策略:
+      - 日备: 最近 keep_daily=7 天
+      - 周备: 最近 keep_weekly=4 个周日备份
+      - 总大小上限: max_size_gb GB,超出时按 mtime 删最旧
     """
     import os
     import glob
     import sqlite3
+    import hashlib
+    import re
 
-    db_path = "./database.sqlite"
-    backup_dir = "./backup"
     os.makedirs(backup_dir, exist_ok=True)
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_path = f"{backup_dir}/db_{timestamp}.sqlite"
+    if not os.path.exists(db_path):
+        logger.warning(f"[backup] DB not found, skip: {db_path}")
+        return {"status": "skipped", "reason": "db_missing"}
 
-    if os.path.exists(db_path):
-        # 使用 SQLite backup API 确保一致性
-        src = sqlite3.connect(db_path)
-        dst = sqlite3.connect(backup_path)
+    # 计算 db 哈希,与上次备份对比,无变化则跳过
+    try:
+        with open(db_path, "rb") as f:
+            db_hash = hashlib.md5(f.read()).hexdigest()[:12]
+    except OSError as e:
+        logger.error(f"[backup] Failed to hash db: {e}")
+        return {"status": "failed", "reason": str(e)}
+
+    # 读最近一次备份的元数据
+    meta_path = os.path.join(backup_dir, ".backup_meta.json")
+    last_hash = None
+    if os.path.exists(meta_path):
         try:
-            src.backup(dst)
-            logger.info(f"[backup] Database backed up to {backup_path}")
-        except Exception as e:
-            logger.error(f"[backup] Backup failed: {e}")
-            if os.path.exists(backup_path):
-                os.remove(backup_path)
-        finally:
-            db.close()
+            import json
+            with open(meta_path, "r") as f:
+                meta = json.load(f)
+                last_hash = meta.get("last_hash")
+        except Exception:
+            pass
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_path = os.path.join(backup_dir, f"db_{timestamp}.sqlite")
+
+    if db_hash == last_hash:
+        logger.info(f"[backup] DB unchanged (hash={db_hash}), skip")
+        return {"status": "skipped", "reason": "unchanged", "hash": db_hash}
+
+    # 执行备份 (使用 SQLite backup API 确保 WAL 模式一致性)
+    src = sqlite3.connect(db_path)
+    dst = sqlite3.connect(backup_path)
+    try:
+        src.backup(dst)
+        size_mb = os.path.getsize(backup_path) / 1024 / 1024
+        logger.info(f"[backup] OK -> {backup_path} ({size_mb:.1f}MB, hash={db_hash})")
+    except Exception as e:
+        logger.error(f"[backup] Backup failed: {e}")
+        if os.path.exists(backup_path):
+            os.remove(backup_path)
+        return {"status": "failed", "reason": str(e)}
+    finally:
+        src.close()
+        dst.close()
+
+    # 写元数据
+    try:
+        import json
+        with open(meta_path, "w") as f:
+            json.dump(
+                {
+                    "last_hash": db_hash,
+                    "last_backup": timestamp,
+                    "last_size_mb": round(size_mb, 2),
+                },
+                f,
+            )
+    except OSError:
+        pass
+
+    # ── 保留策略清理 ──
+    cleanup_old_backups(backup_dir, keep_daily, keep_weekly, max_size_gb)
+    return {"status": "ok", "path": backup_path, "size_mb": round(size_mb, 2)}
+
+
+def cleanup_old_backups(
+    backup_dir: str,
+    keep_daily: int = 7,
+    keep_weekly: int = 4,
+    max_size_gb: float = 5.0,
+):
+    """
+    按保留策略清理旧备份。
+
+    策略:
+      1. 日备: 保留最近 keep_daily=7 个连续日备份
+      2. 周备: 保留最近 keep_weekly=4 个周日备份
+      3. 大小: 若总大小 > max_size_gb GB, 按 mtime 删除最旧的,直到达标
+    """
+    import os
+    import re
+    from datetime import datetime, timedelta
+
+    pattern = re.compile(r"db_(\d{8})_(\d{6})\.sqlite$")
+    files = []
+    for f in os.listdir(backup_dir):
+        m = pattern.match(f)
+        if not m:
+            continue
+        path = os.path.join(backup_dir, f)
+        if not os.path.isfile(path):
+            continue
+        try:
+            ts = datetime.strptime(m.group(1) + m.group(2), "%Y%m%d%H%M%S")
+        except ValueError:
+            continue
+        files.append((ts, path, os.path.getsize(path)))
+
+    files.sort(reverse=True)  # 最新优先
+    to_keep = set()
+
+    # 1) 日备: 连续 keep_daily 天,每天保留 1 个
+    seen_dates = set()
+    daily_count = 0
+    for ts, path, _ in files:  # 新 → 旧
+        d = ts.date()
+        if d in seen_dates:
+            continue
+        seen_dates.add(d)
+        if daily_count >= keep_daily:
+            break
+        to_keep.add(path)
+        daily_count += 1
+
+    # 2) 周备: 周日的备份额外保留 keep_weekly 周
+    seen_weeks = set()
+    weekly_count = 0
+    for ts, path, _ in files:
+        if ts.weekday() != 6:  # 6 = Sunday
+            continue
+        iso_week = ts.isocalendar()[:2]
+        if iso_week in seen_weeks:
+            continue
+        seen_weeks.add(iso_week)
+        if weekly_count >= keep_weekly:
+            break
+        to_keep.add(path)
+        weekly_count += 1
+
+    # 3) 大小: 超过 max_size_gb 删最旧 (强制，最新优先保留)
+    total_size = sum(s for _, _, s in files)
+    max_bytes = int(max_size_gb * 1024 ** 3)
+    for ts, path, size in reversed(files):  # 旧 → 新
+        if total_size <= max_bytes:
+            break
+        try:
+            os.remove(path)
+            total_size -= size
+            if path in to_keep:
+                to_keep.remove(path)
+            logger.info(f"[backup] cleanup: removed {os.path.basename(path)} (size cap)")
+        except OSError as e:
+            logger.warning(f"[backup] cleanup failed: {e}")
+
+    # 4) 删除不在 to_keep 集合的
+    removed = 0
+    for ts, path, size in files:
+        if path in to_keep:
+            continue
+        if not os.path.exists(path):  # 避免已被容量限制删除了的文件报错
+            continue
+        try:
+            os.remove(path)
+            removed += 1
+        except OSError as e:
+            logger.warning(f"[backup] cleanup failed: {e}")
+
+    if removed:
+        logger.info(f"[backup] cleanup: removed {removed} old files, keep {len(to_keep)}")
 
 
 # ────────────────────────────

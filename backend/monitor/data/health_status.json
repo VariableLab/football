@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-09T23:54:52.968775+00:00",
+  "timestamp": "2026-06-16T16:46:09.681793+00:00",
   "overall": "critical",
   "checks": [
     {
@@ -12,51 +12,51 @@
     {
       "name": "odds_freshness",
       "status": "fail",
-      "message": "2/2 场比赛赔率过期",
-      "repaired": true,
-      "repair_action": "triggered: tier1, zgzcw(3)"
+      "message": "赔率检查异常: (sqlite3.OperationalError) no such table: matches\n[SQL: SELECT matches.id AS matches_id, matches.match_code AS matches_match_code, matches.home_team_id AS matches_home_team_id, matches.away_team_id AS matches_away_team_id, matches.kickoff_at AS matches_kickoff_at, matches.\"group\" AS matches_group, matches.stage AS matches_stage, matches.venue AS matches_venue, matches.match_type AS matches_match_type, matches.competition AS matches_competition, matches.status AS matches_status, matches.venue_type AS matches_venue_type, matches.weather AS matches_weather, matches.temperature AS matches_temperature, matches.pitch_condition AS matches_pitch_condition, matches.schedule_density AS matches_schedule_density, matches.odds_home AS matches_odds_home, matches.odds_draw AS matches_odds_draw, matches.odds_away AS matches_odds_away, matches.odds_source AS matches_odds_source, matches.opening_odds_home AS matches_opening_odds_home, matches.opening_odds_draw AS matches_opening_odds_draw, matches.opening_odds_away AS matches_opening_odds_away, matches.opening_odds_source AS matches_opening_odds_source, matches.opening_odds_at AS matches_opening_odds_at, matches.closing_odds_home AS matches_closing_odds_home, matches.closing_odds_draw AS matches_closing_odds_draw, matches.closing_odds_away AS matches_closing_odds_away, matches.closing_odds_source AS matches_closing_odds_source, matches.odds_locked_at AS matches_odds_locked_at, matches.confidence AS matches_confidence, matches.odds_degraded AS matches_odds_degraded, matches.actual_home_goals AS matches_actual_home_goals, matches.actual_away_goals AS matches_actual_away_goals, matches.actual_outcome AS matches_actual_outcome, matches.ht_home_goals AS matches_ht_home_goals, matches.ht_away_goals AS matches_ht_away_goals, matches.poster_url AS matches_poster_url, matches.is_broadcasted AS matches_is_broadcasted, matches.created_at AS matches_created_at, matches.updated_at AS matches_updated_at \nFROM matches \nWHERE matches.status IN (?, ?) AND matches.kickoff_at > ?]\n[parameters: ('SCHEDULED', 'UPCOMING', '2026-06-16 16:46:09.854296')]\n(Background on this error at: https://sqlalche.me/e/20/e3q8)",
+      "repaired": false,
+      "repair_action": ""
     },
     {
       "name": "scheduler_jobs",
-      "status": "ok",
-      "message": "44 个任务正常运行",
+      "status": "fail",
+      "message": "调度器未运行",
       "repaired": false,
       "repair_action": ""
     },
     {
       "name": "data_completeness",
-      "status": "warn",
-      "message": "共 2 场 | 缺赔率:1 | 缺球队数据:4",
+      "status": "fail",
+      "message": "数据完整性检查异常: (sqlite3.OperationalError) no such table: matches\n[SQL: SELECT matches.id AS matches_id, matches.match_code AS matches_match_code, matches.home_team_id AS matches_home_team_id, matches.away_team_id AS matches_away_team_id, matches.kickoff_at AS matches_kickoff_at, matches.\"group\" AS matches_group, matches.stage AS matches_stage, matches.venue AS matches_venue, matches.match_type AS matches_match_type, matches.competition AS matches_competition, matches.status AS matches_status, matches.venue_type AS matches_venue_type, matches.weather AS matches_weather, matches.temperature AS matches_temperature, matches.pitch_condition AS matches_pitch_condition, matches.schedule_density AS matches_schedule_density, matches.odds_home AS matches_odds_home, matches.odds_draw AS matches_odds_draw, matches.odds_away AS matches_odds_away, matches.odds_source AS matches_odds_source, matches.opening_odds_home AS matches_opening_odds_home, matches.opening_odds_draw AS matches_opening_odds_draw, matches.opening_odds_away AS matches_opening_odds_away, matches.opening_odds_source AS matches_opening_odds_source, matches.opening_odds_at AS matches_opening_odds_at, matches.closing_odds_home AS matches_closing_odds_home, matches.closing_odds_draw AS matches_closing_odds_draw, matches.closing_odds_away AS matches_closing_odds_away, matches.closing_odds_source AS matches_closing_odds_source, matches.odds_locked_at AS matches_odds_locked_at, matches.confidence AS matches_confidence, matches.odds_degraded AS matches_odds_degraded, matches.actual_home_goals AS matches_actual_home_goals, matches.actual_away_goals AS matches_actual_away_goals, matches.actual_outcome AS matches_actual_outcome, matches.ht_home_goals AS matches_ht_home_goals, matches.ht_away_goals AS matches_ht_away_goals, matches.poster_url AS matches_poster_url, matches.is_broadcasted AS matches_is_broadcasted, matches.created_at AS matches_created_at, matches.updated_at AS matches_updated_at \nFROM matches \nWHERE matches.status IN (?, ?) AND matches.kickoff_at > ? AND matches.kickoff_at <= ?]\n[parameters: ('SCHEDULED', 'UPCOMING', '2026-06-16 16:46:09.948889', '2026-06-23 16:46:09.948889')]\n(Background on this error at: https://sqlalche.me/e/20/e3q8)",
       "repaired": false,
       "repair_action": ""
     },
     {
       "name": "zgzcw_sync",
       "status": "ok",
-      "message": "同步 3 场, 关联期号 3 场",
+      "message": "同步 4 场, 关联期号 0 场",
       "repaired": false,
       "repair_action": ""
     },
     {
       "name": "jingcai_issues",
-      "status": "ok",
-      "message": "共 24 期: drawn=6, on_sale=6, verified=12",
+      "status": "fail",
+      "message": "期号检查异常: (sqlite3.OperationalError) no such table: jingcai_issues\n[SQL: SELECT jingcai_issues.status AS jingcai_issues_status, count(jingcai_issues.id) AS count_1 \nFROM jingcai_issues GROUP BY jingcai_issues.status]\n(Background on this error at: https://sqlalche.me/e/20/e3q8)",
       "repaired": false,
       "repair_action": ""
     },
     {
       "name": "data_flow",
-      "status": "ok",
-      "message": "活跃 (12h内录入 203 条赔率)",
+      "status": "warn",
+      "message": "断流检查异常: (sqlite3.OperationalError) no such table: odds_history\n[SQL: SELECT count(*) AS count_1 \nFROM (SELECT odds_history.id AS odds_history_id, odds_history.match_id AS odds_history_match_id, odds_history.source AS odds_history_source, odds_history.odds_home AS odds_history_odds_home, odds_history.odds_draw AS odds_history_odds_draw, odds_history.odds_away AS odds_history_odds_away, odds_history.recorded_at AS odds_history_recorded_at, odds_history.is_closing AS odds_history_is_closing, odds_history.is_real AS odds_history_is_real \nFROM odds_history \nWHERE odds_history.recorded_at >= ?) AS anon_1]\n[parameters: ('2026-06-16 04:46:15.900405',)]\n(Background on this error at: https://sqlalche.me/e/20/e3q8)",
       "repaired": false,
       "repair_action": ""
     },
     {
       "name": "model_drift",
-      "status": "fail",
-      "message": "方向准确率 31.6% < 48% 阈值 (100/316)",
+      "status": "warn",
+      "message": "漂移检查异常: (sqlite3.OperationalError) no such table: matches\n[SQL: SELECT matches.id AS matches_id, matches.match_code AS matches_match_code, matches.home_team_id AS matches_home_team_id, matches.away_team_id AS matches_away_team_id, matches.kickoff_at AS matches_kickoff_at, matches.\"group\" AS matches_group, matches.stage AS matches_stage, matches.venue AS matches_venue, matches.match_type AS matches_match_type, matches.competition AS matches_competition, matches.status AS matches_status, matches.venue_type AS matches_venue_type, matches.weather AS matches_weather, matches.temperature AS matches_temperature, matches.pitch_condition AS matches_pitch_condition, matches.schedule_density AS matches_schedule_density, matches.odds_home AS matches_odds_home, matches.odds_draw AS matches_odds_draw, matches.odds_away AS matches_odds_away, matches.odds_source AS matches_odds_source, matches.opening_odds_home AS matches_opening_odds_home, matches.opening_odds_draw AS matches_opening_odds_draw, matches.opening_odds_away AS matches_opening_odds_away, matches.opening_odds_source AS matches_opening_odds_source, matches.opening_odds_at AS matches_opening_odds_at, matches.closing_odds_home AS matches_closing_odds_home, matches.closing_odds_draw AS matches_closing_odds_draw, matches.closing_odds_away AS matches_closing_odds_away, matches.closing_odds_source AS matches_closing_odds_source, matches.odds_locked_at AS matches_odds_locked_at, matches.confidence AS matches_confidence, matches.odds_degraded AS matches_odds_degraded, matches.actual_home_goals AS matches_actual_home_goals, matches.actual_away_goals AS matches_actual_away_goals, matches.actual_outcome AS matches_actual_outcome, matches.ht_home_goals AS matches_ht_home_goals, matches.ht_away_goals AS matches_ht_away_goals, matches.poster_url AS matches_poster_url, matches.is_broadcasted AS matches_is_broadcasted, matches.created_at AS matches_created_at, matches.updated_at AS matches_updated_at \nFROM matches \nWHERE matches.status = ? AND matches.actual_outcome IS NOT NULL AND matches.kickoff_at >= ?]\n[parameters: ('FINISHED', '2026-05-17 16:46:15.905896')]\n(Background on this error at: https://sqlalche.me/e/20/e3q8)",
       "repaired": false,
-      "repair_action": "self_heal_cycle_status=skipped"
+      "repair_action": ""
     },
     {
       "name": "consecutive_failures",
@@ -68,7 +68,7 @@
     {
       "name": "backup_freshness",
       "status": "ok",
-      "message": "最新备份 4.9 小时前 (39 个)",
+      "message": "最新备份 0.7 小时前 (4 个)",
       "repaired": false,
       "repair_action": ""
     }

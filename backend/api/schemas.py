@@ -125,7 +125,8 @@ class PredictionCreate(BaseModel):
     match_id: int
     play_type: str
     probabilities: Dict[str, Any]
-    model_version: str = "v1.0"
+    # 修复 (2026-06-17): 统一为 "v2.0"
+    model_version: str = "v2.0"
     model_config = ConfigDict(protected_namespaces=())
 
 

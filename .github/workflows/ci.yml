@@ -1,0 +1,67 @@
+name: CI Quality Gates
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  quality-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+
+      - name: Run All Pytest Tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
+          SECRET_KEY: test-secret-key-at-least-32-characters-long-for-pytest
+          ADMIN_API_KEY: test-admin-key-long-enough
+        run: |
+          pytest backend/tests
+
+      - name: Verify Backup Database CLI (Dry-Run)
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
+        run: |
+          python3 backend/scripts/backup_database.py --dry-run --force
+
+      - name: Verify Log Cleanup CLI (Dry-Run)
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
+        run: |
+          python3 backend/scripts/cleanup_logs.py --dry-run --retain-days 7
+
+      - name: Verify Health Check CLI (Dry-Run)
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
+        run: |
+          python3 backend/scripts/health_check.py --dry-run
+
+      - name: Verify Odds API Fetch CLI (Dry-Run)
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
+          # 单元测试用假 key, 不会真发请求
+          ODDS_API_KEY: e6d7fb4cf3a602c1cd151c7f678a00b1
+        run: |
+          python3 backend/scripts/odds_api_fetch.py --dry-run --hours 24 --max 5
+
+      - name: Check Workspace for Large Files (>50MB) or Leftover Sqlite files
+        run: |
+          echo "=== Scanning for files larger than 50MB ==="
+          find . -type f -size +50M -not -path '*/.git/*'
+          
+          echo "=== Scanning for unignored sqlite database files outside backend/ ==="
+          find . -name "*.sqlite" -not -path '*/backend/*' -not -path '*/.git/*'

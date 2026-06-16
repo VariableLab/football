@@ -29,6 +29,9 @@ class ComprehensiveReport:
     tier_reason: str = ""
     is_actionable: bool = False
     position_ratio: float = 0.0
+    kelly_raw: float = 0.0
+    stake_pct: float = 0.0
+    stake_amount: float = 0.0
 
     # ─── 主模型 ───
     spf_prediction: str = ""  # home / draw / away
@@ -61,7 +64,12 @@ class ComprehensiveReport:
     handicap_label: str = ""
 
     # ─── 元信息 ───
-    model_version: str = "comprehensive_v2"
+    # 修复记录 (2026-06-17): 统一为单一字面量 "v2.0"
+    #   原: 4 套并存 (v1.0 / v2.0 / v2.0-lr / comprehensive_v2 / fusion_v1)
+    #   现: 所有生产代码统一用 "v2.0",测试用 "v2.0-test"
+    #   依据: 6-16 动态审计确认生产站实际跑的就是 v2.0 (linear fusion)
+    #   不要在代码里硬编码 "v2.0-lr" / "comprehensive_v2" / "fusion_v1"
+    model_version: str = "v2.0"
     ready: bool = False
 
 
@@ -115,6 +123,9 @@ def generate_report(match_id: int) -> Optional[ComprehensiveReport]:
                 report.nn_values = tier_result.nn_values
                 report.edge = tier_result.edge
                 report.ev = tier_result.ev
+                report.kelly_raw = tier_result.kelly_raw
+                report.stake_pct = tier_result.stake_pct
+                report.stake_amount = tier_result.stake_amount
 
                 # 5种玩法参考方向
                 for play_type, rec in tier_result.play_recommendations.items():
@@ -185,6 +196,9 @@ def report_to_dict(report: ComprehensiveReport) -> Dict:
             "reason": report.tier_reason,
             "is_actionable": report.is_actionable,
             "position_ratio": report.position_ratio,
+            "kelly_raw": report.kelly_raw,
+            "stake_pct": report.stake_pct,
+            "stake_amount": report.stake_amount,
         },
         "spf": {
             "prediction": report.spf_prediction,

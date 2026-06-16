@@ -404,6 +404,14 @@ def _get_or_create_team(
     resolve_team_code, club_elo_ratings: dict, result: SyncResult,
 ) -> Team:
     """根据中文名查找或创建球队（复用 jingcai_predictor 的逻辑）"""
+    # 0. 先尝试用系统的别名库与数据库智能检索
+    from ingestion.data_cleaner import resolve_team_db
+    team_id = resolve_team_db(db, cn_name)
+    if team_id:
+        team = db.get(Team, team_id)
+        if team:
+            return team
+
     # 1. 尝试通过中文别名找到内置球队
     internal_code = resolve_team_code(cn_name)
     if internal_code:

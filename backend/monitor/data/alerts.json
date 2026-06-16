@@ -3,7 +3,21 @@
     "source": "health_daemon",
     "level": "critical",
     "message": "DB\u635f\u574f\u5df2\u81ea\u52a8\u6062\u590d\uff0c\u6765\u6e90: /Users/liuxuran/Github/football/backend/backup/db_20260610_030000.sqlite",
-    "ts": 1781510325.914351,
-    "time": "2026-06-15T07:58:45.914373+00:00"
+    "ts": 1781624151.559356,
+    "time": "2026-06-16T15:35:51.559367+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "DB\u635f\u574f\u5df2\u81ea\u52a8\u6062\u590d\uff0c\u6765\u6e90: /Users/liuxuran/Github/football/backend/backup/db_20260617_000704.sqlite",
+    "ts": 1781627375.738758,
+    "time": "2026-06-16T16:29:35.738771+00:00"
+  },
+  {
+    "source": "health_daemon",
+    "level": "critical",
+    "message": "DB\u635f\u574f\u5df2\u81ea\u52a8\u6062\u590d\uff0c\u6765\u6e90: /Users/liuxuran/Github/football/backend/backup/db_20260617_000704.sqlite",
+    "ts": 1781629917.869729,
+    "time": "2026-06-16T17:11:57.869738+00:00"
   }
 ]

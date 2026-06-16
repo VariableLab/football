@@ -328,7 +328,8 @@ def generate_predictions(db: Session, matches: list[Match], team_map: dict[str, 
                 match_id=match.id,
                 play_type=pred_data["play_type"],
                 probabilities=pred_data["probabilities"],
-                model_version="v1.0",
+                # 修复 (2026-06-17): 统一为 "v2.0"
+                model_version="v2.0",
             )
             db.add(pred)
             created += 1

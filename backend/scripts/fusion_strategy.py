@@ -66,7 +66,8 @@ class FusionResult:
     should_avoid: bool  # 是否建议放弃
 
     # 元信息
-    model_version: str = "fusion_v1"
+    # 修复 (2026-06-17): 统一为 "v2.0"
+    model_version: str = "v2.0"
 
 
 # ────────────────────────────

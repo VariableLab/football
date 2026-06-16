@@ -180,6 +180,8 @@ For key_injuries:
 ---
 ## 🌐 联网检索原始事实记录（Google Search）
 {search_text}
+
+<!-- JSON_SNAPSHOT: {{"home_factor": {home_factor:.2f}, "away_factor": {away_factor:.2f}, "home_morale": {home_morale:.2f}, "away_morale": {away_morale:.2f}, "home_injuries": "{report.home.key_injuries}", "away_injuries": "{report.away.key_injuries}"}} -->
 """
     ai_report = db.query(MatchAIReport).filter(MatchAIReport.match_id == match.id).first()
     if ai_report:

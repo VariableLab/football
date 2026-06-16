@@ -198,6 +198,15 @@ app.include_router(strategy_router)
 app.include_router(events_router)
 app.include_router(content_router)
 
+# 兼容路由(2026-06-17) — 桥接 6-16 动态审计发现的 11 个 404 端点
+# 文档: docs/audits/2026-06-16/AUDIT_DYNAMIC_20260616.md
+try:
+    from api.compat_routes import router as compat_router
+    app.include_router(compat_router)
+    logger.info("[compat] 兼容路由已挂载")
+except Exception as e:
+    logger.warning(f"[compat] 兼容路由挂载失败(非致命): {e}")
+
 # Static files — 使用绝对路径
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")

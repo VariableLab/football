@@ -93,7 +93,7 @@ class TestPredictionEngine:
         with patch.object(PredictionEngine, "_load_lr_weights", return_value=mock_weights):
             engine = PredictionEngine(use_lr_fusion=True)
         result = engine.predict(make_mock_ctx())
-        assert result.model_version == "v2.0-lr"
+        assert result.model_version == "v2.0"
         assert set(result.spf.keys()) == {"home", "draw", "away"}
         assert abs(sum(result.spf.values()) - 1.0) < 1e-6
         assert result.confidence in ("high", "medium", "low")
@@ -101,7 +101,7 @@ class TestPredictionEngine:
     def test_predict_fallback_structure(self, mock_submodels):
         engine = PredictionEngine(use_lr_fusion=False)
         result = engine.predict(make_mock_ctx())
-        assert result.model_version == "v1.0"
+        assert result.model_version == "v2.0"
         assert set(result.spf.keys()) == {"home", "draw", "away"}
         assert abs(sum(result.spf.values()) - 1.0) < 1e-6
 

@@ -106,11 +106,18 @@ Layer 4: Strategy Output
 
 ## Performance
 
-| Metric | LR Fusion | Target |
-|--------|:-:|:-:|
-| SPF Direction Accuracy | **56.6%** (backtest) | ≥ 55% |
-| Brier Score | **~0.185** | ≤ 0.190 |
-| Knockout Match Accuracy | **49.3%** | ≥ 45% |
+> **更新 (2026-06-17)**: 以下数据为 5-19 报告中的**回测最佳值**。
+> 生产站实测准确率受数据新鲜度影响,实时波动在 **40-55%** 之间,
+> 详见 `docs/audits/2026-06-16/AUDIT_DYNAMIC_20260616.md`。
+
+| Metric | Backtest (5-19) | Live (6-16) | Target |
+|--------|:-:|:-:|:-:|
+| SPF Direction Accuracy | **56.6%** | **~50%** | ≥ 55% |
+| Brier Score | **~0.185** | — | ≤ 0.190 |
+| Knockout Match Accuracy | **49.3%** | — | ≥ 45% |
+
+**Model Version**: 当前生产实际运行 `v2.0` (linear fusion),
+并非 README 旧版本中提到的 `v2.0-lr` (LR 融合尚未完全部署)。
 
 ---
 

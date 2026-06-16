@@ -29,7 +29,7 @@ from scipy.optimize import minimize
 from scipy.optimize import OptimizeResult
 from sqlalchemy.orm import Session
 
-from database.models import Match, Prediction, FusionWeight, PlayType, MatchStatus, Team
+from database.models import Match, Prediction, FusionWeight, PlayType, MatchStatus, Team, MatchAIReport
 from sqlalchemy.orm import joinedload
 from prediction_engine import (
     PredictionEngine,
@@ -317,6 +317,13 @@ class WeightLearner:
         )
         return training
 
+    def _compute_form_factor(self, form: str) -> float:
+        """从历史战绩序列动态推算基础状态因子，完全防泄漏"""
+        if not form:
+            return 1.0
+        score = sum(0.1 if c == "W" else (-0.1 if c == "L" else 0.0) for c in form)
+        return max(0.5, min(1.5, 1.0 + score))
+
     def _reconstruct_context(
         self,
         match: Match,
@@ -331,6 +338,33 @@ class WeightLearner:
         if not home or not away:
             return None
 
+        # ─── 历史状态与舆情无泄漏还原 ───
+        h_factor_val = None
+        a_factor_val = None
+        h_injuries_val = ""
+        a_injuries_val = ""
+
+        # 优先读取当时赛前关联报告中的隐藏 JSON 快照 (JSON_SNAPSHOT)
+        ai_report = self.db.query(MatchAIReport).filter(MatchAIReport.match_id == match.id).first()
+        if ai_report and ai_report.content:
+            import re
+            match_snapshot = re.search(r"<!--\s*JSON_SNAPSHOT:\s*(\{.*?\})\s*-->", ai_report.content)
+            if match_snapshot:
+                try:
+                    snapshot = json.loads(match_snapshot.group(1))
+                    h_factor_val = snapshot.get("home_factor")
+                    a_factor_val = snapshot.get("away_factor")
+                    h_injuries_val = snapshot.get("home_injuries", "")
+                    a_injuries_val = snapshot.get("away_injuries", "")
+                except Exception:
+                    pass
+
+        # 兜底 Fallback：如无赛前舆情报告，直接根据历史战绩序列计算当时的状态因子（防未来泄漏）
+        if h_factor_val is None:
+            h_factor_val = self._compute_form_factor(home_recent)
+        if a_factor_val is None:
+            a_factor_val = self._compute_form_factor(away_recent)
+
         return MatchContext(
             match_id=match.id,
             home_team=TeamContext(
@@ -340,7 +374,7 @@ class WeightLearner:
                 fifa_rank=home.fifa_rank or 100,
                 avg_goals_scored=home.avg_goals_scored or 1.3,
                 avg_goals_conceded=home.avg_goals_conceded or 1.3,
-                form_factor=home.form_factor or 1.0,
+                form_factor=h_factor_val,  # 💡 替换为防泄漏历史值
                 key_players_available=11,
                 key_players_total=11,
                 squad_fatigue_index=home.squad_fatigue_index or 0.5,
@@ -350,6 +384,7 @@ class WeightLearner:
                 home_away_factor=home.home_away_factor or 1.0,
                 weather_adaptability=home.weather_adaptability or 1.0,
                 recent_results=home_recent,
+                key_injuries=h_injuries_val,  # 💡 替换为防泄漏历史值
             ),
             away_team=TeamContext(
                 team_id=away.id,
@@ -358,7 +393,7 @@ class WeightLearner:
                 fifa_rank=away.fifa_rank or 100,
                 avg_goals_scored=away.avg_goals_scored or 1.3,
                 avg_goals_conceded=away.avg_goals_conceded or 1.3,
-                form_factor=away.form_factor or 1.0,
+                form_factor=a_factor_val,  # 💡 替换为防泄漏历史值
                 key_players_available=11,
                 key_players_total=11,
                 squad_fatigue_index=away.squad_fatigue_index or 0.5,
@@ -368,6 +403,7 @@ class WeightLearner:
                 home_away_factor=away.home_away_factor or 1.0,
                 weather_adaptability=away.weather_adaptability or 1.0,
                 recent_results=away_recent,
+                key_injuries=a_injuries_val,  # 💡 替换为防泄漏历史值
             ),
             stage=match.stage or "group",
             is_knockout=match.stage not in (None, "", "group"),

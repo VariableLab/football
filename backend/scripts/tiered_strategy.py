@@ -20,6 +20,11 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any
 
 from edge_calculator import EdgeCalculator
+try:
+    from position_sizer import PositionSizer, RiskTier
+except ImportError:
+    from strategy.position_sizer import PositionSizer, RiskTier
+
 from strategy_config import (
     StrategyParams, load_params, DEFAULT_PARAMS,
     compute_position_ratio,
@@ -78,6 +83,11 @@ class PlayRecommendation:
     is_recommended: bool
     position_ratio: float = 0.0   # 优化3: 该玩法推荐的仓位系数
     reason: str = ""
+    edge: float = 0.0
+    ev: float = 0.0
+    kelly_raw: float = 0.0
+    stake_pct: float = 0.0
+    stake_amount: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -95,6 +105,9 @@ class MatchTierResult:
 
     edge: float = 0.0
     ev: float = 0.0
+    kelly_raw: float = 0.0
+    stake_pct: float = 0.0
+    stake_amount: float = 0.0
 
     play_recommendations: Dict[str, PlayRecommendation] = field(default_factory=dict)
 
@@ -333,6 +346,9 @@ def generate_play_recommendations(
     odds: Dict[str, float],
     sub_model_results: Dict[str, Dict],
     params: Optional[StrategyParams] = None,
+    sizer: Optional[PositionSizer] = None,
+    bankroll: float = 1000.0,
+    peak: Optional[float] = None,
 ) -> Dict[str, PlayRecommendation]:
     """按场次等级，5种玩法各自生成独立建议"""
     if params is None:
@@ -349,7 +365,10 @@ def generate_play_recommendations(
             )
         return recommendations
 
-    recommendations[PLAY_SPF] = _recommend_spf(spf_probs, nn_values, odds, tier, params)
+    recommendations[PLAY_SPF] = _recommend_spf(
+        spf_probs, nn_values, odds, tier, params,
+        sizer=sizer, bankroll=bankroll, peak=peak
+    )
     recommendations[PLAY_HANDICAP] = _recommend_handicap(sub_model_results.get(PLAY_HANDICAP), tier, params)
     recommendations[PLAY_SCORE] = _recommend_score(sub_model_results.get(PLAY_SCORE), tier, params)
     recommendations[PLAY_GOALS] = _recommend_goals(sub_model_results.get(PLAY_GOALS), tier, params)
@@ -364,8 +383,11 @@ def _recommend_spf(
     odds: Dict[str, float],
     tier: str,
     params: StrategyParams,
+    sizer: Optional[PositionSizer] = None,
+    bankroll: float = 1000.0,
+    peak: Optional[float] = None,
 ) -> PlayRecommendation:
-    """胜平负玩法建议 — 含优化1(平局信号) + 优化2(低赔率主胜降权)"""
+    """胜平负玩法建议 — 含优化1(平局信号) + 优化2(低赔率主胜降权) + 凯利仓位与价值洼地过滤"""
     if not spf_probs:
         return PlayRecommendation(
             play_type=PLAY_SPF, play_label=PLAY_LABELS[PLAY_SPF],
@@ -393,7 +415,44 @@ def _recommend_spf(
         is_rec = False
         reason += " [赔率过低不推荐]"
 
-    # 优化3: 自适应仓位
+    # 价值洼地过滤与凯利公式仓位推荐计算
+    edge_val = 0.0
+    ev_val = 0.0
+    kelly_raw = 0.0
+    stake_pct = 0.0
+    stake_amount = 0.0
+
+    if spf_probs and best_sel in ("home", "draw", "away") and all(odds.get(k) for k in ("home", "draw", "away")):
+        # 去 Margin 暗含真实概率 + 优势边际 Edge + EV
+        edge_res = ec.compute(
+            odds.get("home", 2.0), odds.get("draw", 3.0), odds.get("away", 2.0),
+            spf_probs, is_jingcai=False
+        )
+        sel_edge = edge_res.edges.get(best_sel)
+        if sel_edge:
+            edge_val = round(sel_edge.edge, 4)
+            ev_val = round(sel_edge.ev, 4)
+
+            # 价值洼地过滤 (EV > 0)
+            if is_rec:
+                if sel_edge.is_value:
+                    if sizer:
+                        # 凯利公式计算
+                        stake_res = sizer.compute(
+                            calibrated_prob=sel_edge.calibrated_prob,
+                            odds=sel_edge.odds,
+                            bankroll=bankroll,
+                            peak=peak
+                        )
+                        kelly_raw = round(stake_res.kelly_raw, 4)
+                        stake_pct = round(stake_res.stake_pct, 4)
+                        stake_amount = round(stake_res.stake_amount, 2)
+                        reason += f" | 凯利仓位: {stake_pct:.1%} (金额: ${stake_amount})"
+                else:
+                    is_rec = False
+                    reason += " [期望价值EV<=0，跳过推荐]"
+
+    # 优化3: 自适应仓位 (兼容)
     pos = compute_position_ratio(tier, best_sel, best_odds, params)
 
     return PlayRecommendation(
@@ -406,6 +465,11 @@ def _recommend_spf(
         is_recommended=is_rec,
         position_ratio=pos,
         reason=reason,
+        edge=edge_val,
+        ev=ev_val,
+        kelly_raw=kelly_raw,
+        stake_pct=stake_pct,
+        stake_amount=stake_amount,
     )
 
 
@@ -554,6 +618,9 @@ def analyze_match(
     sub_model_results: Optional[Dict[str, Dict]] = None,
     params: Optional[StrategyParams] = None,
     match_code: str = "",
+    bankroll: float = 1000.0,
+    peak: Optional[float] = None,
+    risk_tier: str = "balanced",
 ) -> MatchTierResult:
     """单场比赛完整分层分析"""
     if params is None:
@@ -561,20 +628,38 @@ def analyze_match(
     if sub_model_results is None:
         sub_model_results = {}
 
+    # 实例化 PositionSizer
+    sizer = None
+    try:
+        sizer = PositionSizer(RiskTier(risk_tier))
+    except Exception:
+        pass
+
     # 分层
     tier, tier_label, tier_reason, edge_val, ev_val = classify_tier(
         spf_probs, nn_values, odds, is_jingcai, params,
     )
 
     # 5种玩法建议
-    play_recs = generate_play_recommendations(tier, spf_probs, nn_values, odds, sub_model_results, params)
+    play_recs = generate_play_recommendations(
+        tier, spf_probs, nn_values, odds, sub_model_results, params,
+        sizer=sizer, bankroll=bankroll, peak=peak
+    )
 
-    # 自适应仓位：取 SPF 推荐的仓位作为场次的默认仓位
+    # 自适应仓位：优先取 SPF 推荐的仓位
     spf_rec = play_recs.get(PLAY_SPF)
     if spf_rec and spf_rec.is_recommended:
         pos = spf_rec.position_ratio
+        edge_val = spf_rec.edge
+        ev_val = spf_rec.ev
+        kelly_raw = spf_rec.kelly_raw
+        stake_pct = spf_rec.stake_pct
+        stake_amount = spf_rec.stake_amount
     else:
         pos = params.high_position_ratio if tier == TIER_HIGH else params.medium_position_ratio
+        kelly_raw = 0.0
+        stake_pct = 0.0
+        stake_amount = 0.0
 
     return MatchTierResult(
         match_id=match_id,
@@ -586,6 +671,9 @@ def analyze_match(
         nn_values=nn_values,
         edge=round(edge_val, 4),
         ev=round(ev_val, 4),
+        kelly_raw=kelly_raw,
+        stake_pct=stake_pct,
+        stake_amount=stake_amount,
         play_recommendations=play_recs,
         position_ratio=pos,
         is_actionable=tier in (TIER_HIGH, TIER_MEDIUM),
@@ -597,7 +685,13 @@ def analyze_match(
 # 从数据库加载并分析
 # ────────────────────────────
 
-def analyze_match_from_db(match_id: int, params: Optional[StrategyParams] = None) -> Optional[MatchTierResult]:
+def analyze_match_from_db(
+    match_id: int,
+    params: Optional[StrategyParams] = None,
+    bankroll: float = 1000.0,
+    peak: Optional[float] = None,
+    risk_tier: str = "balanced",
+) -> Optional[MatchTierResult]:
     """从数据库加载比赛数据，运行完整分层分析"""
     import json
     from database.models import SessionLocal, Match, Prediction
@@ -696,6 +790,9 @@ def analyze_match_from_db(match_id: int, params: Optional[StrategyParams] = None
             sub_model_results=sub_results,
             params=params,
             match_code=match.match_code,
+            bankroll=bankroll,
+            peak=peak,
+            risk_tier=risk_tier,
         )
 
     finally:

@@ -16,10 +16,19 @@ document.addEventListener('alpine:init', () => {
     selectedMatch: null, // 存储完整 match 对象
     preview: null,
     previewLoading: false,
+    selectedStrategy: null, // 存储匹配的策略信息
+    strategyLoading: false,
+    bankroll: 1000,          // 默认模拟账户本金
+    riskTier: 'balanced',    // 默认风险偏好档位
     agentLog: "正在初始化 59 维特征扫描引擎...",
     
     // 移动端视图控制: 'list' | 'detail'
     mobileView: 'list',
+
+    get stakeAmount() {
+      if (!this.selectedStrategy || !this.selectedStrategy.is_recommended) return 0.0;
+      return this.bankroll * (this.selectedStrategy.stake_pct || 0.0);
+    },
 
     async init() {
       await I18n.init();
@@ -78,21 +87,101 @@ document.addEventListener('alpine:init', () => {
       this.selectedId = id;
       this.selectedMatch = this.matches.find(m => m.id === id);
       this.mobileView = 'detail';
+      
       this.previewLoading = true;
       this.preview = null;
+      this.selectedStrategy = null;
+      this.strategyLoading = true;
       
       const m = this.selectedMatch;
-      this.agentLog = `正在校准 ${m?.home_team?.name || '未知'} 的 59 维残差特征...`;
+      this.agentLog = `正在校准 ${m?.home_team?.name || '未知'} 的 59 维残差特征与对冲对策...`;
 
       try {
-        const data = await WCApi.Content.getPreview(id);
-        this.preview = data;
-        this.agentLog = `✅ ${m?.home_team?.name} 模型推演完成，偏差值已锁定。`;
-      } catch (e) {
-        console.error('Preview load failed', e);
-        this.agentLog = "❌ 深度特征对齐失败，请检查数据完整性。";
+        const previewData = await WCApi.Content.getPreview(id);
+        this.preview = previewData;
+      } catch (err) {
+        console.error('Preview load failed', err);
+      }
+
+      try {
+        const strategyData = await WCApi.Strategy.getStrategy(id, this.riskTier);
+        if (strategyData && strategyData.strategies && strategyData.strategies.length > 0) {
+          this.selectedStrategy = strategyData.strategies[0];
+        } else {
+          this.selectedStrategy = {
+            is_recommended: false,
+            edge: 0.0,
+            ev: 0.0,
+            kelly_fraction: 0.0,
+            stake_pct: 0.0,
+            play_label: '胜平负 (SPF)',
+            selection_label: '暂无推荐',
+            odds: 0.0,
+            rationale: '本场赛事不符合价值洼地过滤门槛 (EV <= 0 或 Edge <= 0)。已自动拦截规避风险。',
+            risk_level: 'low'
+          };
+        }
+        this.agentLog = `✅ ${m?.home_team?.name || '模型'} 推演完成，量化仓位已就绪。`;
+      } catch (err) {
+        console.error('Strategy load failed', err);
+        // 如果是 403 Forbidden，显示卡密解锁提示而非全局报错崩溃
+        if (err.status === 403 || (err.message && err.message.includes('403')) || String(err).includes('403')) {
+          this.selectedStrategy = {
+            is_recommended: false,
+            edge: 0.0,
+            ev: 0.0,
+            kelly_fraction: 0.0,
+            stake_pct: 0.0,
+            play_label: '胜平负 (SPF)',
+            selection_label: '待解锁',
+            odds: 0.0,
+            rationale: '🔒 本场赛事处于赛前分析锁定期，量化对策仅对付费订阅会员公开。请点击下方“绑定/激活”按钮解锁。',
+            risk_level: 'low'
+          };
+          this.agentLog = "🔒 深度量化仓位已被锁定，需要绑定/激活卡密。";
+        } else {
+          this.agentLog = "❌ 深度特征或量化对策对齐失败，请检查网络。";
+        }
       } finally {
         this.previewLoading = false;
+        this.strategyLoading = false;
+      }
+    },
+
+    async changeRiskTier() {
+      if (!this.selectedId) return;
+      this.strategyLoading = true;
+      this.agentLog = `正在重算 ${this.selectedMatch?.home_team?.name} 在 [${this.riskTier}] 风控偏好下的凯利比例...`;
+      try {
+        const strategyData = await WCApi.Strategy.getStrategy(this.selectedId, this.riskTier);
+        if (strategyData && strategyData.strategies && strategyData.strategies.length > 0) {
+          this.selectedStrategy = strategyData.strategies[0];
+        } else {
+          this.selectedStrategy = {
+            is_recommended: false,
+            edge: 0.0,
+            ev: 0.0,
+            kelly_fraction: 0.0,
+            stake_pct: 0.0,
+            play_label: '胜平负 (SPF)',
+            selection_label: '暂无推荐',
+            odds: 0.0,
+            rationale: '本场赛事在当前风控档位下未满足期望价值推荐门槛。',
+            risk_level: 'low'
+          };
+        }
+        this.agentLog = `✅ 风控档位已切换至 [${this.riskTier}]，最新仓位已锁定。`;
+      } catch (e) {
+        console.error('Change risk tier failed', e);
+        this.agentLog = "❌ 凯利对策重算失败，请检查网络。";
+      } finally {
+        this.strategyLoading = false;
+      }
+    },
+
+    recalcStake() {
+      if (typeof this.bankroll !== 'number' || this.bankroll < 0) {
+        this.bankroll = 0;
       }
     },
 

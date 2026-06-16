@@ -133,21 +133,21 @@ def run_monitor_cycle(db, client, dry_run=False):
                     # 💡 只取报告的核心量化与分析部分，砍掉底部的原始 Google 检索文献，防止 Telegram Markdown 格式解析错误
                     clean_content = report_content.split("---")[0]
                     
-                    # 构造推送 Markdown
-                    alert_md = f"""🚨 *【2026 世界杯 必发交易所资金异常警报】*
+                    # 构造推送文本 (采用纯文本格式，用清晰的中文括号与符号排版)
+                    alert_md = f"""🚨 【2026 世界杯 必发交易所资金异常警报】
 
-⚽ *焦点对阵*：{home_name} vs {away_name} (场次: {match.match_code})
+⚽ 焦点对阵：{home_name} vs {away_name} (场次: {match.match_code})
 
-📈 *必发资金异常数据*
-* *总成交额*：`¥{vol.total_volume:,.2f}`
-* *实际成交比*：主 {vol.home_ratio:.1%} | 平 {vol.draw_ratio:.1%} | 客 {vol.away_ratio:.1%}
-* *赔率暗含比*：主 {implied_p['home']:.1%} | 平 {implied_p['draw']:.1%} | 客 {implied_p['away']:.1%}
-* *最大偏离值*：`{max_bias:.1%}` (触发线: {BIAS_THRESHOLD:.1%})
+📈 必发资金异常数据
+- 总成交额：¥{vol.total_volume:,.2f}
+- 实际成交比：主 {vol.home_ratio:.1%} | 平 {vol.draw_ratio:.1%} | 客 {vol.away_ratio:.1%}
+- 赔率暗含比：主 {implied_p['home']:.1%} | 平 {implied_p['draw']:.1%} | 客 {implied_p['away']:.1%}
+- 最大偏离值：{max_bias:.1%} (触发线: {BIAS_THRESHOLD:.1%})
 
-🔄 *AI 联动重预测校准*
-* *最新融合胜平负概率*：主胜 `{spf_probs.get('home', 0.0):.1%}` | 平局 `{spf_probs.get('draw', 0.0):.1%}` | 客胜 `{spf_probs.get('away', 0.0):.1%}`
-* *主队调整系数*：`{match.home_team.form_factor:.2f}` (伤停: {match.home_team.key_injuries or '无'})
-* *客队调整系数*：`{match.away_team.form_factor:.2f}` (伤停: {match.away_team.key_injuries or '无'})
+🔄 AI 联动重预测校准
+- 最新融合胜平负概率：主胜 {spf_probs.get('home', 0.0):.1%} | 平局 {spf_probs.get('draw', 0.0):.1%} | 客胜 {spf_probs.get('away', 0.0):.1%}
+- 主队调整系数：{match.home_team.form_factor:.2f} (伤停: {match.home_team.key_injuries or '无'})
+- 客队调整系数：{match.away_team.form_factor:.2f} (伤停: {match.away_team.key_injuries or '无'})
 
 {clean_content}
 """

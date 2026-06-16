@@ -26,7 +26,6 @@ def send_telegram_markdown_message(text: str) -> bool:
     payload = {
         "chat_id": chat_id,
         "text": text,
-        "parse_mode": "Markdown",
         "disable_web_page_preview": False
     }
     

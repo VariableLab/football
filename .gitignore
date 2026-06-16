@@ -22,6 +22,9 @@ ENV/
 # Logs
 logs/
 *.log
+backend/utils/logs/
+backend/scripts/backup_database_runs.log
+backend/scripts/health_check_runs.log
 
 # IDE
 .vscode/
@@ -57,5 +60,7 @@ backend/test_*.db*
 backend/.odds_api_budget.json
 backend/nohup.out
 
-promo-video/
+promo-video/node_modules/
+promo-video/out/
 server_key
+scratch/

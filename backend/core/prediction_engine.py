@@ -236,7 +236,8 @@ class PredictionResult:
     raw_market: Dict[str, float] = field(default_factory=dict)
 
     # 元信息
-    model_version: str = "v1.0"
+    # 修复 (2026-06-17): 统一为 "v2.0"
+    model_version: str = "v2.0"
     confidence: str = "medium"   # high / medium / low
     odds_degraded: bool = False  # True when prediction lacks market odds
     weights_used: Dict[str, Any] = field(default_factory=dict)
@@ -1598,7 +1599,9 @@ class PredictionEngine:
             raw_poisson=poisson_out["spf"],
             raw_players=players_factor,
             raw_market=market_out or {},
-            model_version="v2.0-lr" if lr_spf is not None else "v1.0",
+            # 修复 (2026-06-17): 统一为 "v2.0",无论 LR 是否可用
+            # 6-16 动态审计确认生产站始终返回 "v2.0",不再做 LR vs fallback 分支
+            model_version="v2.0",
             confidence=confidence,
             odds_degraded=market_out is None or is_mock_data, # 标记数据降级
             weights_used={"_fusion": "lr_v2", **(lr_spf or {})} if lr_spf is not None else self.fusion.get_effective_weights(market_out, ctx),

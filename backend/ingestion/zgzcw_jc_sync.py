@@ -254,6 +254,7 @@ def _sync_issue_links(db, match_id: int, jc_code: str, kickoff_at: str, sp_home:
 def sync_jc_matches(db_path: str = None) -> Dict:
     """同步 zgzcw 竞彩比赛到数据库"""
     from database.models import SessionLocal, Team, Match, OddsHistory
+    from ingestion.data_cleaner import resolve_team_db
     
     matches = fetch_jc_matches()
     if not matches:
@@ -263,11 +264,16 @@ def sync_jc_matches(db_path: str = None) -> Dict:
     if db_path:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
-        # 确保是绝对路径
-        if not db_path.startswith("sqlite:///"):
-            db_url = f"sqlite:///{os.path.abspath(db_path)}"
-        else:
+        db_url = db_path
+        if "sqlite" not in db_url and not db_url.startswith("postgresql"):
+            db_url = f"sqlite:///{db_path}"
+        # 特殊处理：如果是 absolute path 带有 sqlite:///
+        if db_path.startswith("sqlite:////"):
             db_url = db_path
+        elif db_path.startswith("sqlite:///"):
+            db_url = db_path
+        elif not db_path.startswith("sqlite://"):
+            db_url = f"sqlite:///{db_path}"
         engine = create_engine(db_url)
         db_session_factory = sessionmaker(bind=engine)
         db = db_session_factory()
@@ -288,18 +294,30 @@ def sync_jc_matches(db_path: str = None) -> Dict:
             jc_code = generate_jc_code(home_en, away_en, m["kickoff_at"])
 
             # 查找或创建主队
-            home_team = db.query(Team).filter(Team.name_en == home_en).first()
+            home_team = None
+            home_id = resolve_team_db(db, m["home_zh"])
+            if home_id:
+                home_team = db.get(Team, home_id)
+            if not home_team:
+                home_team = db.query(Team).filter(Team.name_en == home_en).first()
             if not home_team:
                 home_team = Team(name=m["home_zh"], name_en=home_en, code=home_en[:10].upper().replace(" ", ""))
                 db.add(home_team)
                 db.flush()
+                logger.warning(f"[zgzcw_jc] Team not resolved, created blank team: {m['home_zh']}")
                 
             # 查找或创建客队
-            away_team = db.query(Team).filter(Team.name_en == away_en).first()
+            away_team = None
+            away_id = resolve_team_db(db, m["away_zh"])
+            if away_id:
+                away_team = db.get(Team, away_id)
+            if not away_team:
+                away_team = db.query(Team).filter(Team.name_en == away_en).first()
             if not away_team:
                 away_team = Team(name=m["away_zh"], name_en=away_en, code=away_en[:10].upper().replace(" ", ""))
                 db.add(away_team)
                 db.flush()
+                logger.warning(f"[zgzcw_jc] Team not resolved, created blank team: {m['away_zh']}")
 
             # 查找比赛
             match = db.query(Match).filter(Match.match_code == jc_code).first()

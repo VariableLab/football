@@ -227,10 +227,12 @@ def get_strategy(
             odds=p.odds,
             ev=p.ev,
             edge=p.edge,
-            kelly_stake=p.kelly_stake,
+            kelly_fraction=p.kelly_raw,
+            stake_pct=p.stake_pct,
             rationale=_enrich_rationale(p, match),
-            risk_label=p.risk_label,
+            risk_level=p.risk_label,
             confidence=p.confidence,
+            is_recommended=p.is_recommended,
         )
         for p in picks
     ]

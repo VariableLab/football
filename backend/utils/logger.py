@@ -83,11 +83,21 @@ class JsonFormatter(logging.Formatter):
 # 处理器
 # ────────────────────────────
 class DailyRotatingFileHandler(logging.FileHandler):
-    """按日期自动轮转的文件处理器"""
+    """按日期自动轮转的文件处理器。
 
-    def __init__(self, log_dir: Path, name: str):
+    修复记录 (2026-06-17):
+      - 旧版每天创建新文件,但从不清理 → 12MB / 713 个文件累积
+      - 新版按 retain_days 保留最近 N 天(默认 30),其余在 emit 时清理
+      - 清理时机: emit 触发日期切换时,顺便扫一遍同名前缀的旧文件
+    """
+
+    # 类级共享: 避免每个 logger 都跑一次 cleanup
+    _last_cleanup: Dict[str, float] = {}
+
+    def __init__(self, log_dir: Path, name: str, retain_days: int = 30):
         self.log_dir = log_dir
         self._handler_name = name
+        self.retain_days = retain_days
         self.current_date = datetime.now().strftime("%Y-%m-%d")
         super().__init__(self._get_path(), encoding="utf-8")
 
@@ -102,7 +112,51 @@ class DailyRotatingFileHandler(logging.FileHandler):
             self.baseFilename = self._get_path()
             self.stream.close()
             self.stream = self._open()
+            # 切换日期时清理旧文件
+            self._cleanup_old_files()
         super().emit(record)
+
+    def _cleanup_old_files(self) -> None:
+        """清理同名前缀的过期日志文件。
+
+        频率限制: 同名前缀 1 小时内最多清理 1 次(避免重复 IO)。
+        修复 (2026-06-17): 类级共享 last_cleanup 字典,多 logger 不会重复扫盘。
+        """
+        import time
+        import re
+        from datetime import timedelta
+
+        key = self._handler_name
+        now = time.time()
+        last = self._last_cleanup.get(key, 0)
+        if now - last < 3600:  # 1 小时去重
+            return
+        self._last_cleanup[key] = now
+
+        # 文件名格式: <name>.YYYY-MM-DD.log 或 <name>.error.YYYY-MM-DD.log
+        pattern = re.compile(
+            rf"^{re.escape(self._handler_name)}\.(\d{{4}}-\d{{2}}-\d{{2}})\.log$"
+        )
+        threshold = datetime.now() - timedelta(days=self.retain_days)
+
+        try:
+            for f in self.log_dir.iterdir():
+                if not f.is_file():
+                    continue
+                m = pattern.match(f.name)
+                if not m:
+                    continue
+                try:
+                    file_date = datetime.strptime(m.group(1), "%Y-%m-%d")
+                except ValueError:
+                    continue
+                if file_date < threshold:
+                    try:
+                        f.unlink()
+                    except OSError:
+                        pass  # 静默失败,不影响 logging
+        except OSError:
+            pass  # log_dir 不存在时静默
 
 
 # ────────────────────────────

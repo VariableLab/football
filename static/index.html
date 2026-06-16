@@ -199,6 +199,110 @@
           <div class="text-2xl leading-relaxed serif text-ink/70 italic border-l-4 border-accent pl-10 py-4 bg-accent/5" 
                x-text="$store.app.preview.content.insight"></div>
         </header>
+        <!-- Section 1.5: Quantitative Portfolio & Risk Dashboard -->
+        <section class="border-2 border-ink p-8 bg-[#F4F1EA]/50 space-y-6 relative overflow-hidden">
+          <!-- 背景装饰水印 -->
+          <div class="absolute -right-4 -bottom-6 opacity-[0.02] select-none pointer-events-none">
+            <span class="mono text-[100px] font-bold">KELLY</span>
+          </div>
+
+          <div class="flex justify-between items-center border-b border-black/10 pb-4">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-accent"></span>
+              <h2 class="text-xs font-black uppercase tracking-widest text-ink">量化资金风控与优势评级 (Kelly Dashboard)</h2>
+            </div>
+            
+            <!-- 推荐状态印章 -->
+            <div>
+              <template x-if="$store.app.strategyLoading">
+                <span class="text-[9px] mono opacity-40 animate-pulse">Calculating strategy...</span>
+              </template>
+              <template x-if="!$store.app.strategyLoading && $store.app.selectedStrategy">
+                <div>
+                  <!-- 推荐状态：Value Bet -->
+                  <template x-if="$store.app.selectedStrategy.is_recommended">
+                    <span class="px-3 py-1 border border-accent text-accent text-[9px] font-black uppercase tracking-widest stamp bg-accent/5">🔥 VALUE BET / 价值洼地</span>
+                  </template>
+                  <!-- 推荐状态：已过滤 -->
+                  <template x-if="!$store.app.selectedStrategy.is_recommended">
+                    <span class="px-3 py-1 border border-black/30 text-ink/40 text-[9px] font-black uppercase tracking-widest stamp bg-black/5">🚫 NO VALUE / 期望为负</span>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- 核心指标网格 -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 py-2">
+            <!-- 优势边际 -->
+            <div class="p-4 border border-black/5 bg-white space-y-1">
+              <div class="text-[8px] font-black opacity-30 uppercase tracking-wider">优势边际 (Edge)</div>
+              <div class="mono text-2xl font-bold text-accent" x-text="$store.app.selectedStrategy ? (+$store.app.selectedStrategy.edge * 100).toFixed(1) + '%' : '—'"></div>
+            </div>
+            <!-- 期望价值 -->
+            <div class="p-4 border border-black/5 bg-white space-y-1">
+              <div class="text-[8px] font-black opacity-30 uppercase tracking-wider">期望价值 (EV)</div>
+              <div class="mono text-2xl font-bold" :class="$store.app.selectedStrategy?.ev > 0 ? 'text-accent' : 'text-ink/40'" x-text="$store.app.selectedStrategy ? (+$store.app.selectedStrategy.ev).toFixed(3) : '—'"></div>
+            </div>
+            <!-- 原始凯利 -->
+            <div class="p-4 border border-black/5 bg-white space-y-1">
+              <div class="text-[8px] font-black opacity-30 uppercase tracking-wider">原始凯利 (Raw Kelly)</div>
+              <div class="mono text-2xl font-light opacity-60" x-text="$store.app.selectedStrategy ? (+$store.app.selectedStrategy.kelly_fraction * 100).toFixed(1) + '%' : '—'"></div>
+            </div>
+            <!-- 建议风控占比 -->
+            <div class="p-4 border border-black/5 bg-white space-y-1">
+              <div class="text-[8px] font-black opacity-30 uppercase tracking-wider">推荐风控仓位</div>
+              <div class="mono text-2xl font-black text-accent" x-text="$store.app.selectedStrategy ? (+$store.app.selectedStrategy.stake_pct * 100).toFixed(1) + '%' : '0.0%'"></div>
+            </div>
+          </div>
+
+          <!-- 交互模拟器部分 -->
+          <div class="bg-white p-6 border border-black/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div class="flex flex-wrap gap-6 items-center w-full md:w-auto">
+              <!-- 本金输入 -->
+              <div class="flex flex-col gap-1 shrink-0">
+                <label class="text-[8px] font-black opacity-30 uppercase tracking-wider">账户总本金 (Bankroll)</label>
+                <div class="flex items-center border border-black/15 px-2 py-1">
+                  <span class="text-xs opacity-40 mr-1">$</span>
+                  <input type="number" x-model.number="$store.app.bankroll" @input="$store.app.recalcStake()" class="w-24 text-xs font-bold focus:outline-none mono bg-transparent" placeholder="1000" />
+                </div>
+              </div>
+              
+              <!-- 风险档位 -->
+              <div class="flex flex-col gap-1 shrink-0">
+                <label class="text-[8px] font-black opacity-30 uppercase tracking-wider">风险风控偏好 (Risk Tier)</label>
+                <select x-model="$store.app.riskTier" @change="$store.app.changeRiskTier()" class="border border-black/15 px-2 py-1 text-xs font-bold bg-white focus:outline-none">
+                  <option value="conservative">稳健档 (Conservative)</option>
+                  <option value="balanced">均衡档 (Balanced)</option>
+                  <option value="aggressive">进取档 (Aggressive)</option>
+                  <option value="extreme">激进档 (Extreme)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 推荐下注金额输出 -->
+            <div class="w-full md:w-auto text-left md:text-right border-t md:border-t-0 border-black/5 pt-4 md:pt-0 flex md:flex-col justify-between items-center md:items-end">
+              <span class="text-[8px] font-black opacity-30 uppercase tracking-wider md:mb-1">建议投资配比金额</span>
+              <div class="flex items-baseline gap-1 text-accent">
+                <span class="text-xs font-black">$</span>
+                <span class="mono text-4xl font-black" x-text="$store.app.stakeAmount.toFixed(2)">0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 推荐具体玩法方向与文字解释 -->
+          <div class="text-[11px] leading-relaxed serif text-ink/70 bg-black/[0.02] p-4 border-l-2 border-black/20">
+            <template x-if="!$store.app.selectedStrategy">
+              <span>正在计算最佳对冲仓位推荐...</span>
+            </template>
+            <template x-if="$store.app.selectedStrategy">
+              <div>
+                <span class="font-bold text-ink" x-text="'策略建议：' + $store.app.selectedStrategy.play_label + ' → [' + $store.app.selectedStrategy.selection_label + '] @ ' + $store.app.selectedStrategy.odds + ' 赔率。'"></span>
+                <span x-text="$store.app.selectedStrategy.rationale || '模型已根据赛前新闻、舆情以及历史交易量偏离度校准了当前优势率。'"></span>
+              </div>
+            </template>
+          </div>
+        </section>
 
         <!-- Section 2: xG Contrast Infographic -->
         <section class="grid grid-cols-2 gap-20 py-20 border-y border-black/5">
@@ -333,9 +437,9 @@
 </div>
 
 <!-- Scripts -->
-<script src="/static/api_client.js?v=20260605-v5-final"></script>
-<script src="/static/i18n.js?v=20260605-v5-final"></script>
-<script src="/static/app.js?v=20260605-v5-final"></script>
+<script src="/static/api_client.js?v=20260616-v5-kelly"></script>
+<script src="/static/i18n.js?v=20260616-v5-kelly"></script>
+<script src="/static/app.js?v=20260616-v5-kelly"></script>
 <script defer src="/static/vendor/alpine.min.js"></script>
 
 </body>
