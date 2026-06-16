@@ -418,6 +418,108 @@
           </section>
         </template>
 
+        <!-- Section 3.5: Multi-Dimensional Predictions -->
+        <template x-if="$store.app.matchDetails && ($store.app.goalsPrediction || $store.app.scorePrediction)">
+          <section class="border border-black/5 p-8 bg-[#F4F1EA]/30 space-y-8 relative overflow-hidden">
+            <div class="flex items-center gap-3 border-b border-black/10 pb-4">
+              <span class="w-2 h-2 rounded-full bg-accent"></span>
+              <h2 class="text-xs font-black uppercase tracking-widest text-ink">多维模型预测分布 (Multi-Dimensional Forecasts)</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <!-- Column 1: 精确比分预测 -->
+              <div class="space-y-4">
+                <div class="text-[9px] font-black opacity-30 uppercase tracking-widest">精确比分预测 (Correct Score)</div>
+                <div class="space-y-3">
+                  <template x-if="!$store.app.scorePrediction">
+                    <div class="text-xs opacity-40 italic py-4">无比分预测数据</div>
+                  </template>
+                  <template x-if="$store.app.scorePrediction">
+                    <div class="space-y-2">
+                      <!-- 提取概率最高的前 5 个比分 -->
+                      <template x-for="[score, prob] in Object.entries($store.app.scorePrediction.probabilities).sort((a, b) => b[1] - a[1]).slice(0, 5)" :key="score">
+                        <div class="space-y-1">
+                          <div class="flex justify-between text-xs mono">
+                            <span class="font-bold text-ink" x-text="score"></span>
+                            <span class="text-accent" x-text="(prob * 100).toFixed(1) + '%'"></span>
+                          </div>
+                          <div class="w-full bg-black/5 h-1">
+                            <div class="bg-accent h-1" :style="'width: ' + (prob * 100) + '%'"></div>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Column 2: 总进球数概率 -->
+              <div class="space-y-4">
+                <div class="text-[9px] font-black opacity-30 uppercase tracking-widest">总进球数分布 (Total Goals)</div>
+                <div class="space-y-3">
+                  <template x-if="!$store.app.goalsPrediction">
+                    <div class="text-xs opacity-40 italic py-4">无进球数预测数据</div>
+                  </template>
+                  <template x-if="$store.app.goalsPrediction">
+                    <div class="space-y-2">
+                      <template x-for="[goals, prob] in Object.entries($store.app.goalsPrediction.probabilities).sort((a, b) => parseInt(a[0]) - parseInt(b[0]))" :key="goals">
+                        <div class="space-y-1">
+                          <div class="flex justify-between text-xs mono">
+                            <span x-text="goals + ' 球'"></span>
+                            <span class="text-ink/60" x-text="(prob * 100).toFixed(1) + '%'"></span>
+                          </div>
+                          <div class="w-full bg-black/5 h-1">
+                            <div class="bg-ink h-1" :style="'width: ' + (prob * 100) + '%'"></div>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Column 3: 半全场与让球预测 -->
+              <div class="space-y-6">
+                <!-- 半全场 -->
+                <div class="space-y-3">
+                  <div class="text-[9px] font-black opacity-30 uppercase tracking-widest">半全场走势 (Half / Full Time)</div>
+                  <template x-if="!$store.app.halfPrediction">
+                    <div class="text-xs opacity-40 italic py-2">无半全场预测数据</div>
+                  </template>
+                  <template x-if="$store.app.halfPrediction">
+                    <div class="space-y-2">
+                      <template x-for="[half, prob] in Object.entries($store.app.halfPrediction.probabilities).sort((a,b) => b[1] - a[1]).slice(0, 3)" :key="half">
+                        <div class="flex justify-between text-xs mono">
+                          <span x-text="half"></span>
+                          <span class="text-ink/60" x-text="(prob * 100).toFixed(1) + '%'"></span>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+
+                <!-- 让球胜平负 -->
+                <div class="space-y-3 pt-2 border-t border-black/5">
+                  <div class="text-[9px] font-black opacity-30 uppercase tracking-widest">让球盘口倾向 (Handicap)</div>
+                  <template x-if="!$store.app.rqPrediction">
+                    <div class="text-xs opacity-40 italic py-2">无让球预测数据</div>
+                  </template>
+                  <template x-if="$store.app.rqPrediction">
+                    <div class="space-y-2">
+                      <template x-for="[rq, prob] in Object.entries($store.app.rqPrediction.probabilities)" :key="rq">
+                        <div class="flex justify-between text-xs mono">
+                          <span x-text="rq === 'home' ? '让球主胜' : (rq === 'draw' ? '让球平局' : '让球客胜')"></span>
+                          <span class="text-accent font-bold" x-text="(prob * 100).toFixed(1) + '%'"></span>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </section>
+        </template>
+
         <!-- Section 4: Final Verdict -->
         <section class="text-center pt-16 space-y-12 border-t border-black/5">
           <div class="space-y-4">

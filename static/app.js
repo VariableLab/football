@@ -22,6 +22,13 @@ document.addEventListener('alpine:init', () => {
     riskTier: 'balanced',    // 默认风险偏好档位
     agentLog: "正在初始化 59 维特征扫描引擎...",
     
+    // 多维模型预测绑定
+    matchDetails: null,
+    goalsPrediction: null,
+    scorePrediction: null,
+    halfPrediction: null,
+    rqPrediction: null,
+    
     // 移动端视图控制: 'list' | 'detail'
     mobileView: 'list',
 
@@ -93,6 +100,12 @@ document.addEventListener('alpine:init', () => {
       this.selectedStrategy = null;
       this.strategyLoading = true;
       
+      this.matchDetails = null;
+      this.goalsPrediction = null;
+      this.scorePrediction = null;
+      this.halfPrediction = null;
+      this.rqPrediction = null;
+      
       const m = this.selectedMatch;
       this.agentLog = `正在校准 ${m?.home_team?.name || '未知'} 的 59 维残差特征与对冲对策...`;
 
@@ -101,6 +114,19 @@ document.addEventListener('alpine:init', () => {
         this.preview = previewData;
       } catch (err) {
         console.error('Preview load failed', err);
+      }
+
+      try {
+        const matchDetails = await WCApi.Data.getMatch(id);
+        this.matchDetails = matchDetails;
+        if (matchDetails && matchDetails.predictions) {
+          this.goalsPrediction = matchDetails.predictions.find(p => p.play_type === 'GOALS');
+          this.scorePrediction = matchDetails.predictions.find(p => p.play_type === 'SCORE');
+          this.halfPrediction = matchDetails.predictions.find(p => p.play_type === 'HALF');
+          this.rqPrediction = matchDetails.predictions.find(p => p.play_type === 'RQ');
+        }
+      } catch (err) {
+        console.error('Match details load failed', err);
       }
 
       try {
