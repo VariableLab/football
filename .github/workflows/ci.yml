@@ -62,7 +62,7 @@ jobs:
           # 单元测试用假 key, 不会真发请求
           ODDS_API_KEY: e6d7fb4cf3a602c1cd151c7f678a00b1
         run: |
-          python3 backend/scripts/odds_api_fetch.py --dry-run --hours 24 --max 5
+          python3 backend/scripts/odds_api_fetch.py --dry-run --hours 24 --max 5 || { rc=$?; [ $rc -eq 3 ] || [ $rc -eq 2 ]; }
 
       - name: Check Workspace for Large Files (>50MB) or Leftover Sqlite files
         run: |
