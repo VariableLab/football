@@ -32,6 +32,12 @@ jobs:
         run: |
           pytest backend/tests
 
+      - name: Initialize Temp Database for CLI Testing
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
+        run: |
+          python3 -c "from database.models import init_db; init_db()"
+
       - name: Verify Backup Database CLI (Dry-Run)
         env:
           PYTHONPATH: ${{ github.workspace }}/backend
