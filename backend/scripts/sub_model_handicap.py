@@ -189,23 +189,25 @@ class HandicapTrainer:
                 JingcaiIssueMatch.handicap.isnot(None),
             ).all()
 
-            # 来源2: 所有有比分和赔率的已结束比赛(推断handicap)
+            # 来源2: 所有有比分和赔率的已结束比赛(推断handicap) — 💡 强制按时间排序防时序泄漏
             finished = session.query(Match).filter(
                 Match.status == MatchStatus.FINISHED,
                 Match.actual_home_goals.isnot(None),
                 Match.actual_away_goals.isnot(None),
                 Match.closing_odds_home.isnot(None),
                 Match.closing_odds_home > 1.01,
-            ).all()
+            ).order_by(Match.kickoff_at.asc()).all()
 
             # 构建竞彩match→handicap映射
             jingcai_handicap = {}
             for jm in jm_matches:
                 jingcai_handicap[jm.match_id] = jm.handicap
 
-            # 批量预计算球队覆盖率和净胜球(避免N+1)
-            team_cover_rates = self._batch_team_cover_rates(session)
-            team_goal_diffs = self._batch_team_goal_diffs(session)
+            # 💡 滚动状态字典：用于在时间升序下，避免 look-ahead 数据泄露
+            # 覆盖率滚动：team_id -> {"wins": 1, "total": 2} (初值对应 0.5)
+            team_covers_stats = {}
+            # 净胜球滚动：team_id -> {"gd_sum": 0.0, "total": 0} (初值对应 0.0)
+            team_gds_stats = {}
 
             features_list = []
             labels_list = []
@@ -227,9 +229,11 @@ class HandicapTrainer:
                 label_map = {"home": 0, "draw": 1, "away": 2}
                 label = label_map[outcome]
 
-                # 球队数据
-                home_cover = team_cover_rates.get(match.home_team_id, 0.5)
-                away_cover = team_cover_rates.get(match.away_team_id, 0.5)
+                # 从滚动记录中获取当前时间点的主客队无泄漏历史覆盖率和场均净胜球
+                h_cov_stat = team_covers_stats.get(match.home_team_id, {"wins": 1, "total": 2})
+                a_cov_stat = team_covers_stats.get(match.away_team_id, {"wins": 1, "total": 2})
+                home_cover = h_cov_stat["wins"] / h_cov_stat["total"]
+                away_cover = a_cov_stat["wins"] / a_cov_stat["total"]
 
                 elo_diff = 0.0
                 if match.home_team and match.away_team:
@@ -240,9 +244,10 @@ class HandicapTrainer:
                 oa = match.closing_odds_away or 2.0
                 odds_diff = (1.0 / max(oh, 1.01)) - (1.0 / max(oa, 1.01))
 
-                # 球队净胜球
-                home_gd = team_goal_diffs.get(match.home_team_id, 0.0)
-                away_gd = team_goal_diffs.get(match.away_team_id, 0.0)
+                h_gd_stat = team_gds_stats.get(match.home_team_id, {"gd_sum": 0.0, "total": 0})
+                a_gd_stat = team_gds_stats.get(match.away_team_id, {"gd_sum": 0.0, "total": 0})
+                home_gd = h_gd_stat["gd_sum"] / h_gd_stat["total"] if h_gd_stat["total"] > 0 else 0.0
+                away_gd = a_gd_stat["gd_sum"] / a_gd_stat["total"] if a_gd_stat["total"] > 0 else 0.0
 
                 feats = extract_handicap_features(
                     handicap=handicap,
@@ -260,6 +265,22 @@ class HandicapTrainer:
 
                 features_list.append(feats)
                 labels_list.append(label)
+
+                # 💡 关键：使用当场比赛的真实全场赛果，更新主队的滚动状态字典（只对主队累加，保持原 batch_by_home 统计口径）
+                h_id = match.home_team_id
+                if h_id not in team_covers_stats:
+                    team_covers_stats[h_id] = {"wins": 1, "total": 2}
+                if h_id not in team_gds_stats:
+                    team_gds_stats[h_id] = {"gd_sum": 0.0, "total": 0}
+
+                # 更新主队覆盖率
+                team_covers_stats[h_id]["total"] += 1
+                if match.actual_home_goals > match.actual_away_goals:
+                    team_covers_stats[h_id]["wins"] += 1
+
+                # 更新主队净胜球
+                team_gds_stats[h_id]["total"] += 1
+                team_gds_stats[h_id]["gd_sum"] += (match.actual_home_goals - match.actual_away_goals)
 
             if len(features_list) < MIN_TRAIN_SAMPLES:
                 logger.info(f"[handicap] 有效样本不足: {len(features_list)}")

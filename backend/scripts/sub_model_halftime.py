@@ -141,23 +141,23 @@ class HalftimeTrainer:
 
     def build_training_data(self) -> Optional[Tuple[np.ndarray, np.ndarray]]:
         from database.models import SessionLocal, Match, MatchStatus, Team
-        from sqlalchemy import func, case
 
         session = SessionLocal()
         try:
+            # 💡 强制按 kickoff_at 升序排列，防时序泄露
             finished = session.query(Match).filter(
                 Match.status == MatchStatus.FINISHED,
                 Match.actual_outcome.isnot(None),
                 Match.ht_home_goals.isnot(None),
                 Match.ht_away_goals.isnot(None),
-            ).all()
+            ).order_by(Match.kickoff_at.asc()).all()
 
             if len(finished) < MIN_TRAIN_SAMPLES:
                 logger.info(f"[halftime] 样本不足: {len(finished)}/{MIN_TRAIN_SAMPLES}")
                 return None
 
-            # 批量预计算球队半场倾向(避免N+1)
-            team_ht_rates = self._batch_team_ht_rates(session)
+            # 💡 滚动倾向统计：team_id -> {"win": 4, "draw": 3, "loss": 3, "total": 10}（初始默认平滑先验）
+            team_ht_stats = {}
 
             features_list = []
             labels_list = []
@@ -173,8 +173,20 @@ class HalftimeTrainer:
                 else:
                     label = 2  # away
 
-                home_ht_rate = team_ht_rates.get(match.home_team_id, {"home": 0.40, "draw": 0.30, "away": 0.30})
-                away_ht_rate = team_ht_rates.get(match.away_team_id, {"home": 0.40, "draw": 0.30, "away": 0.30})
+                # 从滚动记录中获取当前时间点的主客队历史倾向概率
+                h_stats = team_ht_stats.get(match.home_team_id, {"win": 4, "draw": 3, "loss": 3, "total": 10})
+                a_stats = team_ht_stats.get(match.away_team_id, {"win": 4, "draw": 3, "loss": 3, "total": 10})
+
+                home_ht_rate = {
+                    "home": h_stats["win"] / h_stats["total"],
+                    "draw": h_stats["draw"] / h_stats["total"],
+                    "away": h_stats["loss"] / h_stats["total"]
+                }
+                away_ht_rate = {
+                    "home": a_stats["win"] / a_stats["total"],
+                    "draw": a_stats["draw"] / a_stats["total"],
+                    "away": a_stats["loss"] / a_stats["total"]
+                }
 
                 elo_diff = 0.0
                 if match.home_team and match.away_team:
@@ -199,6 +211,19 @@ class HalftimeTrainer:
 
                 features_list.append(feats)
                 labels_list.append(label)
+
+                # 💡 关键：计算完当前特征后，把当场比赛的真实赛果滚动更新进主队的统计数据中（只对主队累加）
+                h_id = match.home_team_id
+                if h_id not in team_ht_stats:
+                    team_ht_stats[h_id] = {"win": 4, "draw": 3, "loss": 3, "total": 10}
+                
+                team_ht_stats[h_id]["total"] += 1
+                if label == 0:
+                    team_ht_stats[h_id]["win"] += 1
+                elif label == 1:
+                    team_ht_stats[h_id]["draw"] += 1
+                else:
+                    team_ht_stats[h_id]["loss"] += 1
 
             if len(features_list) < MIN_TRAIN_SAMPLES:
                 logger.info(f"[halftime] 有效样本不足: {len(features_list)}")

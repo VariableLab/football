@@ -169,22 +169,23 @@ class ScoreTrainer:
 
     def build_training_data(self) -> Optional[Tuple[np.ndarray, np.ndarray]]:
         from database.models import SessionLocal, Match, MatchStatus, Team
-        from sqlalchemy import func
 
         session = SessionLocal()
         try:
+            # 所有已结束比赛 — 💡 强制按时间排序防时序泄漏
             finished = session.query(Match).filter(
                 Match.status == MatchStatus.FINISHED,
                 Match.actual_home_goals.isnot(None),
                 Match.actual_away_goals.isnot(None),
-            ).all()
+            ).order_by(Match.kickoff_at.asc()).all()
 
             if len(finished) < MIN_TRAIN_SAMPLES:
                 logger.info(f"[score] 样本不足: {len(finished)}/{MIN_TRAIN_SAMPLES}")
                 return None
 
-            # 批量预计算球队进球/失球统计(避免N+1)
-            team_stats = self._batch_team_goal_stats(session)
+            # 💡 滚动状态字典：用于在时间升序下，避免 look-ahead 数据泄露
+            # 进失球滚动：team_id -> {"goals": 13, "concede": 12, "total": 10} (初值对应 1.3 和 1.2)
+            team_goals_stats = {}
 
             features_list = []
             labels_list = []
@@ -192,8 +193,18 @@ class ScoreTrainer:
             for match in finished:
                 label = score_to_label(match.actual_home_goals, match.actual_away_goals)
 
-                home_stats = team_stats.get(match.home_team_id, {"goals_avg": 1.3, "concede_avg": 1.2})
-                away_stats = team_stats.get(match.away_team_id, {"goals_avg": 1.3, "concede_avg": 1.2})
+                # 从滚动记录中获取当前时间点的主客队无泄漏历史进/失球平均值
+                h_stat = team_goals_stats.get(match.home_team_id, {"goals": 13, "concede": 12, "total": 10})
+                a_stat = team_goals_stats.get(match.away_team_id, {"goals": 13, "concede": 12, "total": 10})
+                
+                home_stats = {
+                    "goals_avg": h_stat["goals"] / h_stat["total"],
+                    "concede_avg": h_stat["concede"] / h_stat["total"]
+                }
+                away_stats = {
+                    "goals_avg": a_stat["goals"] / a_stat["total"],
+                    "concede_avg": a_stat["concede"] / a_stat["total"]
+                }
 
                 elo_diff = 0.0
                 if match.home_team and match.away_team:
@@ -218,6 +229,15 @@ class ScoreTrainer:
 
                 features_list.append(feats)
                 labels_list.append(label)
+
+                # 💡 关键：使用当场比赛的真实全场比分，更新主队的滚动状态字典（只对主队累加，保持原 batch_by_home 统计口径）
+                h_id = match.home_team_id
+                if h_id not in team_goals_stats:
+                    team_goals_stats[h_id] = {"goals": 13, "concede": 12, "total": 10}
+
+                team_goals_stats[h_id]["total"] += 1
+                team_goals_stats[h_id]["goals"] += match.actual_home_goals
+                team_goals_stats[h_id]["concede"] += match.actual_away_goals
 
             if len(features_list) < MIN_TRAIN_SAMPLES:
                 return None
