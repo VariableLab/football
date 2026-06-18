@@ -253,6 +253,14 @@ class Calibrator:
 
         return Calibrator.fit_from_data(observations)
 
+    def refit(self, db_session=None) -> None:
+        """从数据库重新拟合当前校准器的校准曲线。"""
+        curve = self.fit_from_db(db_session)
+        self._curve = curve
+        self._factors = {
+            b.model_prob_range: b.factor for b in curve.buckets
+        }
+
     @property
     def curve(self) -> CalibrationCurve:
         if self._curve is not None:

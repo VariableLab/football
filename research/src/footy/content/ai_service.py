@@ -9,14 +9,14 @@ class AIService:
     """
     def __init__(self):
         # 文本模型配置 (保持原样)
-        self.text_api_key = "sk-vpiG1geQ51q6w12NNOB92ktjJdZ6eDk3ysarFwmP5ztG3Vh6"
-        self.text_base_url = "https://deepstock.zone.id/v1"
-        self.text_model = "openai/gpt-oss-120b"
+        self.text_api_key = os.getenv("TEXT_API_KEY", "")
+        self.text_base_url = os.getenv("TEXT_API_BASE_URL", "https://deepstock.zone.id/v1")
+        self.text_model = os.getenv("TEXT_MODEL", "openai/gpt-oss-120b")
         
         # 视觉模型配置 (Agnes AI)
-        self.vision_api_key = "sk-u0hbhlXSnFVIFWAx5xWe4om7OXtp9jakOpFyM96e0YmxYIjM"
-        self.vision_base_url = "https://apihub.agnes-ai.com/v1"
-        self.image_model = "agnes-image-2.1-flash"
+        self.vision_api_key = os.getenv("AGNES_API_KEY", "")
+        self.vision_base_url = os.getenv("AGNES_API_BASE_URL", "https://apihub.agnes-ai.com/v1")
+        self.image_model = os.getenv("AGNES_IMAGE_MODEL", "agnes-image-2.1-flash")
 
         # 球队视觉画像映射表 (进一步细化南美/亚洲等特征，增加解剖学约束提示)
         self.PERSONA_MAP = {
