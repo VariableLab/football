@@ -144,8 +144,8 @@ class PredictionOut(BaseModel):
 class MatchOut(BaseModel):
     id: int
     match_code: str
-    home_team: TeamOut
-    away_team: TeamOut
+    home_team: Optional[TeamOut] = None
+    away_team: Optional[TeamOut] = None
     kickoff_at: Optional[datetime]
     kickoff_bj: Optional[str] = None
     group: Optional[str]
