@@ -70,7 +70,7 @@ class TeamCreate(BaseModel):
     code: str
     flag: str = "🏳️"
     fifa_rank: Optional[int] = None
-    elo: Optional[int] = None
+    elo: Optional[float] = None
     group: Optional[str] = None
     continent: Optional[str] = None
 
@@ -82,7 +82,7 @@ class TeamOut(BaseModel):
     code: str
     flag: Optional[str] = None
     fifa_rank: Optional[int]
-    elo: Optional[int]
+    elo: Optional[float]
     group: Optional[str]
     form_factor: Optional[float]
     avg_goals_scored: Optional[float]
@@ -286,8 +286,8 @@ class ListResponse(BaseModel):
 class MatchListItem(BaseModel):
     id: int
     match_code: str
-    home_team: TeamOut
-    away_team: TeamOut
+    home_team: Optional[TeamOut] = None
+    away_team: Optional[TeamOut] = None
     kickoff_at: Optional[datetime]
     kickoff_bj: Optional[str] = None
     group: Optional[str]

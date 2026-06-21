@@ -7,7 +7,7 @@ import pytest
 from features.feature_builder import FeatureBuilder
 
 
-def make_team(elo=1500, rest_days=7):
+def make_team(elo=1500):
     return SimpleNamespace(
         elo=elo,
         name="Team",
@@ -15,7 +15,6 @@ def make_team(elo=1500, rest_days=7):
         key_players_available=11,
         key_players_total=11,
         key_injuries="",
-        rest_days=rest_days,
     )
 
 

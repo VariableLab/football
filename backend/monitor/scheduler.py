@@ -223,6 +223,7 @@ def lock_predictions_job():
     """
     对48h内即将开始的比赛，自动运行预测模型并锁定快照。
     优先使用已采集的收盘赔率（closing_odds），确保市场信号独立于 Elo。
+    优化: 批量收集预测和状态更新,单次 commit。
     """
     now = datetime.now(timezone.utc)
     window = now + timedelta(hours=48)
@@ -234,39 +235,61 @@ def lock_predictions_job():
             Match.status == MatchStatus.SCHEDULED
         ).all()
 
+        # ── 批量收集: 预测插入 + 状态更新 ──
+        new_predictions = []       # [(match_id, payload_dict)]
+        matches_to_update = []     # match objects to set UPCOMING
+
         for match in matches:
             # 检查是否已锁定
             existing = db.query(Prediction).filter(Prediction.match_id == match.id).first()
             if existing:
                 continue
 
-            logger.info(f"[prediction] Locking predictions for {match.match_code}")
-
-            # 调用预测引擎（使用 closing_odds 作为市场输入，消除循环引用）
             try:
                 from core.prediction_engine import PredictionEngine, build_context_from_match
                 ctx = build_context_from_match(match)
                 engine = PredictionEngine(db_session=db)
                 result = engine.predict(ctx)
+
                 for payload in result.to_db_payload():
-                    pred = Prediction(
-                        match_id=match.id,
-                        play_type=payload["play_type"],
-                        probabilities=payload["probabilities"],
-                        confidence=payload.get("confidence"),
-                        model_version=payload.get("model_version", "v1.0"),
-                    )
-                    db.add(pred)
+                    new_predictions.append((
+                        match.id,
+                        payload["play_type"],
+                        payload["probabilities"],
+                        payload.get("confidence"),
+                        payload.get("model_version", "v2.0_linear"),
+                    ))
+
                 logger.info(
-                    f"[prediction] {match.match_code} locked | "
+                    f"[prediction] {match.match_code} ready | "
                     f"SPF: H={result.spf.get('home', 0):.2%} D={result.spf.get('draw', 0):.2%} A={result.spf.get('away', 0):.2%}"
                 )
             except Exception as e:
                 logger.error(f"[prediction] Failed to lock {match.match_code}: {e}")
+                continue
 
-            # 更新比赛状态
+            matches_to_update.append(match)
+
+        # ── 批量插入预测 ──
+        if new_predictions:
+            db.add_all([
+                Prediction(
+                    match_id=mid,
+                    play_type=ptype,
+                    probabilities=probs,
+                    confidence=conf,
+                    model_version=ver,
+                )
+                for mid, ptype, probs, conf, ver in new_predictions
+            ])
+            logger.info(f"[prediction] Batch inserted {len(new_predictions)} predictions")
+
+        # ── 批量更新比赛状态 ──
+        for match in matches_to_update:
             match.status = MatchStatus.UPCOMING
-            db.commit()
+
+        # 单次 commit
+        db.commit()
 
 
 # ────────────────────────────
@@ -1232,36 +1255,19 @@ def start_scheduler():
         replace_existing=True,
     )
 
-    # ────────────────────────────
-    # Task: zgzcw 数据同步（主力数据源，替代 sporttery.cn）
-    # ────────────────────────────
-    def zgzcw_daily_sync_wrapper():
+    # ── Zgzcw 竞彩数据同步: 每30分钟(合并原3个冗余任务) ──
+    # 原 zgzcw_daily_sync(08:00) + zgzcw_odds_refresh(*/3h:17) + zgzcw_jc_sync(*/30min)
+    # 统一为每30分钟一次,通过内部去重逻辑避免重复写入
+    def zgzcw_sync_wrapper():
         from ingestion.zgzcw_jc_sync import sync_jc_matches
         result = sync_jc_matches()
-        logger.info(f"[zgzcw-daily-sync] Sync result: {result}")
-
-    def zgzcw_odds_refresh_wrapper():
-        from ingestion.zgzcw_jc_sync import sync_jc_matches
-        result = sync_jc_matches()
-        logger.info(f"[zgzcw-odds-refresh] Sync result: {result}")
-
-    # 每日同步 zgzcw 竞彩比赛 + 期号关联 + 赔率历史：每天 08:00
-    scheduler.add_job(
-        zgzcw_daily_sync_wrapper,
-        trigger=CronTrigger(hour=8, minute=0),
-        id="zgzcw_daily_sync",
-        name="Zgzcw Daily Match + Issue Sync",
-        replace_existing=True,
-    )
-
-    # 每3小时刷新赔率
-    scheduler.add_job(
-        zgzcw_odds_refresh_wrapper,
-        trigger=CronTrigger(hour="*/3", minute=17),
-        id="zgzcw_odds_refresh",
-        name="Zgzcw Odds Refresh (3h)",
-        replace_existing=True,
-    )
+        if result.get("created") or result.get("updated"):
+            logger.info(
+                f"[zgzcw-sync] Synced: created={result.get('created')}, "
+                f"updated={result.get('updated')}, errors={result.get('errors')}"
+            )
+        else:
+            logger.debug("[zgzcw-sync] No new data")
 
     # Zgzcw 开奖结果采集：每 6 小时
     scheduler.add_job(
@@ -1269,6 +1275,15 @@ def start_scheduler():
         trigger=IntervalTrigger(hours=6),
         id="zgzcw_draw_sync",
         name="Zgzcw Draw Result Sync (6h)",
+        replace_existing=True,
+    )
+
+    # ── 合并后的 zgzcw 同步任务: 每30分钟 ──
+    scheduler.add_job(
+        zgzcw_sync_wrapper,
+        trigger=IntervalTrigger(minutes=30),
+        id="zgzcw_sync",
+        name="Zgzcw JC Sync (consolidated: replaced 3 redundant tasks)",
         replace_existing=True,
     )
 
@@ -1489,7 +1504,7 @@ def start_scheduler():
     # Task: 足彩期号自动验证 — 检查已开奖但未验证的期号并执行verify
     # ────────────────────────────
     def jingcai_verify_wrapper():
-        from scheduler import jingcai_auto_verify_wrapper
+        # 避免 from scheduler import 循环导入,直接调用已定义函数
         jingcai_auto_verify_wrapper()
 
     scheduler.add_job(
@@ -1499,25 +1514,6 @@ def start_scheduler():
         name="Jingcai Auto-Verify (1h)",
         replace_existing=True,
     )
-    # ── Zgzcw 竞彩比赛同步：每 30 分钟 ──
-    def zgzcw_jc_sync_wrapper():
-        from ingestion.zgzcw_jc_sync import sync_jc_matches
-        result = sync_jc_matches() # 移除 db_path 硬编码，使用默认配置
-        if result.get("created") or result.get("updated"):
-            logger.info(
-                f"[zgzcw-jc-sync] Synced {result.get('matches')} matches: "
-                f"created={result.get('created')}, updated={result.get('updated')}, "
-                f"errors={result.get('errors')}"
-            )
-
-    scheduler.add_job(
-        zgzcw_jc_sync_wrapper,
-        trigger=IntervalTrigger(minutes=30),
-        id="zgzcw_jc_sync",
-        name="Zgzcw JC Match Sync (live.zgzcw.com)",
-        replace_existing=True,
-    )
-
     # ── Fusion 逻辑回归训练：每周一 06:05（含 A/B 验证部署）──
     def data_quality_wrapper():
         from database.models import get_db

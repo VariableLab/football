@@ -88,8 +88,8 @@ def compat_picks_all(db: Session = Depends(_get_db)):
 def compat_picks_match(match_id: int, db: Session = Depends(_get_db)):
     """兼容老路径 → 实际: /api/matches/{id}/strategy"""
     try:
-        from api.routers.matches import get_match_strategy
-        return get_match_strategy(match_id=match_id, db=db)
+        from api.routers.matches import get_strategy
+        return get_strategy(match_id=match_id, risk_tier="balanced", model_tier="aligned", db=db)
     except Exception as e:
         logger.warning(f"[compat] picks/{match_id} failed: {e}")
         raise HTTPException(status_code=503, detail=f"compat_unavailable: {e}")
@@ -126,8 +126,8 @@ def compat_odds_movements_all(db: Session = Depends(_get_db)):
 def compat_odds_movements_match(match_id: int, db: Session = Depends(_get_db)):
     """兼容老路径 → 实际: /api/matches/{id}/odds-movement"""
     try:
-        from api.routers.matches import get_match_odds_movement
-        return get_match_odds_movement(match_id=match_id, db=db)
+        from api.routers.matches import get_odds_movement
+        return get_odds_movement(match_id=match_id, db=db)
     except Exception as e:
         logger.warning(f"[compat] odds/movements/{match_id} failed: {e}")
         raise HTTPException(status_code=503, detail=f"compat_unavailable: {e}")

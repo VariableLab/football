@@ -378,13 +378,11 @@ class WeightLearner:
                 key_players_available=11,
                 key_players_total=11,
                 squad_fatigue_index=home.squad_fatigue_index or 0.5,
-                rest_days=home.rest_days or 7,
                 tactical_style=home.tactical_style or "balanced",
                 coach_rating=home.coach_rating or 0.5,
                 home_away_factor=home.home_away_factor or 1.0,
                 weather_adaptability=home.weather_adaptability or 1.0,
                 recent_results=home_recent,
-                key_injuries=h_injuries_val,  # 💡 替换为防泄漏历史值
             ),
             away_team=TeamContext(
                 team_id=away.id,
@@ -397,13 +395,11 @@ class WeightLearner:
                 key_players_available=11,
                 key_players_total=11,
                 squad_fatigue_index=away.squad_fatigue_index or 0.5,
-                rest_days=away.rest_days or 7,
                 tactical_style=away.tactical_style or "balanced",
                 coach_rating=away.coach_rating or 0.5,
                 home_away_factor=away.home_away_factor or 1.0,
                 weather_adaptability=away.weather_adaptability or 1.0,
                 recent_results=away_recent,
-                key_injuries=a_injuries_val,  # 💡 替换为防泄漏历史值
             ),
             stage=match.stage or "group",
             is_knockout=match.stage not in (None, "", "group"),

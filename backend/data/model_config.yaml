@@ -1,35 +1,148 @@
 # 预测引擎模型参数配置
-# 
-# 修改此文件后，预测引擎将自动加载新参数，无需重启服务。
+#
+# 修改此文件后，预测引擎通过 load_engine_config() 热加载新参数。
 # 参数基于历史数据回测校准。
 
 # --- 基础配置 ---
-# 泊松截断上限（计算 0-8 个进球）
 MAX_GOALS: 8
-# 泊松截断概率质量
 POISSON_TRUNCATE: 0.999
-# 世界杯默认主场优势 (Elo)，0 表示中立场
 HOME_ADVANTAGE_ELO: 0
-# 状态计算窗口（近 N 场）
 FORM_WINDOW_MATCHES: 10
 
-# --- 模型修正参数 ---
-# Dixon-Coles 低比分相关性修正参数 (rho)
-# 正值表示增加 0-0 和 1-1 的概率
+# --- 泊松模型修正 ---
 DIXON_COLES_RHO: 0.0092
-
-# 平局概率修正系数 (Draw Inflation)
-# 用于补偿独立泊松模型对平局率的低估
-# 最终建议：上调至 1.35 以平衡胜平负分布
 DRAW_INFLATION_FACTOR: 1.35
 
 # --- 线性融合默认权重 ---
-# elo: Elo 实力模型权重
-# poisson: 泊松攻防模型权重
-# players: 球员状态修正权重
-# market: 市场赔率隐含概率权重（通常是最强信号）
 DEFAULT_WEIGHTS:
   elo: 0.35
   poisson: 0.35
   players: 0.05
   market: 0.25
+
+# --- 半场-全场转移矩阵 (基于23576场历史统计, 2026-05-09校准) ---
+HT_FT_TRANSITION:
+  home:   {home: 0.785, draw: 0.151, away: 0.065}
+  draw:   {home: 0.442, draw: 0.237, away: 0.321}
+  away:   {home: 0.105, draw: 0.199, away: 0.697}
+
+# --- 半场结果分布先验 ---
+HT_DISTRIBUTION:
+  home: 0.368
+  draw: 0.364
+  away: 0.268
+
+# --- 半场时间比例 (用于从全场λ推算半场λ) ---
+HALF_TIME_RATIO: 0.48
+
+# --- 淘汰赛进球减少因子 ---
+KNOCKOUT_GOAL_FACTORS:
+  R16: 0.88
+  QF: 0.85
+  SF: 0.82
+  F: 0.80
+  3P: 0.90
+
+# --- 战术风格相克矩阵 (主队风格, 客队风格) → (主队进攻乘数, 客队进攻乘数) ---
+TACTICAL_MATRIX:
+  attack:
+    attack:    {home: 1.15, away: 1.15}
+    defense:   {home: 0.88, away: 0.72}
+    balanced:  {home: 1.02, away: 0.92}
+    counter:   {home: 0.95, away: 1.12}
+  defense:
+    attack:    {home: 0.72, away: 0.88}
+    defense:   {home: 0.68, away: 0.68}
+    balanced:  {home: 0.80, away: 0.85}
+    counter:   {home: 0.62, away: 0.75}
+  balanced:
+    attack:    {home: 0.92, away: 1.02}
+    defense:   {home: 0.85, away: 0.80}
+    balanced:  {home: 1.00, away: 1.00}
+    counter:   {home: 0.95, away: 0.95}
+  counter:
+    attack:    {home: 1.12, away: 0.95}
+    defense:   {home: 0.75, away: 0.62}
+    balanced:  {home: 0.95, away: 0.95}
+    counter:   {home: 0.85, away: 0.85}
+
+# --- 天气惩罚系数 ---
+WEATHER_PENALTY:
+  clear: 0.00
+  cloudy: 0.00
+  rain: 0.04
+  hot: 0.06
+  cold: 0.04
+  snow: 0.10
+
+PITCH_PENALTY:
+  good: 0.00
+  average: 0.02
+  poor: 0.05
+  artificial: 0.03
+
+# --- 赛程密度休息惩罚 ---
+REST_PENALTY:
+  "5-999": 1.00
+  "3-5": 0.97
+  "2-3": 0.92
+  "0-2": 0.85
+
+# --- 球员状态修正 ---
+PLAYER_POSITION_IMPACT:
+  goalkeeper: 0.12
+  defense: 0.08
+  midfield: 0.07
+  forward: 0.08
+
+# --- 教练临场能力 ---
+COACH_BASE_MULTIPLIER: 0.04
+COACH_KNOCKOUT_BONUS: 0.03
+COACH_RANGE: [0.90, 1.10]
+
+# --- 伤病影响 ---
+INJURY_ATTACK_PEN_PER_PLAYER: 0.03
+INJURY_DEFENSE_PEN_PER_PLAYER: 0.02
+INJURY_MAX_ATTACK_PEN: 0.15
+INJURY_MAX_DEFENSE_PEN: 0.12
+INJURY_FATIGUE_MULT: 0.5
+
+# --- 疲劳修正 ---
+FATIGUE_PEN_MAX: 0.15
+
+# --- 状态因子范围 ---
+FORM_RANGE: [0.75, 1.15]
+
+# --- 天气适应性惩罚下限 ---
+WEATHER_ADAPT_MIN: 0.85
+
+# --- 临场异动修正 (Steam Move) ---
+STEAM_MOVE:
+  min_intensity: 0.05
+  max_intensity: 0.15
+  sigmoid_slope: 20
+  target_prob_low: 0.50
+  target_prob_high: 0.65
+  alpha_multiplier: 0.4
+
+# --- 置信度阈值 ---
+CONFIDENCE:
+  high_entropy: 0.7
+  high_agreement: 0.95
+  medium_entropy: 0.5
+  medium_agreement: 0.85
+
+# --- 降级模式 ---
+DEGRADED:
+  mock_elo_threshold: 1600
+  lab_elo_weight_normal: 0.90
+  lab_elo_weight_degraded: 0.95
+
+# --- 残差NN融合 ---
+RESIDUAL_NN:
+  lr_weight: 0.4
+  nn_weight: 0.6
+
+# --- 平局检测 ---
+DRAW_DETECTION:
+  nn_fallback_enabled: true

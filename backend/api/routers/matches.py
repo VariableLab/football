@@ -134,6 +134,7 @@ def get_match(match_id: int, db: Session = Depends(get_db)):
 def get_strategy(
     match_id: int,
     risk_tier: str = "balanced",
+    model_tier: str = "aligned",
     db: Session = Depends(get_db),
     user: Optional[any] = Depends(get_optional_user),
 ):
@@ -165,7 +166,23 @@ def get_strategy(
                     detail="License expired. Please redeem a new license key.",
                 )
 
-    preds = db.query(Prediction).filter(Prediction.match_id == match_id).all()
+    version_map = {
+        "classic": "v3.0_classic",
+        "aligned": "v3.0",
+        "deep": "v4.0"
+    }
+    target_version = version_map.get(model_tier, "v3.0")
+    fallback_sequence = [target_version, "v3.0", "v2.0", "v3.0_shadow"]
+    fallback_sequence = list(dict.fromkeys(fallback_sequence))
+
+    preds = []
+    for ver in fallback_sequence:
+        preds = db.query(Prediction).filter(
+            Prediction.match_id == match_id,
+            Prediction.model_version == ver
+        ).all()
+        if preds:
+            break
     
     # 如果数据库中没有预测，则即时生成（实时计算模式）
     if not preds:
@@ -177,13 +194,21 @@ def get_strategy(
             
             # 模拟数据库负载结构
             predictions = []
-            for payload in result.to_db_payload():
+            payloads = result.to_db_payload()
+            
+            selected_payloads = []
+            for ver in fallback_sequence:
+                selected_payloads = [p for p in payloads if p.get("model_version") == ver]
+                if selected_payloads:
+                    break
+            
+            for payload in selected_payloads:
                 predictions.append({
                     "id": 0, # 虚拟 ID
                     "match_id": match.id,
                     "play_type": payload["play_type"],
                     "probabilities": payload["probabilities"],
-                    "model_version": payload.get("model_version", "v1.0"),
+                    "model_version": payload["model_version"],
                     "input_checksum": "live-calc",
                     "locked_at": None,
                 })

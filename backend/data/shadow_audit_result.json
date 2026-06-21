@@ -1,0 +1,122 @@
+{
+  "audited_at": "2026-06-21T06:35:55.213106+00:00",
+  "sample_size": 4,
+  "metrics": {
+    "spf": {
+      "v2": {
+        "brier": 0.7363267550650445,
+        "rps": 0.2590575264382885,
+        "accuracy": 0.5
+      },
+      "v3": {
+        "brier": 0.7363335475000001,
+        "rps": 0.25903464750000005,
+        "accuracy": 0.5
+      },
+      "v4": {
+        "brier": 0.7363335475000001,
+        "rps": 0.25903464750000005,
+        "accuracy": 0.5
+      }
+    }
+  },
+  "betting": {
+    "v2": {
+      "total_bets": 4.0,
+      "profit": -0.20000000000000018,
+      "roi": -0.050000000000000044
+    },
+    "v3": {
+      "total_bets": 4.0,
+      "profit": -0.20000000000000018,
+      "roi": -0.050000000000000044
+    },
+    "v4": {
+      "total_bets": 4.0,
+      "profit": -0.20000000000000018,
+      "roi": -0.050000000000000044
+    }
+  },
+  "details": [
+    {
+      "match_code": "FRIENDLY-03",
+      "teams": "葡萄牙 vs 比利时",
+      "actual_spf": "home",
+      "v2_spf": {
+        "home": "81.1%",
+        "draw": "9.0%",
+        "away": "9.9%"
+      },
+      "v3_spf": {
+        "home": "81.1%",
+        "draw": "9.0%",
+        "away": "9.9%"
+      },
+      "v4_spf": {
+        "home": "81.1%",
+        "draw": "9.0%",
+        "away": "9.9%"
+      }
+    },
+    {
+      "match_code": "FRIENDLY-01",
+      "teams": "阿根廷 vs 意大利",
+      "actual_spf": "home",
+      "v2_spf": {
+        "home": "84.9%",
+        "draw": "8.0%",
+        "away": "7.1%"
+      },
+      "v3_spf": {
+        "home": "84.9%",
+        "draw": "8.0%",
+        "away": "7.1%"
+      },
+      "v4_spf": {
+        "home": "84.9%",
+        "draw": "8.0%",
+        "away": "7.1%"
+      }
+    },
+    {
+      "match_code": "FRIENDLY-02",
+      "teams": "巴西 vs 德国",
+      "actual_spf": "draw",
+      "v2_spf": {
+        "home": "80.8%",
+        "draw": "9.3%",
+        "away": "9.9%"
+      },
+      "v3_spf": {
+        "home": "80.8%",
+        "draw": "9.3%",
+        "away": "9.9%"
+      },
+      "v4_spf": {
+        "home": "80.8%",
+        "draw": "9.3%",
+        "away": "9.9%"
+      }
+    },
+    {
+      "match_code": "FRIENDLY-04",
+      "teams": "美国 vs 墨西哥",
+      "actual_spf": "away",
+      "v2_spf": {
+        "home": "71.8%",
+        "draw": "18.9%",
+        "away": "9.3%"
+      },
+      "v3_spf": {
+        "home": "71.8%",
+        "draw": "18.9%",
+        "away": "9.3%"
+      },
+      "v4_spf": {
+        "home": "71.8%",
+        "draw": "18.9%",
+        "away": "9.3%"
+      }
+    }
+  ]
+}

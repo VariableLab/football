@@ -77,6 +77,19 @@ TEAM_NAME_MAP = {
     "富川FC": "Bucheon FC", "浦项制铁": "Pohang Steelers",
     # 美职联
     "纳什威尔": "Nashville SC", "洛杉矶": "LA Galaxy",
+    # 国家队 (世界杯)
+    "捷克": "Czech Republic", "南非": "South Africa",
+    "瑞士": "Switzerland", "波黑": "Bosnia and Herzegovina",
+    "加拿大": "Canada", "卡塔尔": "Qatar",
+    "墨西哥": "Mexico", "韩国": "South Korea",
+    "瑞典": "Sweden", "科特迪瓦": "Ivory Coast",
+    "突尼斯": "Tunisia", "新西兰": "New Zealand",
+    "委内瑞拉": "Venezuela", "哥斯达黎加": "Costa Rica",
+    "智利": "Chile", "加纳": "Ghana",
+    "美国": "United States", "科摩罗": "Comoros",
+    "乌拉圭": "Uruguay", "洪都拉斯": "Honduras",
+    "哥伦比亚": "Colombia", "几内亚": "Guinea",
+    "阿尔及利亚": "Algeria", "马里": "Mali",
 }
 
 # 联赛映射（zgzcw -> 数据库）
@@ -105,9 +118,11 @@ def _normalise_league(zgzcw_league: str) -> str:
     return LEAGUE_MAP.get(zgzcw_league, zgzcw_league)
 
 
-def fetch_jc_matches() -> List[Dict]:
+def fetch_jc_matches(date_str: Optional[str] = None) -> List[Dict]:
     """从 live.zgzcw.com 获取竞彩比赛列表"""
     url = "https://live.zgzcw.com/"
+    if date_str:
+        url = f"https://live.zgzcw.com/?date={date_str}"
     headers = {
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -251,12 +266,21 @@ def _sync_issue_links(db, match_id: int, jc_code: str, kickoff_at: str, sp_home:
         return False
 
 
-def sync_jc_matches(db_path: str = None) -> Dict:
+def sync_jc_matches(db_path: str = None, date_str: Optional[str] = None) -> Dict:
     """同步 zgzcw 竞彩比赛到数据库"""
     from database.models import SessionLocal, Team, Match, OddsHistory
     from ingestion.data_cleaner import resolve_team_db
     
-    matches = fetch_jc_matches()
+    if date_str:
+        matches = fetch_jc_matches(date_str)
+    else:
+        from datetime import datetime, timedelta
+        matches = []
+        for i in range(3):
+            d = (datetime.now() + timedelta(days=i)).strftime("%Y-%m-%d")
+            logger.info(f"[zgzcw_jc] Fetching matches for date: {d}")
+            matches.extend(fetch_jc_matches(d))
+            
     if not matches:
         return {"matches": 0, "created": 0, "updated": 0, "errors": 0, "issues_linked": 0}
 

@@ -75,12 +75,15 @@ def main():
                     continue
                 ctx = build_context_from_match(m)
                 res = engine.predict(ctx)
-                db.query(Prediction).filter(Prediction.match_id == m.id).delete()
+                db.query(Prediction).filter(
+                    Prediction.match_id == m.id,
+                    Prediction.model_version.in_(["v2.0", "v3.0", "v3.0_shadow"])
+                ).delete()
                 for p in res.to_db_payload():
                     db.add(Prediction(
                         match_id=m.id, play_type=p["play_type"], 
                         probabilities=p["probabilities"],
-                        model_version=res.model_version, # 💡 使用 engine 返回的真实版本号
+                        model_version=p["model_version"], # 💡 使用 payload 返回的真实版本号
                         confidence=res.confidence
                     ))
                 success += 1

@@ -49,7 +49,10 @@ def regenerate_matches(db: Session, matches: list, label: str = "") -> int:
     failed = 0
 
     for match in matches:
-        db.query(Prediction).filter(Prediction.match_id == match.id).delete()
+        db.query(Prediction).filter(
+            Prediction.match_id == match.id,
+            Prediction.model_version.in_(["v2.0", "v3.0", "v3.0_shadow", "v3.0_classic", "v4.0"])
+        ).delete()
 
         try:
             ctx = build_context_from_match(match)
@@ -66,7 +69,7 @@ def regenerate_matches(db: Session, matches: list, label: str = "") -> int:
                     play_type=payload["play_type"],
                     probabilities=payload["probabilities"],
                     input_checksum=checksum,
-                    model_version="v2.0",
+                    model_version=payload["model_version"],
                 )
                 db.add(pred)
             created += 1

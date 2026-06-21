@@ -33,6 +33,7 @@ import yaml
 import os
 
 # ─── 子模型已迁移到 features/ 包（向后兼容：本地定义仍可用）───
+from core.models import EloModel, PoissonModel, PlayerAdjustmentModel, MarketModel, FormAdjustmentModel, DrawDetectionModel
 from features import (
     EloModel, PoissonModel, PlayerAdjustmentModel,
     FormAdjustmentModel, HomeAwayModel, ScheduleDensityModel,
@@ -50,935 +51,38 @@ from features.form_markov_model import FormMarkovModel
 from features.h2h_model import H2HModel
 
 # ────────────────────────────
-# 常量 / 配置（支持 YAML 动态加载）
+# 常量 — 从 core.constants 导入,避免循环导入
 # ────────────────────────────
-# 💡 修正路径：配置文件在 backend/data 下，而不是 backend/core/data
-_CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "model_config.yaml")
+from core.constants import (
+    MAX_GOALS, POISSON_TRUNCATE, HOME_ADVANTAGE_ELO, FORM_WINDOW_MATCHES,
+    DIXON_COLES_RHO, DRAW_INFLATION_FACTOR, DEFAULT_WEIGHTS,
+    HT_FT_TRANSITION, HT_DISTRIBUTION, HALF_TIME_RATIO,
+    KNOCKOUT_GOAL_FACTORS, TACTICAL_MATRIX,
+    WEATHER_PENALTY, PITCH_PENALTY, REST_PENALTY,
+    PLAYER_POSITION_IMPACT, STEAM_MOVE, DEGRADED, RESIDUAL_NN,
+)
 
-def load_engine_config():
-    # 默认值 (调优版：显著提升 Elo 权重)
-    cfg = {
-        "MAX_GOALS": 8,
-        "POISSON_TRUNCATE": 0.999,
-        "HOME_ADVANTAGE_ELO": 0,
-        "FORM_WINDOW_MATCHES": 10,
-        "DIXON_COLES_RHO": 0.0092,
-        "DRAW_INFLATION_FACTOR": 1.27,
-        "DEFAULT_WEIGHTS": {
-            "elo": 0.35,
-            "poisson": 0.35,
-            "players": 0.05,
-            "market": 0.25,
-        }
-    }
-    if os.path.exists(_CONFIG_PATH):
-        try:
-            with open(_CONFIG_PATH, "r", encoding="utf-8") as f:
-                external_cfg = yaml.safe_load(f)
-                if external_cfg:
-                    cfg.update(external_cfg)
-        except Exception as e:
-            import logging
-            logging.getLogger("prediction_engine").warning(f"[config] Failed to load model_config.yaml: {e}")
-    return cfg
+# 向后兼容: 保留模块级常量引用
+_ENGINE_CFG = {
+    "MAX_GOALS": MAX_GOALS,
+    "POISSON_TRUNCATE": POISSON_TRUNCATE,
+    "HOME_ADVANTAGE_ELO": HOME_ADVANTAGE_ELO,
+    "FORM_WINDOW_MATCHES": FORM_WINDOW_MATCHES,
+    "DIXON_COLES_RHO": DIXON_COLES_RHO,
+    "DRAW_INFLATION_FACTOR": DRAW_INFLATION_FACTOR,
+    "DEFAULT_WEIGHTS": DEFAULT_WEIGHTS,
+}
 
-# 加载当前配置
-_ENGINE_CFG = load_engine_config()
-
-MAX_GOALS = _ENGINE_CFG["MAX_GOALS"]
-POISSON_TRUNCATE = _ENGINE_CFG["POISSON_TRUNCATE"]
-HOME_ADVANTAGE_ELO = _ENGINE_CFG["HOME_ADVANTAGE_ELO"]
-FORM_WINDOW_MATCHES = _ENGINE_CFG["FORM_WINDOW_MATCHES"]
-DIXON_COLES_RHO = _ENGINE_CFG["DIXON_COLES_RHO"]
-DRAW_INFLATION_FACTOR = _ENGINE_CFG["DRAW_INFLATION_FACTOR"]
-DEFAULT_WEIGHTS = _ENGINE_CFG["DEFAULT_WEIGHTS"]
-
+# 向后兼容: load_engine_config() 别名
+load_engine_config = lambda: _ENGINE_CFG
 
 
 # ────────────────────────────
-# 数据结构
+# 数据结构 — 迁移到 core/context.py
 # ────────────────────────────
-@dataclass
-class TeamContext:
-    """一支球队的赛前上下文"""
-    team_id: int
-    name: str
-    name_en: str = ""
-    elo: int = 1500
-    fifa_rank: int = 100
-
-    # 近 N 场场均数据（用于泊松参数）
-    avg_goals_scored: float = 1.30
-    avg_goals_conceded: float = 1.10
-
-    # ─── FBref / SoccerData 高级统计（自动同步） ───
-    avg_xg: float = 0.0              # 场均期望进球 xG（优先于 avg_goals_scored）
-    avg_xga: float = 0.0             # 场均期望失球 xGA
-    possession: float = 50.0         # 平均控球率 %
-    pass_completion: float = 0.0     # 传球成功率 %
-    shots_per_game: float = 0.0      # 场均射门次数
-
-    # 状态因子 (0.5 ~ 1.5)
-    form_factor: float = 1.0
-
-    # 球员相关
-    key_players_available: int = 11
-    key_players_total: int = 11
-    squad_fatigue_index: float = 0.5
-
-    # 本届赛事已赛场次
-    tournament_matches_played: int = 0
-    tournament_goals_scored: int = 0
-    tournament_goals_conceded: int = 0
-
-    # ─── 扩展：近期战绩 ───
-    recent_results: str = ""           # e.g. "WWDLWLLDWD"
-    recent_goals_scored: float = 0.0
-    recent_goals_conceded: float = 0.0
-
-    # ─── 扩展：主客场 / 气候 ───
-    home_away_factor: float = 1.0      # 1.0=中性, >1 主场优势大
-    weather_adaptability: float = 1.0  # 0~2
-
-    # ─── 扩展：战术与教练 ───
-    tactical_style: str = "balanced"   # attack / defense / balanced / counter
-    coach_rating: float = 0.5          # 0~1
-
-    # ─── 扩展：赛程与疲劳 ───
-    rest_days: int = 7
-    key_injuries: str = ""             # e.g. "梅西(伤),内马尔(停)"
-
-
-@dataclass
-class RefereeContext:
-    name: str
-    yellow_cards_avg: float = 4.0
-    red_cards_avg: float = 0.2
-    home_win_bias: float = 1.0  # >1 means home teams win more under this ref
-
-
-@dataclass
-class MatchContext:
-    """单场比赛的完整上下文"""
-    match_id: int
-    home_team: TeamContext
-    away_team: TeamContext
-    referee: Optional[RefereeContext] = None
-
-    # 赛事阶段
-    stage: str = "group"   # group / R32 / R16 / QF / SF / F
-    is_knockout: bool = False
-
-    # 让球（竞彩官方让球）
-    handicap: int = 0
-
-    # 市场赔率（当前最佳估计，可能包含合成赔率）
-    odds_home: Optional[float] = None
-    odds_draw: Optional[float] = None
-    odds_away: Optional[float] = None
-
-    # ─── 收盘赔率（真实市场赔率，赛前最后采集） ───
-    # 关键设计：closing_odds 只来自真实数据源（oddsapi / betexplorer / football-data）
-    # synthetic 赔率不入 closing_odds，消除循环引用
-    closing_odds_home: Optional[float] = None
-    closing_odds_draw: Optional[float] = None
-    closing_odds_away: Optional[float] = None
-
-    # 历史交锋（近5场对战结果）
-    h2h_home_wins: int = 0
-    h2h_draws: int = 0
-    h2h_away_wins: int = 0
-
-    # 特殊标记
-    is_third_round_group: bool = False
-    is_late_season: bool = False       # 是否为赛季冲刺阶段 (Top/Bottom 抢分)
-    home_team_qualified: Optional[bool] = None
-    away_team_qualified: Optional[bool] = None
-
-    # ─── 扩展：比赛环境 ───
-    venue_type: str = "neutral"        # home / away / neutral
-    weather: str = "clear"             # clear / rain / hot / cold / snow
-    temperature: float = 20.0
-    pitch_condition: str = "good"      # good / average / poor / artificial
-    schedule_density: str = "normal"   # light / normal / dense / extreme
-    competition: str = ""              # 赛事名称 (e.g. EPL, LaLiga)
-
-    @property
-    def has_odds(self) -> bool:
-        return self.odds_home is not None and self.odds_draw is not None and self.odds_away is not None
-
-    @property
-    def has_closing_odds(self) -> bool:
-        """是否有真实收盘赔率（非合成）"""
-        return (
-            self.closing_odds_home is not None
-            and self.closing_odds_draw is not None
-            and self.closing_odds_away is not None
-        )
-
-
-@dataclass
-class PredictionResult:
-    """单场比赛的完整预测结果"""
-    match_id: int
-
-    # 融合后最终概率
-    spf: Dict[str, float] = field(default_factory=dict)       # 胜平负
-    rq: Dict[str, float] = field(default_factory=dict)        # 让球胜平负
-    score: Dict[str, float] = field(default_factory=dict)     # 比分
-    goals: Dict[str, float] = field(default_factory=dict)     # 总进球
-    half: Dict[str, float] = field(default_factory=dict)      # 半全场
-
-    # 子模型原始输出（用于可解释性拆解）
-    raw_elo: Dict[str, float] = field(default_factory=dict)
-    raw_poisson: Dict[str, float] = field(default_factory=dict)
-    raw_players: float = 0.0
-    raw_market: Dict[str, float] = field(default_factory=dict)
-
-    # 元信息
-    # 修复 (2026-06-17): 统一为 "v2.0"
-    model_version: str = "v2.0"
-    confidence: str = "medium"   # high / medium / low
-    odds_degraded: bool = False  # True when prediction lacks market odds
-    weights_used: Dict[str, Any] = field(default_factory=dict)
-    trace: Optional[Any] = None  # LogicChain object
-
-    generated_at: datetime = field(default_factory=datetime.utcnow)
-
-    def to_db_payload(self) -> List[Dict[str, Any]]:
-        return [
-            {"play_type": PlayType.SPF, "probabilities": self.spf, "confidence": self.confidence, "model_version": self.model_version},
-            {"play_type": PlayType.RQ, "probabilities": self.rq, "confidence": self.confidence, "model_version": self.model_version},
-            {"play_type": PlayType.SCORE, "probabilities": self.score, "confidence": self.confidence, "model_version": self.model_version},
-            {"play_type": PlayType.GOALS, "probabilities": self.goals, "confidence": self.confidence, "model_version": self.model_version},
-            {"play_type": PlayType.HALF, "probabilities": self.half, "confidence": self.confidence, "model_version": self.model_version},
-        ]
-
-
-# ────────────────────────────
-# 模型 A：Elo 实力模型
-# ────────────────────────────
-class EloModel:
-    """
-    Elo 评分系统，输出胜平负概率。
-    参考 FiveThirtyEight 的 Soccer SPI 方法，加入平局修正。
-    """
-
-    # 世界杯经验参数：Elo 差对应的胜率
-    @staticmethod
-    def win_prob(elo_diff: float) -> float:
-        return 1.0 / (1.0 + 10.0 ** (-elo_diff / 400.0))
-
-    @classmethod
-    def predict(cls, ctx: MatchContext) -> Dict[str, float]:
-        home_advantage = 0 if ctx.venue_type == "neutral" else HOME_ADVANTAGE_ELO
-        diff = ctx.home_team.elo - ctx.away_team.elo + home_advantage
-
-        # 基础胜率
-        p_win = cls.win_prob(diff)
-        p_loss = cls.win_prob(-diff)
-
-        # 平局修正：Elo 接近时平局概率上升
-        # 经验公式：平局概率 ~ 0.25 + 0.1 * exp(-|diff|/200)
-        draw_base = 0.25 + 0.10 * math.exp(-abs(diff) / 200.0)
-
-        # 淘汰赛平局概率更高（保守）
-        if ctx.is_knockout:
-            draw_base += 0.08
-
-        # 归一化
-        total = p_win + draw_base + p_loss
-        return {
-            "home": p_win / total,
-            "draw": draw_base / total,
-            "away": p_loss / total,
-        }
-
-
-# ────────────────────────────
-# 模型 B：泊松双变量模型
-# ────────────────────────────
-class PoissonModel:
-    """
-    双变量泊松模型，输出：
-      - 具体比分概率
-      - 胜平负概率（由比分加总）
-      - 总进球概率
-      - 让球概率
-      - 半全场概率（简化版）
-    """
-
-    @classmethod
-    def _compute_lambdas(cls, ctx: MatchContext) -> Tuple[float, float]:
-        """计算双方期望进球 λ（全维度修正版）"""
-        # ── 1. 联赛基准进攻/防守强度 ──
-        # 优先使用 FBref xG/xGA（更稳定的预测信号），fallback 到实际进球数
-        home_attack = ctx.home_team.avg_xg if ctx.home_team.avg_xg > 0 else ctx.home_team.avg_goals_scored
-        home_defense = ctx.home_team.avg_xga if ctx.home_team.avg_xga > 0 else ctx.home_team.avg_goals_conceded
-        away_attack = ctx.away_team.avg_xg if ctx.away_team.avg_xg > 0 else ctx.away_team.avg_goals_scored
-        away_defense = ctx.away_team.avg_xga if ctx.away_team.avg_xga > 0 else ctx.away_team.avg_goals_conceded
-
-        # ── 2. 本届赛事动态修正 ──
-        if ctx.home_team.tournament_matches_played > 0:
-            home_attack = 0.6 * home_attack + 0.4 * (
-                ctx.home_team.tournament_goals_scored / max(ctx.home_team.tournament_matches_played, 1)
-            )
-        if ctx.away_team.tournament_matches_played > 0:
-            away_attack = 0.6 * away_attack + 0.4 * (
-                ctx.away_team.tournament_goals_scored / max(ctx.away_team.tournament_matches_played, 1)
-            )
-
-        # ── 3. 中立场优势（排名高的一方略优）──
-        neutral_advantage = 1.0
-        if ctx.home_team.fifa_rank < ctx.away_team.fifa_rank:
-            neutral_advantage = 1.05
-        elif ctx.home_team.fifa_rank > ctx.away_team.fifa_rank:
-            neutral_advantage = 0.95
-
-        # ── 4. 基础 λ ──
-        lambda_home = home_attack * away_defense * ctx.home_team.form_factor * neutral_advantage
-        lambda_away = away_attack * home_defense * ctx.away_team.form_factor * (1.0 / neutral_advantage)
-
-        # ── 5. 近期状态修正 ──
-        lambda_home *= FormAdjustmentModel.compute_factor(ctx.home_team)
-        lambda_away *= FormAdjustmentModel.compute_factor(ctx.away_team)
-
-        # ── 6. 主客场修正 ──
-        lambda_home *= HomeAwayModel.compute_factor(ctx, is_home=True)
-        lambda_away *= HomeAwayModel.compute_factor(ctx, is_home=False)
-
-        # ── 7. 赛程密度 / 疲劳修正 ──
-        lambda_home *= ScheduleDensityModel.compute_factor(ctx.home_team)
-        lambda_away *= ScheduleDensityModel.compute_factor(ctx.away_team)
-
-        # ── 8. 天气 / 场地修正 ──
-        lambda_home *= WeatherVenueModel.compute_factor(ctx, ctx.home_team)
-        lambda_away *= WeatherVenueModel.compute_factor(ctx, ctx.away_team)
-
-        # ── 9. 战术风格相克 ──
-        tact_h, tact_a = TacticalModel.compute_factors(ctx)
-        lambda_home *= tact_h
-        lambda_away *= tact_a
-
-        # ── 10. 教练临场能力 ──
-        lambda_home *= CoachImpactModel.compute_factor(ctx.home_team, ctx.is_knockout)
-        lambda_away *= CoachImpactModel.compute_factor(ctx.away_team, ctx.is_knockout)
-
-        # ── 11. 阵容完整度（伤病停赛）──
-        home_atk_pen, home_def_pen = SquadAvailabilityModel.compute_factor(ctx.home_team)
-        away_atk_pen, away_def_pen = SquadAvailabilityModel.compute_factor(ctx.away_team)
-        # 进攻方受自身伤病影响，防守方受对方伤病影响
-        lambda_home *= home_atk_pen * away_def_pen
-        lambda_away *= away_atk_pen * home_def_pen
-
-        # ── 12. 裁判因素修正 ──
-        ref_h, ref_a = RefereeModel.compute_factor(ctx)
-        lambda_home *= ref_h
-        lambda_away *= ref_a
-
-        # ── 13. 淘汰赛修正：进球数下降（分阶段细化） ──
-        if ctx.is_knockout:
-            stage_factor = {"R16": 0.88, "QF": 0.85, "SF": 0.82, "F": 0.80, "3P": 0.90}
-            factor = stage_factor.get(ctx.stage, 0.85)
-            lambda_home *= factor
-            lambda_away *= factor
-
-        # ── 13. 第三轮小组赛轮换修正 ──
-        if ctx.is_third_round_group:
-            if ctx.home_team_qualified is True or ctx.away_team_qualified is True:
-                lambda_home *= 0.90
-                lambda_away *= 0.90
-
-        return max(lambda_home, 0.1), max(lambda_away, 0.1)
-
-    @staticmethod
-    def _tau_dixon_coles(i: int, j: int, lambda_h: float, lambda_a: float, rho: float) -> float:
-        """
-        Dixon-Coles 相关性修正因子 tau(i,j)。
-        仅对低比分 (0,0), (1,0), (0,1), (1,1) 进行修正，其余为 1。
-        公式（Dixon & Coles, 1997）:
-          tau(0,0) = 1 - lambda_h * lambda_a * rho
-          tau(1,0) = 1 + lambda_h * rho
-          tau(0,1) = 1 + lambda_a * rho
-          tau(1,1) = 1 - rho
-          tau(i,j) = 1               当 i>1 或 j>1
-        rho 为负值时表示低比分间的负相关（足球典型值 -0.05 ~ -0.15）。
-        """
-        if i == 0 and j == 0:
-            return 1.0 - lambda_h * lambda_a * rho
-        elif i == 1 and j == 0:
-            return 1.0 + lambda_h * rho
-        elif i == 0 and j == 1:
-            return 1.0 + lambda_a * rho
-        elif i == 1 and j == 1:
-            return 1.0 - rho
-        return 1.0
-
-    @classmethod
-    def predict_score_matrix(cls, ctx: MatchContext, rho: float = DIXON_COLES_RHO) -> np.ndarray:
-        """
-        返回 (MAX_GOALS+1) × (MAX_GOALS+1) 的比分概率矩阵。
-        score_matrix[i][j] = P(主队进 i 球，客队进 j 球)
-
-        使用 Dixon-Coles 修正替代独立泊松，更准确地校准低比分概率。
-        """
-        lambda_h, lambda_a = cls._compute_lambdas(ctx)
-
-        size = MAX_GOALS + 1
-        matrix = np.zeros((size, size))
-
-        for i in range(size):
-            for j in range(size):
-                # 基础泊松概率
-                if i < MAX_GOALS and j < MAX_GOALS:
-                    base = poisson.pmf(i, lambda_h) * poisson.pmf(j, lambda_a)
-                elif i == MAX_GOALS and j < MAX_GOALS:
-                    base = (1 - poisson.cdf(MAX_GOALS - 1, lambda_h)) * poisson.pmf(j, lambda_a)
-                elif i < MAX_GOALS and j == MAX_GOALS:
-                    base = poisson.pmf(i, lambda_h) * (1 - poisson.cdf(MAX_GOALS - 1, lambda_a))
-                else:
-                    base = (1 - poisson.cdf(MAX_GOALS - 1, lambda_h)) * (1 - poisson.cdf(MAX_GOALS - 1, lambda_a))
-
-                # Dixon-Coles 低比分相关性修正
-                tau = cls._tau_dixon_coles(i, j, lambda_h, lambda_a, rho)
-                matrix[i][j] = tau * base
-
-        # 归一化（确保总和为1）
-        total = matrix.sum()
-        if total > 0:
-            matrix /= total
-        return matrix, lambda_h, lambda_a
-
-    @classmethod
-    def predict_spf_only(cls, ctx: MatchContext) -> Dict[str, float]:
-        """只计算胜平负概率，跳过比分/进球等（用于权重学习加速）"""
-        lambda_h, lambda_a = cls._compute_lambdas(ctx)
-        size = MAX_GOALS + 1
-
-        p_home = 0.0
-        p_draw = 0.0
-        p_away = 0.0
-
-        for i in range(size):
-            for j in range(size):
-                if i < MAX_GOALS and j < MAX_GOALS:
-                    base = poisson.pmf(i, lambda_h) * poisson.pmf(j, lambda_a)
-                elif i == MAX_GOALS and j < MAX_GOALS:
-                    base = (1 - poisson.cdf(MAX_GOALS - 1, lambda_h)) * poisson.pmf(j, lambda_a)
-                elif i < MAX_GOALS and j == MAX_GOALS:
-                    base = poisson.pmf(i, lambda_h) * (1 - poisson.cdf(MAX_GOALS - 1, lambda_a))
-                else:
-                    base = (1 - poisson.cdf(MAX_GOALS - 1, lambda_h)) * (1 - poisson.cdf(MAX_GOALS - 1, lambda_a))
-
-                tau = cls._tau_dixon_coles(i, j, lambda_h, lambda_a, DIXON_COLES_RHO)
-                prob = tau * base
-
-                if i > j:
-                    p_home += prob
-                elif i == j:
-                    p_draw += prob
-                else:
-                    p_away += prob
-
-        # 平局膨胀修正
-        p_draw *= DRAW_INFLATION_FACTOR
-        total = p_home + p_draw + p_away
-        return {"home": p_home / total, "draw": p_draw / total, "away": p_away / total}
-
-    @classmethod
-    def predict(cls, ctx: MatchContext) -> Dict[str, Any]:
-        """返回泊松模型的全部玩法预测"""
-        matrix, lambda_h, lambda_a = cls.predict_score_matrix(ctx)
-        size = matrix.shape[0]
-
-        # 1. 胜平负（由比分矩阵加总 + 平局膨胀修正）
-        p_home = sum(matrix[i][j] for i in range(size) for j in range(size) if i > j)
-        p_draw = sum(matrix[i][j] for i in range(size) for j in range(size) if i == j)
-        p_away = sum(matrix[i][j] for i in range(size) for j in range(size) if i < j)
-
-        # 平局膨胀修正：独立泊松系统低估平局
-        p_draw *= DRAW_INFLATION_FACTOR
-        total = p_home + p_draw + p_away
-
-        spf = {"home": p_home / total, "draw": p_draw / total, "away": p_away / total}
-
-        # 2. 比分（仅输出概率 > 1% 的）
-        # 对平局格子(1:1等)也应用DRAW_INFLATION_FACTOR，使比分与SPF标度一致
-        inflated_matrix = np.copy(matrix)
-        for i in range(size):
-            inflated_matrix[i][i] *= DRAW_INFLATION_FACTOR
-        # 归一化膨胀后的比分矩阵
-        inflated_sum = inflated_matrix.sum()
-        if inflated_sum > 0:
-            inflated_matrix /= inflated_sum
-
-        score = {}
-        for i in range(size):
-            for j in range(size):
-                key = f"{i}:{j}" if i < MAX_GOALS and j < MAX_GOALS else f"{min(i, MAX_GOALS)}+:{min(j, MAX_GOALS)}+"
-                prob = inflated_matrix[i][j]
-                if prob > 0.01:
-                    score[f"{i}:{j}"] = round(prob, 4)
-
-        # 3. 总进球（0-6 独立桶，7+ 尾部累积）
-        goals = {}
-        for total_goals in range(7):
-            prob = sum(matrix[i][j] for i in range(size) for j in range(size) if i + j == total_goals)
-            if prob > 0.005:
-                goals[str(total_goals)] = round(prob, 4)
-        # 7+ 累积所有进球>=7的概率
-        prob_7plus = sum(matrix[i][j] for i in range(size) for j in range(size) if i + j >= 7)
-        if prob_7plus > 0.005:
-            goals["7+"] = round(prob_7plus, 4)
-
-        # 4. 让球胜平负
-        # 竞彩让球 N：主队需要净胜 > N 球才算让胜
-        handicap = ctx.handicap
-        p_rq_home = sum(matrix[i][j] for i in range(size) for j in range(size) if (i - j) > handicap)
-        p_rq_draw = sum(matrix[i][j] for i in range(size) for j in range(size) if (i - j) == handicap)
-        p_rq_away = sum(matrix[i][j] for i in range(size) for j in range(size) if (i - j) < handicap)
-        rq_total = p_rq_home + p_rq_draw + p_rq_away
-
-        rq = {
-            "home": p_rq_home / rq_total,
-            "draw": p_rq_draw / rq_total,
-            "away": p_rq_away / rq_total,
-            "handicap": handicap,
-        }
-
-                # 5. 半全场（HT→FT 转移矩阵校准版）
-        # 基于 23576 场历史数据统计的半场→全场转移概率
-        # 校准日期: 2026-05-09
-        HT_FT_TRANSITION = {
-            "home":   {"home": 0.785, "draw": 0.151, "away": 0.065},
-            "draw":   {"home": 0.442, "draw": 0.237, "away": 0.321},
-            "away":   {"home": 0.105, "draw": 0.199, "away": 0.697},
-        }
-        # 实际半场结果分布（23,576 场统计）
-        HT_DISTRIBUTION = {"home": 0.368, "draw": 0.364, "away": 0.268}
-
-        # 上半场 λ = 全场 λ * 0.48（半场时间约占全场 48%）
-        lambda_h_1h = lambda_h * 0.48
-        lambda_a_1h = lambda_a * 0.48
-
-        def half_outcome_prob(lh: float, la: float) -> Dict[str, float]:
-            """计算半场结果概率"""
-            p_h = 0.0
-            p_d = 0.0
-            p_a = 0.0
-            for i in range(5):
-                for j in range(5):
-                    pi = poisson.pmf(i, lh)
-                    pj = poisson.pmf(j, la)
-                    if i > j:
-                        p_h += pi * pj
-                    elif i == j:
-                        p_d += pi * pj
-                    else:
-                        p_a += pi * pj
-            t = p_h + p_d + p_a
-            return {"home": p_h / t, "draw": p_d / t, "away": p_a / t}
-
-        # 泊松模型估计半场结果分布
-        half_1h = half_outcome_prob(lambda_h_1h, lambda_a_1h)
-
-        # 混合: 50% 泊松估计 + 50% 历史先验（避免极端偏差）
-        for k in half_1h:
-            half_1h[k] = 0.5 * half_1h[k] + 0.5 * HT_DISTRIBUTION[k]
-
-        # P(半场=X, 全场=Y) = P(半场=X) * P(全场=Y | 半场=X)
-        # 使用校准后的转移矩阵
-        half = {}
-        outcomes = ["home", "draw", "away"]
-        labels = {"homehome": "主主", "homedraw": "主平", "homeaway": "主客",
-                  "drawhome": "平主", "drawdraw": "平平", "drawaway": "平客",
-                  "awayhome": "客主", "awaydraw": "客平", "awayaway": "客客"}
-        for h1 in outcomes:
-            for h2 in outcomes:
-                key = f"{h1}{h2}"
-                prob = half_1h[h1] * HT_FT_TRANSITION[h1][h2]
-                half[labels.get(key, key)] = prob
-
-        # 归一化
-        half_total = sum(half.values())
-        half = {k: round(v / half_total, 4) for k, v in half.items()}
-
-        return {
-            "spf": spf,
-            "rq": rq,
-            "score": score,
-            "goals": goals,
-            "half": half,
-            "lambda_home": lambda_h,
-            "lambda_away": lambda_a,
-        }
-
-
-# ────────────────────────────
-# 模型 C：球员状态修正
-# ────────────────────────────
-class PlayerAdjustmentModel:
-    """
-    根据球员 availability 和疲劳度，输出一个战力修正系数。
-    该系数直接乘到 Elo / 泊松的输出上，不单独输出概率分布。
-    """
-
-    # 核心位置缺阵的战力损失（经验值）
-    POSITION_IMPACT = {
-        "goalkeeper": 0.12,
-        "defense": 0.08,
-        "midfield": 0.07,
-        "forward": 0.08,
-    }
-
-    @classmethod
-    def predict(cls, ctx: MatchContext) -> float:
-        """返回 0.7 ~ 1.3 的战力修正系数"""
-        home = ctx.home_team
-        away = ctx.away_team
-
-        # 可用核心球员比例
-        home_avail = home.key_players_available / max(home.key_players_total, 1)
-        away_avail = away.key_players_available / max(away.key_players_total, 1)
-
-        # 疲劳影响（疲劳指数 0~1，指数越高战力越低）
-        home_fatigue_penalty = home.squad_fatigue_index * 0.10  # 最大扣10%
-        away_fatigue_penalty = away.squad_fatigue_index * 0.10
-
-        # 综合修正：主队相对客队的战力比
-        home_strength = home_avail * (1 - home_fatigue_penalty)
-        away_strength = away_avail * (1 - away_fatigue_penalty)
-
-        # 返回一个对称的修正因子：1.0 表示无差别，>1 主队更强，<1 客队更强
-        if away_strength == 0:
-            return 1.3
-        ratio = home_strength / away_strength
-        # 压缩到合理范围
-        return max(0.7, min(1.3, 0.85 + 0.15 * ratio))
-
-
-# ────────────────────────────
-# 模型 D：近期状态修正
-# ────────────────────────────
-class FormAdjustmentModel:
-    """
-    根据近 N 场战绩（W/D/L 字符串）计算加权状态因子。
-    最近一场权重最高，越往前权重递减。
-    """
-    @classmethod
-    def compute_factor(cls, team: TeamContext) -> float:
-        if not team.recent_results:
-            return 1.0
-
-        results = team.recent_results[-10:]  # 取最近 10 场
-        n = len(results)
-        if n == 0:
-            return 1.0
-
-        # 权重：最近一场 = 1.0，最早一场 = 0.5
-        weights = [0.5 + 0.5 * (i / max(n - 1, 1)) for i in range(n)]
-        points_map = {"W": 3, "D": 1, "L": 0}
-        points = [points_map.get(r.upper(), 1) for r in results]
-
-        weighted_avg = sum(p * w for p, w in zip(points, weights)) / sum(weights)
-        # 1.5 分 = 中性(1.0), 3 分 = +10%, 0 分 = -15%
-        return max(0.75, min(1.15, 0.85 + 0.10 * (weighted_avg / 1.5)))
-
-
-# ────────────────────────────
-# 模型 E：主客场修正
-# ────────────────────────────
-class HomeAwayModel:
-    """
-    主客场差异修正。
-    世界杯是中立场，但存在气候/时差适应优势。
-    """
-    @classmethod
-    def compute_factor(cls, ctx: MatchContext, is_home: bool) -> float:
-        if ctx.venue_type == "neutral":
-            return 1.0
-
-        team = ctx.home_team if is_home else ctx.away_team
-        factor = team.home_away_factor
-        if is_home:
-            return factor
-        # 客场 = 反向打折
-        return max(0.8, 2.0 - factor)
-
-
-# ────────────────────────────
-# 模型 F：赛程密度 / 疲劳修正
-# ────────────────────────────
-class ScheduleDensityModel:
-    """
-    休息天数不足 → 进攻/防守效率下降。
-     also considers squad_fatigue_index.
-    """
-    @classmethod
-    def compute_factor(cls, team: TeamContext) -> float:
-        rest = team.rest_days
-        fatigue = team.squad_fatigue_index
-
-        # 休息天数惩罚
-        rest_penalty = {
-            (5, 999): 1.00,
-            (3, 5): 0.97,
-            (2, 3): 0.92,
-            (0, 2): 0.85,
-        }
-        rest_mult = 0.85
-        for (low, high), val in rest_penalty.items():
-            if low <= rest < high:
-                rest_mult = val
-                break
-
-        # 疲劳指数惩罚 (0~1)
-        fatigue_mult = 1.0 - 0.15 * fatigue
-
-        return max(0.80, rest_mult * fatigue_mult)
-
-
-# ────────────────────────────
-# 模型 G：天气 / 场地修正
-# ────────────────────────────
-class WeatherVenueModel:
-    """
-    恶劣天气和糟糕场地对双方都有影响，
-    但气候适应性强的球队受影响更小。
-    """
-    WEATHER_PENALTY = {
-        "clear": 0.00,
-        "cloudy": 0.00,
-        "rain": 0.04,
-        "hot": 0.06,
-        "cold": 0.04,
-        "snow": 0.10,
-    }
-    PITCH_PENALTY = {
-        "good": 0.00,
-        "average": 0.02,
-        "poor": 0.05,
-        "artificial": 0.03,
-    }
-
-    @classmethod
-    def compute_factor(cls, ctx: MatchContext, team: TeamContext) -> float:
-        weather_pen = cls.WEATHER_PENALTY.get(ctx.weather, 0.0)
-        pitch_pen = cls.PITCH_PENALTY.get(ctx.pitch_condition, 0.0)
-        total_pen = weather_pen + pitch_pen
-
-        adapt = team.weather_adaptability
-        # 适应性越高，惩罚越小（适应性 1.0 = 正常，2.0 = 免疫）
-        effective = total_pen * max(0.3, 1.5 - adapt * 0.5)
-        return max(0.85, 1.0 - effective)
-
-
-# ────────────────────────────
-# 模型 H：战术风格相克
-# ────────────────────────────
-class TacticalModel:
-    """
-    不同战术风格相遇时的进球预期修正。
-    这是一个经验矩阵，基于足球战术学常识。
-    """
-    # (主队风格, 客队风格) -> (主队进攻乘数, 客队进攻乘数)
-    TACTICAL_MATRIX = {
-        ("attack", "attack"): (1.15, 1.15),
-        ("attack", "defense"): (0.88, 0.72),
-        ("attack", "balanced"): (1.02, 0.92),
-        ("attack", "counter"): (0.95, 1.12),
-        ("defense", "attack"): (0.72, 0.88),
-        ("defense", "defense"): (0.68, 0.68),
-        ("defense", "balanced"): (0.80, 0.85),
-        ("defense", "counter"): (0.62, 0.75),
-        ("balanced", "attack"): (0.92, 1.02),
-        ("balanced", "defense"): (0.85, 0.80),
-        ("balanced", "balanced"): (1.00, 1.00),
-        ("balanced", "counter"): (0.95, 0.95),
-        ("counter", "attack"): (1.12, 0.95),
-        ("counter", "defense"): (0.75, 0.62),
-        ("counter", "balanced"): (0.95, 0.95),
-        ("counter", "counter"): (0.85, 0.85),
-    }
-
-    @classmethod
-    def compute_factors(cls, ctx: MatchContext) -> Tuple[float, float]:
-        home_s = (ctx.home_team.tactical_style or "balanced").lower()
-        away_s = (ctx.away_team.tactical_style or "balanced").lower()
-        base = cls.TACTICAL_MATRIX.get((home_s, away_s), (1.0, 1.0))
-
-        # ─── possession 数据校准 ───
-        # 如果 FBref possession 数据可用，用它微调进攻乘数
-        # 高控球率(>55%) → 轻微提升进攻预期（控制比赛节奏）
-        # 低控球率(<45%) → 轻微降低进攻预期（反击型球队机会更少但质量更高，已体现在战术矩阵中）
-        h_poss = ctx.home_team.possession
-        a_poss = ctx.away_team.possession
-        if h_poss > 0 and a_poss > 0:
-            poss_diff = (h_poss - a_poss) / 100.0  # -0.5 ~ +0.5
-            # 控球优势每多 10% → 进攻预期 +1.5%
-            adj = poss_diff * 0.15
-            return (base[0] * (1 + adj), base[1] * (1 - adj))
-        return base
-
-
-# ────────────────────────────
-# 模型 I：教练临场能力
-# ────────────────────────────
-class CoachImpactModel:
-    """
-    高评分教练在关键时刻（淘汰赛、落后时）
-    能提升球队进攻效率 3~6%。
-    """
-    @classmethod
-    def compute_factor(cls, team: TeamContext, is_knockout: bool = False) -> float:
-        rating = team.coach_rating  # 0~1
-        base = 1.0 + 0.04 * (rating - 0.5)  # 0.5 = 中性
-        if is_knockout:
-            base += 0.03 * (rating - 0.5)
-        return max(0.90, min(1.10, base))
-
-
-# ────────────────────────────
-# 模型 J：阵容完整度（伤病停赛）
-# ────────────────────────────
-class SquadAvailabilityModel:
-    """
-    核心球员伤停对攻防的影响。
-    关键球员缺阵越多，进攻和防守双双下降。
-    """
-    @classmethod
-    def compute_factor(cls, team: TeamContext) -> Tuple[float, float]:
-        """返回 (进攻乘数, 防守乘数)"""
-        if not team.key_injuries:
-            return 1.0, 1.0
-
-        # 解析伤病名单，统计人数
-        injuries = [x.strip() for x in team.key_injuries.split(",") if x.strip()]
-        count = len(injuries)
-
-        # 每缺一个核心：进攻 -3%, 防守 -2%
-        attack_pen = min(0.15, count * 0.03)
-        defense_pen = min(0.12, count * 0.02)
-
-        # 疲劳进一步放大影响
-        fatigue_mult = 1.0 + 0.5 * team.squad_fatigue_index
-        attack_pen *= fatigue_mult
-        defense_pen *= fatigue_mult
-
-        return max(0.80, 1.0 - attack_pen), max(0.85, 1.0 - defense_pen)
-
-
-# ────────────────────────────
-# 模型 D：市场赔率隐含概率
-# ────────────────────────────
-class MarketModel:
-    """
-    从市场赔率反推隐含概率。
-    使用基础归一化（去除抽水），保留市场原始信号强度。
-    世界杯淘汰赛阶段赔率来自欧洲主流博彩，返奖率 ~92-95%。
-    """
-
-    @classmethod
-    def predict(cls, ctx: MatchContext) -> Optional[Dict[str, float]]:
-        # ─── 关键修复：只使用真实收盘赔率 ───
-        # 合成赔率（synthetic）是从 Elo 反推的，如果市场模型使用它，
-        # 会形成循环引用：Elo → SyntheticOdds → MarketModel → Elo的噪声版本
-        # 这会让 market 权重完全失效，甚至引入负向信号。
-        # 因此 MarketModel 只在存在真实收盘赔率时才输出概率。
-        if ctx.has_closing_odds:
-            o1, oX, o2 = ctx.closing_odds_home, ctx.closing_odds_draw, ctx.closing_odds_away
-        elif ctx.has_odds:
-            # 兼容旧数据：如果没有独立的 closing_odds，降级使用普通 odds
-            # 但会打日志提醒，因为普通 odds 可能包含合成值
-            o1, oX, o2 = ctx.odds_home, ctx.odds_draw, ctx.odds_away
-        else:
-            return None
-
-        # 基础归一化：1/odds 去除抽水
-        raw = {"home": 1.0 / o1, "draw": 1.0 / oX, "away": 1.0 / o2}
-        total = sum(raw.values())
-
-        # 轻微平滑（5% 均匀分布），防止极端赔率导致的过自信
-        uniform = 1.0 / 3.0
-        result = {}
-        for k in raw:
-            prob = raw[k] / total
-            result[k] = 0.95 * prob + 0.05 * uniform
-
-        # 再归一化
-        t2 = sum(result.values())
-        return {k: v / t2 for k, v in result.items()}
-
-
-# ────────────────────────────
-# 模型 E：平局检测修正
-# ────────────────────────────
-class DrawDetectionModel:
-    """平局检测子模型 — 优先使用NN分类器，fallback到规则式校准。
-
-    核心问题: 当前融合SPF仅0.7%预测平局，实际占25%。
-    规则式draw_calibrator已在walk-forward验证中失败(2026-05-12)。
-    新方案: 训练专用二分类MLP(DrawClassifierNet)，用P(draw|features)修正SPF。
-    当NN模型不可用时，fallback到draw_calibrator规则方案。
-    """
-    _nn_predictor: Optional[Any] = None
-
-    @classmethod
-    def _get_nn_predictor(cls) -> Optional[Any]:
-        if cls._nn_predictor is None:
-            try:
-                from core.draw_classifier import DrawClassifierPredictor
-                predictor = DrawClassifierPredictor()
-                if predictor.is_ready():
-                    cls._nn_predictor = predictor
-            except Exception:
-                pass
-        return cls._nn_predictor
-
-    @classmethod
-    def predict(
-        cls,
-        spf: Dict[str, float],
-        ctx: MatchContext,
-        market: Optional[Dict[str, float]] = None,
-    ) -> Dict[str, float]:
-        """检测平局并修正SPF概率"""
-        nn = cls._get_nn_predictor()
-        if nn is not None:
-            home_xg = getattr(ctx.home_team, "avg_xg", 0) or ctx.home_team.avg_goals_scored
-            away_xg = getattr(ctx.away_team, "avg_xg", 0) or ctx.away_team.avg_goals_scored
-
-            draw_prob_nn = nn.predict_from_match(
-                elo_diff=ctx.home_team.elo - ctx.away_team.elo,
-                xg_diff=home_xg - away_xg,
-                market_draw_prob=market.get("draw") if market else None,
-                model_draw_prob=spf.get("draw", 0.25),
-                competition="",
-                venue_type=getattr(ctx, "venue_type", "neutral"),
-                temperature=getattr(ctx, "temperature", 20.0),
-                odds_home=ctx.closing_odds_home or ctx.odds_home,
-                odds_draw=ctx.closing_odds_draw or ctx.odds_draw,
-                odds_away=ctx.closing_odds_away or ctx.odds_away,
-                draw_movement=0.0,
-            )
-            return nn.adjust_spf(spf, draw_prob_nn)
-
-        # Fallback: 规则式draw_calibrator (已验证效果差, 仅作兜底)
-        from core.draw_calibrator import (
-            DrawFeatures,
-            apply_draw_calibration,
-            load_draw_params,
-        )
-        home_xg = getattr(ctx.home_team, "avg_xg", 0) or ctx.home_team.avg_goals_scored
-        away_xg = getattr(ctx.away_team, "avg_xg", 0) or ctx.away_team.avg_goals_scored
-        features = DrawFeatures(
-            elo_diff=ctx.home_team.elo - ctx.away_team.elo,
-            xg_diff=home_xg - away_xg,
-            market_draw_prob=market.get("draw") if market else None,
-            is_knockout=ctx.is_knockout,
-        )
-        return apply_draw_calibration(spf, features, load_draw_params())
-
+from core.context import (
+    TeamContext, RefereeContext, MatchContext, PredictionResult,
+)
 
 # ────────────────────────────
 # 融合层
@@ -1213,6 +317,7 @@ class PredictionEngine:
 
     def __init__(self, weights: Optional[Dict[str, float]] = None, db_session=None,
                  use_lr_fusion: bool = True):
+        self.db = db_session
         self.fusion = EnsembleFusion(weights, db_session=db_session)
         self.use_lr_fusion = use_lr_fusion
         self._lr_weights_cache: Dict[str, LogisticFusionWeights] = {}
@@ -1500,9 +605,19 @@ class PredictionEngine:
         # 2. 融合胜平负 ── 优先使用 LR 逻辑回归融合 (v2)
         lr_spf = None
         weights = self._get_lr_weights_for_match(ctx.competition)
-        
+
+        # 💡 诊断日志: 帮助排查 LR 融合 0% 部署问题
+        import logging as _log
+        _diag_logger = _log.getLogger("lr_diagnosis")
+        _diag_logger.info(
+            f"[LR-diag] match_id={ctx.match_id} competition='{ctx.competition}' "
+            f"weights_loaded={'yes' if weights else 'NO'} "
+            f"is_degraded={is_degraded} market_out={'present' if market_out else 'None'} "
+            f"has_closing_odds={ctx.has_closing_odds} has_odds={ctx.has_odds}"
+        )
+
         real_market = market_out if not is_degraded else None
-        
+
         if weights and real_market is not None:
             lr_spf = self._predict_with_lr(
                 ctx, elo_out, poisson_out, players_factor, real_market, weights
@@ -1588,6 +703,53 @@ class PredictionEngine:
         if is_mock_data:
             confidence = "low"
             
+        # ─── v3.0 一致性混合对齐引擎 ───
+        shadow_data = None
+        try:
+            from core.shadow_engine import ShadowPredictor
+            real_handicap = getattr(ctx, "handicap", 0) or 0
+            shadow_data = ShadowPredictor.predict(ctx, real_handicap, target_spf=fused_spf)
+        except Exception as e:
+            import logging
+            logging.getLogger("prediction_engine").warning(f"[Shadow] Predict failed: {e}")
+
+        # ─── v3.0_classic 纯物理 Dixon-Coles 预测 ───
+        classic_data = None
+        try:
+            from core.shadow_engine import ShadowPredictor
+            real_handicap = getattr(ctx, "handicap", 0) or 0
+            classic_data = ShadowPredictor.predict(ctx, real_handicap, target_spf=None)
+        except Exception as e:
+            import logging
+            logging.getLogger("prediction_engine").warning(f"[Classic Engine] Predict failed: {e}")
+
+        # ─── v4.0 深度学习时序 xG 引擎预测 ───
+        deep_data = None
+        try:
+            from core.deep_frontier_nn import DeepFrontierPredictor
+            from core.shadow_engine import ShadowPredictor
+            df_predictor = DeepFrontierPredictor(db_session=self.db)
+            if df_predictor.is_ready():
+                from features.feature_builder import FeatureBuilder
+                temp_builder = FeatureBuilder(use_interactions=False)
+                # 使用局部变量构建 48 维静态特征向量
+                static_feats = temp_builder.build(
+                    elo_probs=elo_out,
+                    poisson_result=poisson_out,
+                    players_factor=players_factor,
+                    market_probs=market_out,
+                    form_features=None,
+                    h2h_features=None,
+                    ctx=ctx
+                )
+                # 预测 xG 并通过物理对齐推导
+                lam_h_pred, lam_a_pred = df_predictor.predict_xg(self.db, ctx, static_feats[:48])
+                real_handicap = getattr(ctx, "handicap", 0) or 0
+                deep_data = ShadowPredictor.predict(ctx, real_handicap, target_spf=fused_spf, custom_lambdas=(lam_h_pred, lam_a_pred))
+        except Exception as e:
+            import logging
+            logging.getLogger("prediction_engine").warning(f"[Deep Frontier] Predict failed: {e}")
+
         return PredictionResult(
             match_id=ctx.match_id,
             spf=fused_spf,
@@ -1599,13 +761,14 @@ class PredictionEngine:
             raw_poisson=poisson_out["spf"],
             raw_players=players_factor,
             raw_market=market_out or {},
-            # 修复 (2026-06-17): 统一为 "v2.0",无论 LR 是否可用
-            # 6-16 动态审计确认生产站始终返回 "v2.0",不再做 LR vs fallback 分支
             model_version="v2.0",
             confidence=confidence,
-            odds_degraded=market_out is None or is_mock_data, # 标记数据降级
+            odds_degraded=market_out is None or is_mock_data,
             weights_used={"_fusion": "lr_v2", **(lr_spf or {})} if lr_spf is not None else self.fusion.get_effective_weights(market_out, ctx),
             trace=trace,
+            shadow_data=shadow_data,
+            classic_data=classic_data,
+            deep_data=deep_data,
         )
 
     def _predict_with_lr(self, ctx: MatchContext, elo_out: Dict[str, float], poisson_out: Dict, players_factor: float, market_out: Optional[Dict[str, float]], weights: "LogisticFusionWeights",) -> Optional[Dict[str, float]]:
@@ -1953,8 +1116,6 @@ def build_team_context_from_orm(team) -> TeamContext:
         weather_adaptability=team.weather_adaptability or 1.0,
         tactical_style=tactical,
         coach_rating=team.coach_rating or 0.5,
-        rest_days=team.rest_days or 7,
-        key_injuries=team.key_injuries or "",
         squad_fatigue_index=team.squad_fatigue_index or 0.5,
     )
 
@@ -1972,6 +1133,7 @@ def build_context_from_match(match, handicap: int = 0) -> MatchContext:
         match_id=match.id,
         home_team=home,
         away_team=away,
+        kickoff_at=match.kickoff_at,
         stage=match.stage or "group",
         is_knockout=match.stage in ("R32", "R16", "QF", "SF", "F"),
         is_late_season=is_late,

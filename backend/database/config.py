@@ -25,9 +25,9 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     TEST_MODE: bool = False
     
-    # 安全配置
-    SECRET_KEY: str = "fallback_secret_key_at_least_32_chars_long"
-    ADMIN_API_KEY: str = "fallback_admin_key"
+    # 安全配置 — 生产环境必须设置,无回退默认值
+    SECRET_KEY: str = ""
+    ADMIN_API_KEY: str = ""
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     
     # 数据库配置
@@ -54,17 +54,30 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     # 💡 移除 os.chdir，改為純淨的配置讀取
     s = Settings()
-    
+
     # 💡 强行同步到 os.environ，解决第三方模块或特定 router 通过 os.getenv 读不到 Pydantic env 的问题
     os.environ["TEST_MODE"] = str(s.TEST_MODE).lower()
-    
+
     import sys
     is_testing = "PYTEST_CURRENT_TEST" in os.environ or "pytest" in sys.modules
+
     if is_testing:
         s.SECRET_KEY = "test-secret-key-at-least-32-characters-long-for-pytest"
         s.ADMIN_API_KEY = "test-admin-api-key-at-least-16-chars"
         # 💡 测试环境下使用内存数据库，避免文件路径问题导致 unable to open database file
         s.DATABASE_URL = "sqlite:///:memory:"
+    else:
+        # 💡 生产环境: 强制要求密钥已配置
+        if not s.SECRET_KEY or s.SECRET_KEY.startswith("fallback"):
+            raise RuntimeError(
+                "SECRET_KEY is not configured. "
+                "Set the SECRET_KEY environment variable before starting the application."
+            )
+        if not s.ADMIN_API_KEY:
+            raise RuntimeError(
+                "ADMIN_API_KEY is not configured. "
+                "Set the ADMIN_API_KEY environment variable before starting the application."
+            )
 
     # 确保 Key 长度符合加密要求
     if len(s.SECRET_KEY) < 32:

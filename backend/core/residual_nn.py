@@ -112,7 +112,15 @@ class StackingTrainer:
                     if market is None:
                         continue
                     
-                    base_feats = builder.build(elo, poisson, 1.0, market, None, None, ctx)
+                    # 💡 修复：引入真实的最近战绩与历史交锋特征，消除训练-推理不一致
+                    from features.form_markov_model import FormMarkovModel
+                    from features.h2h_model import H2HModel
+                    fm = FormMarkovModel(s)
+                    form_features = fm.compute(ctx.home_team.recent_results, ctx.home_team.team_id)
+                    hm = H2HModel(s)
+                    h2h_features = hm.compute(ctx.home_team.team_id, ctx.away_team.team_id)
+                    
+                    base_feats = builder.build(elo, poisson, 1.0, market, form_features, h2h_features, ctx)
                     
                     # 求解真实的 LR 概率，消除 Train-Test Discrepancy
                     weights = engine._get_lr_weights_for_match(ctx.competition)
@@ -201,9 +209,10 @@ class StackingTrainer:
                 break
         
         # 保存统计信息供推理归一化
+        # 💡 修复：提升 std 截断下限到 1e-2，防御特征常量波动引发的归一化爆炸
         stats = {
             "mean": X.mean(axis=0).tolist(),
-            "std": np.maximum(X.std(axis=0), 1e-6).tolist(),
+            "std": np.maximum(X.std(axis=0), 1e-2).tolist(),
             "trained_at": datetime.now(timezone.utc).isoformat(),
             "best_loss": best_loss
         }
@@ -229,10 +238,11 @@ class StackingPredictor:
     def predict(self, features: np.ndarray) -> Dict[str, float]:
         if not self.is_ready(): return None
         
-        # 归一化
-        mean = np.array(self.stats["mean"], dtype=np.float32)
-        std = np.array(self.stats["std"], dtype=np.float32)
-        x = (features - mean) / std
+        # 💡 彻底修复 Train-Test Discrepancy (双重归一化)：
+        # 模型骨干网络已包含 nn.BatchNorm1d (self.input_bn)，它在训练时直接接受原始未归一化的输入特征 X，并自我批归一化。
+        # 推理时模型会基于在训练阶段累积的 running_mean/var 自动执行归一化。
+        # 严禁在推理层进行人工手动缩放 (x = (features - mean)/std)，必须直接输入原始 features。
+        x = features
         
         with torch.no_grad():
             logits = self.model(torch.FloatTensor(x).unsqueeze(0))

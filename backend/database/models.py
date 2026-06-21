@@ -645,3 +645,22 @@ class BettingExchangeVolume(Base):
     away_ratio = Column(Float, default=0.0)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+
+# ────────────────────────────
+# 模型注册表 — 统一管理所有预测模型版本
+# ────────────────────────────
+class ModelVersion(Base):
+    __tablename__ = "model_versions"
+
+    id = Column(Integer, primary_key=True)
+    version = Column(String(20), unique=True, nullable=False, index=True)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=False, index=True)
+    deployed_at = Column(DateTime(timezone=True), nullable=True)
+    accuracy = Column(Float, nullable=True)
+    brier_score = Column(Float, nullable=True)
+    sample_count = Column(Integer, default=0)
+    feature_dim = Column(Integer, default=48)
+    metrics = Column(Text, nullable=True)  # JSON string
+

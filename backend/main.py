@@ -98,10 +98,16 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Application starting up", extra={"extra_data": {"version": "0.3.0"}})
-    
+
     # 生产环境安全守卫
     if settings.DEBUG and os.getenv("ENVIRONMENT") == "production":
         raise RuntimeError("DEBUG=True is not allowed in production")
+
+    # 安全配置守卫
+    if not settings.SECRET_KEY or settings.SECRET_KEY.startswith("fallback"):
+        raise RuntimeError("SECRET_KEY must be set via environment variable (not .env fallback)")
+    if not settings.ADMIN_API_KEY:
+        raise RuntimeError("ADMIN_API_KEY must be set via environment variable")
 
     init_db()
     from scheduler import start_scheduler
@@ -163,13 +169,23 @@ async def safe_generic_exception(request, exc):
     detail = str(exc) if settings.DEBUG else "Internal server error"
     return JSONResponse(status_code=500, content={"detail": detail})
 
-# CORS — 全放开以确保生产环境数据通畅
+# CORS — 生产环境指定域名,开发环境允许全部
+_ALLOWED_ORIGINS_RAW = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000,https://football.nett.to")
+ALLOWED_ORIGINS = [o.strip() for o in _ALLOWED_ORIGINS_RAW.split(",")]
+
+# 如果明确配置了通配符(不推荐),则关闭 credentials
+if "*" in ALLOWED_ORIGINS:
+    cors_credentials = False
+    logger.warning("[cors] Wildcard origin detected — credentials disabled for security")
+else:
+    cors_credentials = True
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=cors_credentials,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Api-Key", "X-Request-ID"],
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
