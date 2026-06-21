@@ -82,6 +82,8 @@ def regenerate_matches(db: Session, matches: list, label: str = "") -> int:
                 )
             if created % 100 == 0:
                 db.commit()
+                # 关键修复：清空 session 的 identity map，彻底释放旧对象内存
+                db.expunge_all()
                 
         except Exception as e:
             logger.error(f"Failed to regenerate prediction for {match.match_code}: {e}")
