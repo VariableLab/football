@@ -45,6 +45,7 @@ class TeamContext:
     key_players_available: int = 11
     key_players_total: int = 11
     squad_fatigue_index: float = 0.5
+    key_injuries: str = ""
 
     # 本届赛事已赛场次
     tournament_matches_played: int = 0
