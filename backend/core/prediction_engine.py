@@ -18,27 +18,19 @@
 from __future__ import annotations
 
 import math
-import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional, Any
-from datetime import datetime, timedelta
-from itertools import product
 
 import numpy as np
 import pandas as pd
-from scipy.stats import poisson
 
-from database.models import PlayType
-import yaml
 import os
 
 # ─── 子模型已迁移到 features/ 包（向后兼容：本地定义仍可用）───
-from core.models import EloModel, PoissonModel, PlayerAdjustmentModel, MarketModel, FormAdjustmentModel, DrawDetectionModel
+from core.models import EloModel, PoissonModel, PlayerAdjustmentModel, MarketModel, DrawDetectionModel
 from features import (
     EloModel, PoissonModel, PlayerAdjustmentModel,
-    FormAdjustmentModel, HomeAwayModel, ScheduleDensityModel,
-    WeatherVenueModel, TacticalModel, CoachImpactModel, SquadAvailabilityModel,
-    MarketModel, RefereeModel,
+    MarketModel,
 )
 
 # ─── LR 融合层 (v2 架构) ───
@@ -56,10 +48,6 @@ from features.h2h_model import H2HModel
 from core.constants import (
     MAX_GOALS, POISSON_TRUNCATE, HOME_ADVANTAGE_ELO, FORM_WINDOW_MATCHES,
     DIXON_COLES_RHO, DRAW_INFLATION_FACTOR, DEFAULT_WEIGHTS,
-    HT_FT_TRANSITION, HT_DISTRIBUTION, HALF_TIME_RATIO,
-    KNOCKOUT_GOAL_FACTORS, TACTICAL_MATRIX,
-    WEATHER_PENALTY, PITCH_PENALTY, REST_PENALTY,
-    PLAYER_POSITION_IMPACT, STEAM_MOVE, DEGRADED, RESIDUAL_NN,
 )
 
 # 向后兼容: 保留模块级常量引用
@@ -81,7 +69,7 @@ load_engine_config = lambda: _ENGINE_CFG
 # 数据结构 — 迁移到 core/context.py
 # ────────────────────────────
 from core.context import (
-    TeamContext, RefereeContext, MatchContext, PredictionResult,
+    TeamContext, MatchContext, PredictionResult,
 )
 
 # ────────────────────────────
@@ -548,8 +536,11 @@ class PredictionEngine:
             
             # 1. Lab Poisson
             if os.path.exists(p_weight_path):
-                lab_p = LabPoisson()
-                lab_p.load_params(p_weight_path)
+                if not hasattr(PredictionEngine, "_lab_poisson_cache"):
+                    PredictionEngine._lab_poisson_cache = LabPoisson()
+                    PredictionEngine._lab_poisson_cache.load_params(p_weight_path)
+                lab_p = PredictionEngine._lab_poisson_cache
+                
                 # 💡 关键修复：使用英文名匹配专家模型权重
                 h_name = ctx.home_team.name_en or ctx.home_team.name
                 a_name = ctx.away_team.name_en or ctx.away_team.name
@@ -561,12 +552,15 @@ class PredictionEngine:
                     trace.add_step("Lab-Expert Poisson", "使用实验室 Dixon-Coles 泊松参数", lab_poisson_spf)
                 else:
                     import logging
-                    logging.getLogger("prediction_engine").info(f"Lab Poisson skipped: Team not found in weights")
+                    logging.getLogger("prediction_engine").info("Lab Poisson skipped: Team not found in weights")
 
             # 2. Lab Elo
             if os.path.exists(e_weight_path):
-                lab_e = LabElo()
-                lab_e.load_params(e_weight_path)
+                if not hasattr(PredictionEngine, "_lab_elo_cache"):
+                    PredictionEngine._lab_elo_cache = LabElo()
+                    PredictionEngine._lab_elo_cache.load_params(e_weight_path)
+                lab_e = PredictionEngine._lab_elo_cache
+
                 # 💡 关键修复：使用英文名匹配专家模型权重
                 h_name = ctx.home_team.name_en or ctx.home_team.name
                 a_name = ctx.away_team.name_en or ctx.away_team.name
@@ -1060,7 +1054,7 @@ class Backtester:
                     "max_prob": max(spf.values()),
                     "confidence": r.confidence,
                 })
-            except Exception as e:
+            except Exception:
                 # 单场比赛失败不影响整体
                 continue
 
@@ -1418,7 +1412,7 @@ class BettingStrategy:
         if not best:
             return None
         return self._build_pick("conservative", "保守策略", best, 5.0,
-                                f"高置信+正EV，风险最低")
+                                "高置信+正EV，风险最低")
 
     def _probability_strategy(self, candidates: List[Dict]) -> Optional[StrategyPick]:
         """概率优先：选概率最大的"""
@@ -1455,7 +1449,7 @@ class BettingStrategy:
         stake = min(10.0, max(3.0, best["prob"] * best["odds"] * 3))
         ev_sign = "+" if best["ev"] > 0 else ""
         return self._build_pick("combo", "组合策略", best, stake,
-                                f"综合评分最优，概率×EV平衡")
+                                "综合评分最优，概率×EV平衡")
 
     def _build_pick(self, stype: str, sname: str, c: Dict, stake: float, rationale: str) -> StrategyPick:
         risk = self._risk_level(c["prob"], c["ev"], c.get("confidence", "medium"))
