@@ -159,6 +159,7 @@ class PredictionResult:
     shadow_data: Optional[Dict[str, Any]] = None  # v3.0 一致性混合对齐引擎
     classic_data: Optional[Dict[str, Any]] = None  # v3.0_classic 纯物理 Dixon-Coles 引擎
     deep_data: Optional[Dict[str, Any]] = None     # v4.0 深度学习时序 xG 物理融合引擎
+    mixture_signals: Optional[Dict[str, Any]] = None  # 混合比分模型信号 (collapse_prob, upset)
 
     generated_at: datetime = field(default_factory=datetime.utcnow)
 
@@ -211,5 +212,16 @@ class PredictionResult:
                          "confidence": self.confidence,
                          "model_version": "v4.0"
                      })
+
+        # 混合比分模型信号 — 存入 SPF 的 probabilities 中作为元数据
+        if self.mixture_signals:
+            payload.append({
+                "play_type": PlayType.SPF,
+                "probabilities": {
+                    "_mixture": self.mixture_signals,
+                },
+                "confidence": self.confidence,
+                "model_version": "v3.0_mixture",
+            })
 
         return payload

@@ -261,13 +261,84 @@ def get_strategy(
         for p in picks
     ]
 
+    # ─── 混合比分模型: 计算崩盘概率 ───
+    collapse_prob = 0.0
+    big_score_warning = False
+    upset_signal = None
+
+    # 先从预测结果中尝试提取 mixture_signals (如果已持久化)
+    for pred in predictions:
+        probs = pred.get("probabilities", {})
+        if isinstance(probs, dict) and "_mixture" in probs:
+            mix = probs["_mixture"]
+            if isinstance(mix, dict):
+                collapse_prob = mix.get("collapse_prob", 0.0)
+                big_score_warning = mix.get("big_score_warning", False)
+                upset_signal = mix.get("upset_signal")
+            break
+
+    # 如果没有持久化的信号，则实时计算
+    if collapse_prob == 0.0 and upset_signal is None:
+        try:
+            from core.models.mixture_score_model import MixtureScoreModel
+            from core.models.upset_detector import UpsetDetector
+
+            home_elo = match.home_team.elo if match.home_team else 0
+            away_elo = match.away_team.elo if match.away_team else 0
+            elo_diff = home_elo - away_elo
+
+            home_xg = (match.home_team.avg_xg or match.home_team.avg_goals_scored) if match.home_team else 0
+            away_xg = (match.away_team.avg_xg or match.away_team.avg_goals_conceded) if match.away_team else 0
+            xg_diff = home_xg - away_xg
+
+            home_form = (match.home_team.form_factor or 1.0) if match.home_team else 1.0
+            away_form = (match.away_team.form_factor or 1.0) if match.away_team else 1.0
+
+            home_inj = len([x for x in ((match.home_team.key_injuries or "") if match.home_team else "") .split(",") if x.strip()])
+            away_inj = len([x for x in ((match.away_team.key_injuries or "") if match.away_team else "") .split(",") if x.strip()])
+
+            home_rest = getattr(match.home_team, "rest_days", 7) if match.home_team else 7
+            away_rest = getattr(match.away_team, "rest_days", 7) if match.away_team else 7
+
+            collapse_prob = MixtureScoreModel.compute_collapse_probability(
+                elo_diff=elo_diff, xg_diff=xg_diff,
+                home_form=home_form, away_form=away_form,
+                home_injuries=home_inj, away_injuries=away_inj,
+                home_rest_days=home_rest, away_rest_days=away_rest,
+            )
+            big_score_warning = collapse_prob > 0.25
+
+            # 爆冷探测器
+            spf_pred = next((p for p in predictions if p.get("play_type") == "SPF"), None)
+            if spf_pred:
+                model_spf = spf_pred.get("probabilities", {})
+                if isinstance(model_spf, dict) and len(model_spf) >= 3:
+                    signal = UpsetDetector.detect_from_odds(
+                        model_spf=model_spf,
+                        odds_home=match.odds_home or 2.0,
+                        odds_draw=match.odds_draw or 3.2,
+                        odds_away=match.odds_away or 3.5,
+                    )
+                    upset_signal = {
+                        "kl_divergence": signal.kl_divergence,
+                        "upset_probability": signal.upset_probability,
+                        "divergence_direction": signal.divergence_direction,
+                        "is_upset_candidate": signal.is_upset_candidate,
+                        "confidence": signal.confidence,
+                    }
+        except Exception as e:
+            import logging
+            logging.getLogger("matches").debug(f"Model signals failed: {e}")
+
+    # ─── 对冲投资组合 ───
     try:
         from strategy.hedged_portfolio import HedgedPortfolioGenerator
         port_gen = HedgedPortfolioGenerator(
             match_predictions=predictions,
             odds_home=match.odds_home or 2.0,
             odds_draw=match.odds_draw or 3.2,
-            odds_away=match.odds_away or 3.5
+            odds_away=match.odds_away or 3.5,
+            collapse_prob=collapse_prob,
         )
         # 提取 dict 格式的 portfolio
         portfolios = []
@@ -277,7 +348,7 @@ def get_strategy(
                 "name": port.name,
                 "legs": [
                     {
-                        "type": leg.type,
+                        "type": leg.leg_type,
                         "play": leg.play,
                         "selection": leg.selection,
                         "odds": leg.odds,
@@ -288,7 +359,9 @@ def get_strategy(
                 ],
                 "expected_roi": port.expected_roi,
                 "win_prob_combined": port.win_prob_combined,
-                "rationale": port.rationale
+                "rationale": port.rationale,
+                "total_ev": port.total_ev,
+                "kelly_fraction": port.kelly_fraction,
             })
     except Exception as e:
         import logging
@@ -304,6 +377,9 @@ def get_strategy(
         strategies=strategies,
         portfolios=portfolios,
         predictions=predictions,
+        collapse_prob=round(collapse_prob, 4),
+        big_score_warning=big_score_warning,
+        upset_signal=upset_signal,
     )
 
 @router.get("/{match_id}/odds-movement", response_model=OddsMovementResponse)

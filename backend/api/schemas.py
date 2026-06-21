@@ -381,6 +381,11 @@ class StrategyResponse(BaseModel):
     predictions: List[PredictionOut]
     trace: Optional[LogicChain] = None
 
+    # ─── 混合比分模型信号 ───
+    collapse_prob: Optional[float] = None          # 崩盘概率 (0~1)
+    big_score_warning: Optional[bool] = None       # 是否警告大比分
+    upset_signal: Optional[Dict[str, Any]] = None  # 爆冷探测器结果
+
 
 # ─── Feedback ───
 class FeedbackOut(BaseModel):

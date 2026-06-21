@@ -11,7 +11,10 @@ from scipy.stats import poisson
 from core.context import MatchContext
 from core.constants import (
     MAX_GOALS, DIXON_COLES_RHO, DRAW_INFLATION_FACTOR,
+    HT_FT_TRANSITION, HT_DISTRIBUTION, HALF_TIME_RATIO,
 )
+from core.models.mixture_score_model import MixtureScoreModel
+from core.models.heavy_tail_poisson import HeavyTailPoisson
 from features.adjustment_models import RefereeModel
 from core.models.form_adjustment import FormAdjustmentModel
 from core.models.home_away import HomeAwayModel
@@ -302,4 +305,173 @@ class PoissonModel:
             "half": half,
             "lambda_home": lambda_h,
             "lambda_away": lambda_a,
+        }
+
+    @classmethod
+    def predict_with_heavy_tail(
+        cls,
+        ctx: MatchContext,
+        use_heavy_tail: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        混合比分模型 — 增强大比分预测能力。
+
+        使用 MixtureScoreModel: Normal状态 + Collapse状态加权混合。
+        当 Elo 差距 > 150 或综合崩盘信号 > 0.15 时自动启用。
+        能更好地捕捉强弱悬殊比赛的极端比分 (如 5:1, 4:0)。
+
+        返回与 predict() 相同的结构，但比分分布更合理。
+        """
+        lambda_h, lambda_a = cls._compute_lambdas(ctx)
+
+        if not use_heavy_tail:
+            return cls.predict(ctx)
+
+        # 计算崩盘概率
+        elo_diff = ctx.home_team.elo - ctx.away_team.elo
+        xg_diff = (
+            (ctx.home_team.avg_xg or ctx.home_team.avg_goals_scored)
+            - (ctx.away_team.avg_xg or ctx.away_team.avg_goals_conceded)
+        )
+        home_injuries = len([x for x in (ctx.home_team.key_injuries or "").split(",") if x.strip()])
+        away_injuries = len([x for x in (ctx.away_team.key_injuries or "").split(",") if x.strip()])
+        home_rest = getattr(ctx.home_team, "rest_days", 7)
+        away_rest = getattr(ctx.away_team, "rest_days", 7)
+
+        collapse_prob = MixtureScoreModel.compute_collapse_probability(
+            elo_diff=elo_diff,
+            xg_diff=xg_diff,
+            home_form=ctx.home_team.form_factor,
+            away_form=ctx.away_team.form_factor,
+            home_injuries=home_injuries,
+            away_injuries=away_injuries,
+            home_rest_days=home_rest,
+            away_rest_days=away_rest,
+        )
+
+        # 如果崩盘概率太低，回退到标准泊松
+        if collapse_prob < 0.08:
+            return cls.predict(ctx)
+
+        # 使用混合模型生成比分概率
+        mixture_scores = MixtureScoreModel.predict(
+            lambda_h, lambda_a, collapse_prob, max_goals=MAX_GOALS,
+        )
+
+        # 1. 比分 — 应用 Draw Inflation 后输出
+        def parse_goals(s: str) -> Tuple[int, int]:
+            """解析比分字符串为 (home_goals, away_goals)"""
+            parts = s.split(":")
+            if len(parts) == 2:
+                return int(parts[0].rstrip("+")), int(parts[1].rstrip("+"))
+            return 0, 0
+
+        score = {}
+        for s, p in mixture_scores.items():
+            hi, ai = parse_goals(s)
+            if hi == ai:
+                p *= DRAW_INFLATION_FACTOR
+            score[s] = round(p, 4)
+
+        # 归一化
+        score_total = sum(score.values())
+        if score_total > 0:
+            score = {k: v / score_total for k, v in score.items()}
+
+        # 2. 从比分矩阵推导 SPF
+        p_home = 0.0
+        p_draw = 0.0
+        p_away = 0.0
+        for s, v in score.items():
+            hi, ai = parse_goals(s)
+            if hi > ai:
+                p_home += v
+            elif hi == ai:
+                p_draw += v
+            else:
+                p_away += v
+        spf_total = p_home + p_draw + p_away
+        spf = {"home": p_home / spf_total, "draw": p_draw / spf_total, "away": p_away / spf_total}
+
+        # 3. 总进球
+        goals = {}
+        for s, p in score.items():
+            hi, ai = parse_goals(s)
+            tg = hi + ai
+            key = str(tg) if tg < 7 else "7+"
+            goals[key] = goals.get(key, 0) + p
+        # 归一化总进球
+        g_total = sum(goals.values())
+        if g_total > 0:
+            goals = {k: round(v / g_total, 4) for k, v in goals.items()}
+
+        # 4. 让球
+        handicap = ctx.handicap
+        p_rq_h = 0.0
+        p_rq_d = 0.0
+        p_rq_a = 0.0
+        for s, v in score.items():
+            hi, ai = parse_goals(s)
+            diff = hi - ai
+            if diff > handicap:
+                p_rq_h += v
+            elif diff == handicap:
+                p_rq_d += v
+            else:
+                p_rq_a += v
+        rq_t = p_rq_h + p_rq_d + p_rq_a
+        rq = {
+            "home": p_rq_h / rq_t if rq_t > 0 else 1/3,
+            "draw": p_rq_d / rq_t if rq_t > 0 else 1/3,
+            "away": p_rq_a / rq_t if rq_t > 0 else 1/3,
+            "handicap": handicap,
+        }
+
+        # 5. 半全场 (与 predict() 相同逻辑)
+        lambda_h_1h = lambda_h * HALF_TIME_RATIO
+        lambda_a_1h = lambda_a * HALF_TIME_RATIO
+
+        def half_outcome_prob(lh_val: float, la_val: float) -> Dict[str, float]:
+            p_h, p_d, p_a = 0.0, 0.0, 0.0
+            for ii in range(5):
+                for jj in range(5):
+                    pi = poisson.pmf(ii, lh_val)
+                    pj = poisson.pmf(jj, la_val)
+                    if ii > jj:
+                        p_h += pi * pj
+                    elif ii == jj:
+                        p_d += pi * pj
+                    else:
+                        p_a += pi * pj
+            t = p_h + p_d + p_a
+            return {"home": p_h / max(t, 1e-8), "draw": p_d / max(t, 1e-8), "away": p_a / max(t, 1e-8)}
+
+        half_1h = half_outcome_prob(lambda_h_1h, lambda_a_1h)
+        for k in half_1h:
+            half_1h[k] = 0.5 * half_1h[k] + 0.5 * HT_DISTRIBUTION[k]
+
+        half = {}
+        outcomes = ["home", "draw", "away"]
+        labels = {"homehome": "主主", "homedraw": "主平", "homeaway": "主客",
+                  "drawhome": "平主", "drawdraw": "平平", "drawaway": "平客",
+                  "awayhome": "客主", "awaydraw": "客平", "awayaway": "客客"}
+        for h1 in outcomes:
+            for h2 in outcomes:
+                key = f"{h1}{h2}"
+                prob = half_1h[h1] * HT_FT_TRANSITION[h1][h2]
+                half[labels.get(key, key)] = prob
+
+        half_total = sum(half.values())
+        half = {k: round(v / half_total, 4) for k, v in half.items()}
+
+        return {
+            "spf": spf,
+            "rq": rq,
+            "score": score,
+            "goals": goals,
+            "half": half,
+            "lambda_home": lambda_h,
+            "lambda_away": lambda_a,
+            "heavy_tail": True,
+            "collapse_prob": round(collapse_prob, 4),
         }

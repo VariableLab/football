@@ -194,6 +194,53 @@
           </div>
         </div>
 
+        <!-- Model Signals -->
+        <template x-if="bigScoreWarning || upsetSignal">
+          <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Big Score Warning -->
+            <template x-if="bigScoreWarning">
+              <div class="p-4 border border-orange-200 rounded-xl bg-orange-50/50">
+                <div class="flex items-center gap-2 mb-2">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="7" stroke="#f97316" stroke-width="1.5"/>
+                    <path d="M8 5v3.5M8 10.5v.5" stroke="#f97316" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                  <span class="text-xs font-semibold text-orange-700">大比分预警</span>
+                </div>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-2xl font-mono font-bold text-orange-600" x-text="(collapseProb * 100).toFixed(1) + '%'"></span>
+                  <span class="text-xs text-muted">崩盘概率</span>
+                </div>
+                <div class="mt-2 text-xs text-orange-600/80">模型检测到实力悬殊信号，可能出现 4:0+ 的极端比分</div>
+              </div>
+            </template>
+
+            <!-- Upset Signal -->
+            <template x-if="upsetSignal">
+              <div class="p-4 border border-purple-200 rounded-xl bg-purple-50/50">
+                <div class="flex items-center gap-2 mb-2">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 2l6 4v4l-6 4-6-4V6z" stroke="#a855f7" stroke-width="1.5"/>
+                    <path d="M8 8v4M8 6l3-2" stroke="#a855f7" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                  <span class="text-xs font-semibold text-purple-700">市场分歧</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <div class="text-[10px] text-muted uppercase">爆冷概率</div>
+                    <div class="text-lg font-mono font-semibold text-purple-600" x-text="(upsetSignal.upset_probability * 100).toFixed(1) + '%'"></div>
+                  </div>
+                  <div>
+                    <div class="text-[10px] text-muted uppercase">KL 散度</div>
+                    <div class="text-lg font-mono font-semibold text-purple-600" x-text="upsetSignal.kl_divergence.toFixed(4)"></div>
+                  </div>
+                </div>
+                <div class="mt-1 text-xs text-purple-600/80" x-text="upsetSignal.divergence_direction === 'model_home_favor' ? '模型看好主场' : upsetSignal.divergence_direction === 'model_away_favor' ? '模型看好客场' : '模型看好平局'"></div>
+              </div>
+            </template>
+          </div>
+        </template>
+
         <!-- Strategy Card -->
         <template x-if="selectedStrategy">
           <div class="mb-8 p-5 border border-border rounded-xl bg-gray-50/50">
@@ -238,6 +285,33 @@
 
             <div class="text-sm leading-relaxed text-muted">
               <span class="font-medium text-fg" x-text="selectedStrategy.rationale || ''"></span>
+            </div>
+          </div>
+        </template>
+
+        <!-- Hedged Portfolio -->
+        <template x-if="portfolios.length > 0">
+          <div class="mb-8">
+            <h3 class="text-sm font-semibold mb-3">对冲投资组合</h3>
+            <div class="space-y-3">
+              <template x-for="(port, idx) in portfolios.slice(0, 3)" :key="idx">
+                <div class="p-4 border border-border rounded-xl bg-gradient-to-r from-blue-50/30 to-transparent">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium" x-text="port.name"></span>
+                    <span class="text-xs font-mono px-2 py-0.5 rounded bg-green-100 text-green-700" x-text="'ROI ' + (port.expected_roi * 100).toFixed(1) + '%'"></span>
+                  </div>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
+                    <template x-for="leg in port.legs" :key="leg.play + leg.selection">
+                      <div>
+                        <div class="text-[10px] text-muted uppercase" x-text="leg.type === 'primary' ? '主攻' : '对冲'"></div>
+                        <div class="text-xs font-medium"><span x-text="leg.play"></span> <span x-text="leg.selection"></span></div>
+                        <div class="text-xs font-mono text-muted">@<span x-text="leg.odds.toFixed(2)"></span></div>
+                      </div>
+                    </template>
+                  </div>
+                  <div class="text-xs text-muted leading-relaxed" x-text="port.rationale"></div>
+                </div>
+              </template>
             </div>
           </div>
         </template>
@@ -365,8 +439,11 @@
 
         <!-- Model Info Footer -->
         <div class="flex items-center justify-between text-[10px] text-muted border-t border-border pt-4">
-          <span x-text="'Model: ' + (selectedStrategy ? (predictions.find(p => p.play_type === 'SPF')?.model_version || 'v2.0') : 'v2.0')"></span>
+          <span x-text="'Model: ' + (selectedStrategy ? (predictions.find(p => p.play_type === 'SPF')?.model_version || 'v3.0_mixture') : 'v3.0_mixture')"></span>
           <span x-text="'Odds Source: ' + (selectedMatch?.odds_source || '—')"></span>
+          <template x-if="collapseProb > 0.15">
+            <span class="text-orange-500 font-medium" x-text="'Collapse: ' + (collapseProb * 100).toFixed(1) + '%'"></span>
+          </template>
           <span x-text="'Confidence: ' + (selectedMatch?.confidence || '—')"></span>
         </div>
       </div>

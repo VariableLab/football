@@ -25,6 +25,12 @@ document.addEventListener('alpine:init', () => {
     goalsPrediction: null,
     halfPrediction: null,
 
+    // 混合模型信号
+    collapseProb: 0,
+    bigScoreWarning: false,
+    upsetSignal: null,
+    portfolios: [],
+
     get stakeAmount() {
       if (!this.selectedStrategy || !this.selectedStrategy.is_recommended) return 0;
       return this.bankroll * (this.selectedStrategy.stake_pct || 0);
@@ -83,6 +89,10 @@ document.addEventListener('alpine:init', () => {
       this.halfPrediction = null;
       this.preview = null;
       this.selectedStrategy = null;
+      this.collapseProb = 0;
+      this.bigScoreWarning = false;
+      this.upsetSignal = null;
+      this.portfolios = [];
 
       const m = this.matches.find(x => x.id === id);
       this.selectedMatch = m;
@@ -120,6 +130,11 @@ document.addEventListener('alpine:init', () => {
             risk_level: 'low',
           };
         }
+        // 混合模型信号
+        this.collapseProb = strategyData?.collapse_prob || 0;
+        this.bigScoreWarning = strategyData?.big_score_warning || false;
+        this.upsetSignal = strategyData?.upset_signal || null;
+        this.portfolios = strategyData?.portfolios || [];
       } catch (err) {
         console.error('Strategy load failed', err);
         this.selectedStrategy = {

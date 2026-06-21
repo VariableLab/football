@@ -42,6 +42,9 @@ from features.feature_builder import FeatureBuilder
 from features.form_markov_model import FormMarkovModel
 from features.h2h_model import H2HModel
 
+# ─── 重尾泊松模型 (比分预测增强) ───
+from core.models.heavy_tail_poisson import HeavyTailPoisson
+
 # ────────────────────────────
 # 常量 — 从 core.constants 导入,避免循环导入
 # ────────────────────────────
@@ -411,11 +414,11 @@ class PredictionEngine:
             
         return spf
 
-    def _recalibrate_scores(self, raw_score: Dict[str, float], fused_spf: Dict[str, float]) -> Dict[str, float]:
+    def _recalibrate_scores(self, raw_score: Dict[str, float], fused_spf: Dict[str, float], use_heavy_tail: bool = False) -> Dict[str, float]:
         """使用最终融合的胜平负概率，对比分预测进行贝叶斯校准"""
         calibrated = {}
         by_outcome = {"home": {}, "draw": {}, "away": {}}
-        
+
         for score_key, prob in raw_score.items():
             try:
                 parts = score_key.split(':')
@@ -581,7 +584,10 @@ class PredictionEngine:
             elo_out = lab_elo_spf
 
         # 如果有实验室泊松，优先使用
-        poisson_out = PoissonModel.predict(ctx)
+        # 当 Elo 差距 > 200 时启用重尾模式，改善大比分预测
+        elo_gap = abs(ctx.home_team.elo - ctx.away_team.elo)
+        use_heavy_tail = elo_gap > 200
+        poisson_out = PoissonModel.predict_with_heavy_tail(ctx, use_heavy_tail=use_heavy_tail)
         if lab_poisson_spf:
             poisson_out["spf"] = lab_poisson_spf
 
@@ -681,7 +687,7 @@ class PredictionEngine:
         rq = {k: v / total for k, v in rq.items()}
 
         # 4. 比分 / 总进球 / 半全场：在降级模式或 SPF 融合校准后，对比分/衍生玩法进行贝叶斯概率对齐
-        score = self._recalibrate_scores(poisson_out["score"], fused_spf)
+        score = self._recalibrate_scores(poisson_out["score"], fused_spf, use_heavy_tail=use_heavy_tail)
         goals = self._recalibrate_goals(score)
         half = self._recalibrate_half(poisson_out["half"], fused_spf)
 
@@ -744,6 +750,52 @@ class PredictionEngine:
             import logging
             logging.getLogger("prediction_engine").warning(f"[Deep Frontier] Predict failed: {e}")
 
+        # ─── 混合比分模型信号 ───
+        mixture_signals = None
+        try:
+            from core.models.mixture_score_model import MixtureScoreModel
+            from core.models.upset_detector import UpsetDetector
+
+            collapse_prob = MixtureScoreModel.compute_collapse_probability(
+                elo_diff=ctx.home_team.elo - ctx.away_team.elo,
+                xg_diff=(
+                    (ctx.home_team.avg_xg or ctx.home_team.avg_goals_scored)
+                    - (ctx.away_team.avg_xg or ctx.away_team.avg_goals_conceded)
+                ),
+                home_form=ctx.home_team.form_factor,
+                away_form=ctx.away_team.form_factor,
+                home_injuries=len([x for x in (ctx.home_team.key_injuries or "").split(",") if x.strip()]),
+                away_injuries=len([x for x in (ctx.away_team.key_injuries or "").split(",") if x.strip()]),
+                home_rest_days=getattr(ctx.home_team, "rest_days", 7),
+                away_rest_days=getattr(ctx.away_team, "rest_days", 7),
+            )
+
+            # 爆冷探测器
+            upset_signal = None
+            if poisson_out and "spf" in poisson_out:
+                signal = UpsetDetector.detect_from_odds(
+                    model_spf=poisson_out["spf"],
+                    odds_home=getattr(ctx, "odds_home", 2.0) or 2.0,
+                    odds_draw=getattr(ctx, "odds_draw", 3.2) or 3.2,
+                    odds_away=getattr(ctx, "odds_away", 3.5) or 3.5,
+                )
+                upset_signal = {
+                    "kl_divergence": signal.kl_divergence,
+                    "upset_probability": signal.upset_probability,
+                    "divergence_direction": signal.divergence_direction,
+                    "is_upset_candidate": signal.is_upset_candidate,
+                    "confidence": signal.confidence,
+                }
+
+            mixture_signals = {
+                "collapse_prob": round(collapse_prob, 4),
+                "big_score_warning": collapse_prob > 0.25,
+                "upset_signal": upset_signal,
+            }
+        except Exception as e:
+            import logging
+            logging.getLogger("prediction_engine").debug(f"Mixture signals failed: {e}")
+
         return PredictionResult(
             match_id=ctx.match_id,
             spf=fused_spf,
@@ -763,6 +815,7 @@ class PredictionEngine:
             shadow_data=shadow_data,
             classic_data=classic_data,
             deep_data=deep_data,
+            mixture_signals=mixture_signals,
         )
 
     def _predict_with_lr(self, ctx: MatchContext, elo_out: Dict[str, float], poisson_out: Dict, players_factor: float, market_out: Optional[Dict[str, float]], weights: "LogisticFusionWeights",) -> Optional[Dict[str, float]]:
