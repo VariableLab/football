@@ -9,15 +9,13 @@
   4. 输出采集统计报告
 """
 
-import sys
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
 from database.models import SessionLocal, Match, Team, OddsHistory, MatchStatus
 from odds_collector import (
-    FootballDataSource, BetExplorerSource, OddsCollector, SyntheticOddsSource,
-    OddsSnapshot
+    FootballDataSource, BetExplorerSource, SyntheticOddsSource
 )
 from utils.logger import get_logger
 
@@ -187,7 +185,7 @@ def main():
         print(f"   真实赔率覆盖: {matches_with_real}/{total_matches}")
 
         # 显示几条最新记录
-        print(f"\n   最近采集记录:")
+        print("\n   最近采集记录:")
         recent = db.query(OddsHistory).order_by(OddsHistory.recorded_at.desc()).limit(5).all()
         for h in recent:
             match = db.query(Match).filter(Match.id == h.match_id).first()

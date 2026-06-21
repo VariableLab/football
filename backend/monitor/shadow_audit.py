@@ -10,9 +10,8 @@
 import sys
 import os
 import json
-import numpy as np
-from datetime import datetime, timezone, timedelta
-from typing import List, Dict, Tuple, Optional
+from datetime import datetime, timezone
+from typing import Dict
 
 # 确保 backend 及其子包在 sys.path 中
 _current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -274,22 +273,22 @@ def run_audit(limit=200):
         print("\n" + "="*80)
         print(f"MULTI-TIER ENGINE AUDIT REPORT (Sample Size: {spf_valid_count})")
         print("="*80)
-        print(f"1. PlayType: SPF (胜平负)")
-        print(f"   Metric         |  v2.0 (StackingNet) |  v3.0 (Mixed aligned) |  v4.0 (Deep Frontier)")
-        print(f"   ---------------|---------------------|-----------------------|----------------------")
+        print("1. PlayType: SPF (胜平负)")
+        print("   Metric         |  v2.0 (StackingNet) |  v3.0 (Mixed aligned) |  v4.0 (Deep Frontier)")
+        print("   ---------------|---------------------|-----------------------|----------------------")
         print(f"   Brier Score    |  {v2_spf_brier_avg:.5f}            |  {v3_spf_brier_avg:.5f}              |  {v4_spf_brier_avg:.5f} (lower is better)")
         print(f"   RPS Score      |  {v2_spf_rps_avg:.5f}            |  {v3_spf_rps_avg:.5f}              |  {v4_spf_rps_avg:.5f} (lower is better)")
         print(f"   Accuracy (ACC) |  {v2_spf_acc:.2%} ({v2_spf_correct}/{spf_valid_count})  |  {v3_spf_acc:.2%} ({v3_spf_correct}/{spf_valid_count})    |  {v4_spf_acc:.2%} ({v4_spf_correct}/{spf_valid_count})")
-        print(f"   ---------------|---------------------|-----------------------|----------------------")
+        print("   ---------------|---------------------|-----------------------|----------------------")
         print(f"   v4.0 vs v2.0 Accuracy Change: {v4_spf_acc - v2_spf_acc:+.2%}")
         
-        print("\n" + f"2. Simulated Betting Performance (EV > 5%)")
-        print(f"   Strategy       |  Total Bets  |  Net Profit/Loss  |  ROI")
-        print(f"   ---------------|--------------|-------------------|---------")
+        print("\n" + "2. Simulated Betting Performance (EV > 5%)")
+        print("   Strategy       |  Total Bets  |  Net Profit/Loss  |  ROI")
+        print("   ---------------|--------------|-------------------|---------")
         print(f"   v2.0           |  {v2_bet_total:.1f}         |  {v2_bet_return - v2_bet_total:+.2f}              | {v2_roi:+.2%}")
         print(f"   v3.0 (Aligned) |  {v3_bet_total:.1f}         |  {v3_bet_return - v3_bet_total:+.2f}              | {v3_roi:+.2%}")
         print(f"   v4.0 (Deep)    |  {v4_bet_total:.1f}         |  {v4_bet_return - v4_bet_total:+.2f}              | {v4_roi:+.2%}")
-        print(f"   ---------------|--------------|-------------------|---------")
+        print("   ---------------|--------------|-------------------|---------")
         print("="*80)
         
         # 写入 JSON

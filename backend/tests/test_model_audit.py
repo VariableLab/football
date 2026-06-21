@@ -2,7 +2,7 @@
 import json
 import os
 from datetime import datetime, timezone, timedelta
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -17,8 +17,6 @@ def clean_audit_dir():
 
 
 from model_audit import AuditEntry, AuditReport, ModelAuditor, run_self_heal_cycle
-from model_audit import _load_self_heal_state, _save_self_heal_state
-from model_audit import SELF_HEAL_STATE_PATH
 
 
 class TestAuditEntry:

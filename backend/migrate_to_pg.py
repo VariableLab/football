@@ -1,6 +1,5 @@
 import os
 import sys
-import asyncio
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
@@ -11,7 +10,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'databa
 
 # Import Models
 from database.models import (
-    Base, User, Team, Match, Prediction, JingcaiIssue, JingcaiIssueMatch, 
+    User, Team, Match, Prediction, JingcaiIssue, JingcaiIssueMatch, 
     AccuracySnapshot, Feedback, UserSettings
 )
 
@@ -58,7 +57,7 @@ def migrate_table(sqlite_session, pg_session, model_class, batch_size=1000):
             pg_session.bulk_save_objects(pg_records)
             pg_session.commit()
             print(f"  Inserted {offset + len(records)} / {total_count}...")
-        except IntegrityError as e:
+        except IntegrityError:
             pg_session.rollback()
             print(f"  Integrity Error at offset {offset}. Attempting row-by-row fallback...")
             # Fallback to row-by-row for this batch to skip duplicates
@@ -68,7 +67,7 @@ def migrate_table(sqlite_session, pg_session, model_class, batch_size=1000):
                     pg_session.commit()
                 except Exception:
                     pg_session.rollback()
-            print(f"  Row-by-row recovery complete for batch.")
+            print("  Row-by-row recovery complete for batch.")
         except Exception as e:
             pg_session.rollback()
             print(f"  Critical error migrating batch: {e}")

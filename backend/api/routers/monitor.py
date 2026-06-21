@@ -1,7 +1,5 @@
-from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from datetime import datetime, timezone
 
 from database.models import get_db
 from model_audit import ModelAuditor, run_self_heal_cycle
@@ -81,4 +79,3 @@ def get_accuracy_stats(db: Session = Depends(get_db)):
     }
 
 
-from sqlalchemy import case

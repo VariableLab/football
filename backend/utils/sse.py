@@ -5,7 +5,6 @@ Server-Sent Events (SSE) 实时推送模块
 import asyncio
 import json
 import logging
-from datetime import datetime, timezone
 from typing import Dict, Any
 
 logger = logging.getLogger("sse")

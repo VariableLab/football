@@ -10,8 +10,6 @@
     2. 为所有比赛采集/刷新赔率
     3. 优先级: BetExplorer 爬虫 > football-data > 合成赔率兜底
 """
-import sys
-from datetime import datetime
 
 from sqlalchemy import inspect, text
 
@@ -71,18 +69,17 @@ def refresh_all_odds():
             print(f"  [{i}/{len(matches)}] {match.match_code:16} ❌ 无法获取赔率")
 
     print("-" * 50)
-    print(f"\n📊 刷新完成:")
+    print("\n📊 刷新完成:")
     print(f"   真实赔率: {updated} 场")
     print(f"   合成赔率: {synthetic} 场")
     print(f"   失败:     {failed} 场")
     print(f"   总计:     {len(matches)} 场")
 
     # 汇总统计
-    from sqlalchemy import func
     total = db.query(Match).count()
     with_real = db.query(Match).filter(Match.odds_source != "synthetic").count()
     with_synth = db.query(Match).filter(Match.odds_source == "synthetic").count()
-    print(f"\n📈 覆盖率:")
+    print("\n📈 覆盖率:")
     print(f"   真实赔率: {with_real}/{total} ({with_real/total*100:.1f}%)")
     print(f"   合成赔率: {with_synth}/{total} ({with_synth/total*100:.1f}%)")
 

@@ -31,18 +31,15 @@ async def live_odds_sse(request: Request):
 
 from __future__ import annotations
 
-import asyncio
-import json
 import threading
 import time
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
-from typing import Any, Callable, Dict, List, Optional, Set
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Any, Callable, Dict, List, Optional
 from collections import defaultdict
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
 
 from utils.logger import get_logger
 
@@ -443,7 +440,6 @@ class JingcaiLiveSource(LiveOddsSource):
         match_ids: List[int],
         session: Session,
     ) -> List[LiveOddsUpdate]:
-        from database.models import Match, JingcaiIssue, JingcaiIssueMatch
 
         updates: List[LiveOddsUpdate] = []
         now = datetime.now(timezone.utc)

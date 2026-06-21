@@ -10,8 +10,6 @@ from __future__ import annotations
 from typing import Dict, Optional, Tuple
 import numpy as np
 from sqlalchemy.orm import joinedload
-from sqlalchemy import text
-from datetime import datetime, timezone
 
 from database.models import (
     SessionLocal, Match, MatchStatus, OddsHistory,
@@ -24,7 +22,7 @@ from core.models.player_adjustment import PlayerAdjustmentModel
 from features.form_markov_model import FormMarkovModel
 from features.h2h_model import H2HModel
 from features.feature_builder import FeatureBuilder
-from fusion.logistic_fusion import LogisticFusionTrainer, LogisticFusionWeights, cross_validate_lambda
+from fusion.logistic_fusion import LogisticFusionTrainer, cross_validate_lambda
 from utils.logger import get_logger
 
 logger = get_logger("fusion_trainer")

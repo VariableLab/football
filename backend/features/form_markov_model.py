@@ -19,11 +19,10 @@
   - form_stability: float    稳定性指数 (0 ~ 1)
   - streak_length: int       当前连续同结果场次
 """
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from database.models import Match, MatchStatus
 from utils.logger import get_logger

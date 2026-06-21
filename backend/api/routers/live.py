@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Header
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from typing import Optional, List, Dict, Any
+from typing import Optional
 import json
 import asyncio
-import hmac
 import os
 
 from database.config import get_settings

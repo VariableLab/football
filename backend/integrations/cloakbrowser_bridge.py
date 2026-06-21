@@ -15,14 +15,9 @@ cloakbrowser 是 Playwright 的隐身替代品，48 项 C++ 补丁通过所有�
   npx cloakbrowser install
 """
 
-import asyncio
 import json
-import logging
-import os
 import shutil
 import subprocess
-import tempfile
-import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path

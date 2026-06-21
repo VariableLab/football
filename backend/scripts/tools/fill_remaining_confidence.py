@@ -1,5 +1,6 @@
 """补剩余置信度"""
-import sys, logging
+import sys
+import logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 from database.models import SessionLocal, Prediction, Match
 

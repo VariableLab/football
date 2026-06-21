@@ -1,14 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
-from typing import Optional, List, Dict, Any
+from typing import Optional
 import json
 from datetime import datetime, timedelta
 
 from database.models import get_db, JingcaiIssue, JingcaiIssueMatch, Match, MatchStatus
 from schemas import (
     JingcaiIssueCreate, JingcaiIssueOut, JingcaiIssueResultIn,
-    JingcaiIssueListResponse, JingcaiReportResponse, MatchOut, StatusResponse,
-    OptimalComboResponse
+    JingcaiIssueListResponse, JingcaiReportResponse, MatchOut, OptimalComboResponse
 )
 from utils.logger import get_logger
 from api.auth import verify_admin_key

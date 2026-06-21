@@ -14,10 +14,9 @@
 降级策略: h2h_total < 3 → 所有特征归零（让融合层忽略）
 """
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List
 
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_
 
 from database.models import Match, MatchStatus
 

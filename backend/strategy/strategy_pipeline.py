@@ -22,10 +22,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
-from enum import Enum
 
-from core.calibrator import Calibrator, CalibrationCurve
-from strategy.edge_calculator import EdgeCalculator, MatchEdgeResult, EdgeResult
+from core.calibrator import Calibrator
+from strategy.edge_calculator import EdgeCalculator, EdgeResult
 from strategy.position_sizer import PositionSizer, StakeResult, RiskTier
 from strategy.risk_manager import RiskManager, RiskAssessment
 

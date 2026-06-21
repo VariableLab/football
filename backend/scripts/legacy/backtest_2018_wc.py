@@ -13,14 +13,12 @@
 
 from __future__ import annotations
 
-import sys
 import math
-from datetime import datetime
 from typing import List, Tuple, Dict, Any
 
 from sqlalchemy.orm import Session
 
-from database.models import Team, Match, MatchStatus, Prediction, SessionLocal, get_db
+from database.models import Team, SessionLocal
 from prediction_engine import (
     PredictionEngine,
     Backtester,
@@ -287,7 +285,7 @@ def run_weights(historical: List[Tuple[MatchContext, str]], weights: Dict[str, f
     if high_conf_total > 0:
         print(f"     高置信准确率: {high_conf_correct}/{high_conf_total} = {high_conf_correct/high_conf_total*100:.1f}%")
     else:
-        print(f"     高置信准确率: N/A")
+        print("     高置信准确率: N/A")
     return {
         "accuracy": correct / n,
         "brier": sum(briers) / len(briers),
@@ -297,8 +295,8 @@ def run_weights(historical: List[Tuple[MatchContext, str]], weights: Dict[str, f
 
 def run_grid_search(historical: List[Tuple[MatchContext, str]]):
     """网格搜索最优权重"""
-    print(f"\n  🔍 开始网格搜索最优权重...")
-    print(f"     搜索空间: Elo×Poisson×Market = 5×5×5 = 125 种组合")
+    print("\n  🔍 开始网格搜索最优权重...")
+    print("     搜索空间: Elo×Poisson×Market = 5×5×5 = 125 种组合")
 
     engine = PredictionEngine(weights=DEFAULT_WEIGHTS.copy())
     bt = Backtester(engine)
@@ -311,14 +309,14 @@ def run_grid_search(historical: List[Tuple[MatchContext, str]]):
 
     result = bt.run(historical, weight_grids=weight_grids)
 
-    print(f"\n  ✅ 最优权重搜索结果")
+    print("\n  ✅ 最优权重搜索结果")
     print(f"  {'='*50}")
-    print(f"     最优权重:")
+    print("     最优权重:")
     print(f"       Elo     = {result.weights['elo']:.2f}")
     print(f"       Poisson = {result.weights['poisson']:.2f}")
     print(f"       Players = {result.weights['players']:.2f}")
     print(f"       Market  = {result.weights['market']:.2f}")
-    print(f"     ───────────────────────────────")
+    print("     ───────────────────────────────")
     print(f"     方向准确率:     {result.direction_accuracy*100:.1f}%")
     print(f"     Brier Score:    {result.brier_score:.4f}")
     print(f"     Log Loss:       {result.log_loss:.4f}")
@@ -331,9 +329,9 @@ def run_grid_search(historical: List[Tuple[MatchContext, str]]):
 
 def run_regression_weights(historical: List[Tuple[MatchContext, str]]):
     """用 scipy.optimize 回归学习最优权重"""
-    print(f"\n  🔬 回归学习最优权重（L-BFGS-B 优化）...")
+    print("\n  🔬 回归学习最优权重（L-BFGS-B 优化）...")
 
-    from weight_learner import WeightLearner, _weights_to_dict
+    from weight_learner import _weights_to_dict
     from prediction_engine import DEFAULT_WEIGHTS as DW
     import numpy as np
     from scipy.optimize import minimize
@@ -359,9 +357,9 @@ def run_regression_weights(historical: List[Tuple[MatchContext, str]]):
     learned = _weights_to_dict(result.x)
     brier_val = objective(result.x)
 
-    print(f"\n  ✅ 回归学习结果")
+    print("\n  ✅ 回归学习结果")
     print(f"  {'='*50}")
-    print(f"     学习权重:")
+    print("     学习权重:")
     print(f"       Elo     = {learned['elo']:.3f}")
     print(f"       Poisson = {learned['poisson']:.3f}")
     print(f"       Players = {learned['players']:.3f}")
@@ -384,7 +382,7 @@ def run_detailed_analysis(historical: List[Tuple[MatchContext, str]], best_weigh
     ko_total = 0
     upset_count = 0
 
-    print(f"\n  📋 逐场详细分析（最优权重）")
+    print("\n  📋 逐场详细分析（最优权重）")
     print(f"  {'='*80}")
 
     for i, (ctx, actual) in enumerate(historical, 1):
@@ -448,11 +446,11 @@ def main():
         run_detailed_analysis(historical, best_regression)
 
         # 5. 输出建议权重
-        print(f"\n  💾 建议替换 DEFAULT_WEIGHTS 为:")
-        print(f"  DEFAULT_WEIGHTS = {{")
+        print("\n  💾 建议替换 DEFAULT_WEIGHTS 为:")
+        print("  DEFAULT_WEIGHTS = {")
         for k, v in best_regression.items():
             print(f'      "{k}": {v:.2f},')
-        print(f"  }}")
+        print("  }")
 
     finally:
         db.close()

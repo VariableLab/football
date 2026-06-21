@@ -7,12 +7,12 @@
 - sync_results_job 逻辑
 - DBSession 上下文管理器
 """
-import sys, os
+import sys
+import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock
 
 
 class TestDBSession:

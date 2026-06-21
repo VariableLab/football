@@ -6,7 +6,6 @@ sync_wc_completed_results.py — 2026 世界杯完赛结果补录与数据纠错
 import os
 import sys
 import sqlite3
-from datetime import datetime, timezone
 
 # 配置 Python 路径以包含 backend 及子目录
 _cwd = os.getcwd()

@@ -32,7 +32,6 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from typing import Optional
 import logging
 
 logger = logging.getLogger(__name__)

@@ -1,61 +1,29 @@
-import sys, os
+import sys
+import os
 _root = os.path.dirname(os.path.abspath(__file__))
 for d in ["api", "core", "features", "ingestion", "database", "strategy", "monitor", "utils", "api/routers"]:
     sys.path.append(os.path.join(_root, d))
 
 # -*- coding: utf-8 -*-
-import hmac
-import json
 import os
-import asyncio
 from pathlib import Path
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel
 
-from fastapi import FastAPI, Depends, HTTPException, status, Header, Request
+from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from starlette.responses import FileResponse
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import text
+from sqlalchemy.orm import Session
 from contextlib import asynccontextmanager
 
 from utils.logger import get_logger
 from database.config import get_settings
-from database.models import init_db, get_db, User, Team, Match, MatchStatus, Prediction, JingcaiIssue, JingcaiIssueMatch, OddsHistory
-from schemas import (
-    UserRegister, UserLogin, UserOut, Token,
-    LicenseRedeem, LicenseRedeemOut,
-    MatchOut, PredictionOut, StrategyPickOut,
-    JingcaiIssueCreate, JingcaiIssueOut, JingcaiIssueResultIn,
-    JingcaiIssueListResponse,
-    MatchListResponse, StrategyResponse,
-    FeedbackOut, FeedbackListResponse,
-    JingcaiReportResponse,
-    # Phase 2 response_model additions
-    TeamListResponse,
-    SettingsResponse, SettingsUpdateResponse,
-    HealthCheck, OddsMovementResponse, ArbitrageResponse,
-    ValidationReportResponse, CalibrationCurveResponse, PlayTypeBreakdownResponse,
-    BetNNStatusResponse, BetNNPredictResponse, BetNNTrainResponse,
-    FeedbackLikeResponse, FeedbackCreateResponse,
-    LiveOddsAllResponse, LiveOddsSingleResponse,
-    HedgeAlertsResponse, HedgePositionResponse, HedgeComputeResult,
-    OptimalComboResponse, StatusResponse,
-)
-from strategy_pipeline import StrategyPipeline
-from odds_tracker import OddsTracker
-from hedge_engine import HedgeEngine
-from live_odds_feed import LiveOddsFeed, OddsBus, get_odds_bus, live_odds_update_to_dict
-from live_hedge_engine import LiveHedgeEngine
+from database.models import init_db, get_db, Team, Match, Prediction
 from auth import (
-    get_password_hash, verify_password, create_access_token, 
-    get_current_active_user, get_optional_user, verify_admin_key
+    verify_admin_key
 )
-from license_manager import redeem_license_key
 from api.admin import router as admin_router
 from api.routers.matches import router as matches_router
 from api.routers.feedback import router as feedback_router
@@ -74,8 +42,6 @@ from api.routers.models import router as models_router
 from api.routers.strategy import router as strategy_router
 from api.routers.events import router as events_router
 from api.routers.content import router as content_router
-from validation_engine import ValidationEngine
-from odds_collector import OddsCollector, collect_odds_tier1_primary
 
 settings = get_settings()
 logger = get_logger("main")
@@ -132,7 +98,6 @@ def db_stats(
     _: bool = Depends(verify_admin_key),
 ):
     """診斷：返回資料庫統計數據 (受管理員密鑰保護)"""
-    from database.models import Match, Team, Prediction
     return {
         "matches": db.query(Match).count(),
         "teams": db.query(Team).count(),

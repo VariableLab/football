@@ -5,7 +5,6 @@
 import json
 import os
 from datetime import datetime, timezone
-from typing import Optional
 
 from utils.logger import get_logger
 
@@ -83,7 +82,7 @@ def _notify_webhook(source: str, level: str, message: str) -> None:
         }
         httpx.post(ALERT_WEBHOOK_URL, json=payload, timeout=5)
     except Exception:
-        logger.warning(f"[alert] webhook notification failed (ignored)")
+        logger.warning("[alert] webhook notification failed (ignored)")
 
 
 def fire_alert(source: str, level: str, message: str) -> None:

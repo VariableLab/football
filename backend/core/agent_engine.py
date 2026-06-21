@@ -7,11 +7,11 @@ Agent Engine — ProQuant 智能体调度中心 (v1.0)
 3. 专家逻辑链生成 (Expert Reasoning)
 """
 
-from typing import Dict, List, Optional, Any
+from typing import Dict, Optional, Any
 from pydantic import BaseModel
 import logging
 
-from core.agent_brain import PROJECT_MANIFESTO, get_agent_context_prompt
+from core.agent_brain import get_agent_context_prompt
 from core.agent_tools import AgentTools
 
 logger = logging.getLogger("agent_engine")

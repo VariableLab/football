@@ -13,7 +13,7 @@ import sys
 import sqlite3
 import subprocess
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Dict
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(PROJECT_ROOT, "database.sqlite")
@@ -213,7 +213,7 @@ FIXES = {
 
 def run_diagnostics(fix: bool = False, verbose: bool = False) -> Dict:
     print(f"\n{'='*60}")
-    print(f"  🔍 系统诊断报告")
+    print("  🔍 系统诊断报告")
     print(f"  {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
     print(f"  数据库: {DB_PATH}")
     print(f"{'='*60}\n")
@@ -239,7 +239,7 @@ def run_diagnostics(fix: bool = False, verbose: bool = False) -> Dict:
             try:
                 ok = fix_fn()
                 if ok:
-                    log(f"修复成功，重新验证...", "INFO")
+                    log("修复成功，重新验证...", "INFO")
                     retry = fn()
                     if retry["status"] == "pass":
                         log(f"验证通过: {retry['detail']}", "PASS")
@@ -247,7 +247,7 @@ def run_diagnostics(fix: bool = False, verbose: bool = False) -> Dict:
                     else:
                         log(f"验证仍失败: {retry['detail']}", "FAIL")
                 else:
-                    log(f"修复执行失败", "FAIL")
+                    log("修复执行失败", "FAIL")
             except Exception as e:
                 log(f"修复异常: {e}", "FAIL")
 

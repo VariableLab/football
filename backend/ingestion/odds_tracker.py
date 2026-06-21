@@ -13,8 +13,8 @@ print(report.opening_odds, report.drift_home, report.steam_moves)
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import List, Optional, Tuple
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 
@@ -260,7 +260,7 @@ class OddsTracker:
         Returns:
             List of (match_id, steam_move) tuples
         """
-        from database.models import Match, OddsHistory
+        from database.models import Match
 
         cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
         query = self._session.query(Match).filter(Match.kickoff_at >= cutoff)

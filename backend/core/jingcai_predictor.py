@@ -23,29 +23,23 @@ from __future__ import annotations
 
 import sys
 import csv
-import math
 import json
 import argparse
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import List, Dict, Tuple, Optional, Any
 
 from sqlalchemy.orm import Session
 
 from database.models import (
     SessionLocal, Team, Match, Prediction, MatchStatus, MatchType,
-    PlayType, OddsHistory, AuditLog,
-    JingcaiIssue, JingcaiIssueMatch,
+    PlayType, JingcaiIssue, JingcaiIssueMatch,
 )
 from core.prediction_engine import (
-    PredictionEngine, MatchContext, TeamContext,
-    build_team_context_from_orm, build_context_from_match,
+    PredictionEngine, MatchContext, build_context_from_match,
     StrategyPick,
-    DEFAULT_WEIGHTS,
 )
 from strategy_pipeline import StrategyPipeline
-from odds_collector import SyntheticOddsSource
 from utils.logger import get_logger
 
 logger = get_logger("jingcai")
@@ -507,23 +501,23 @@ def print_report(predictions: List[Dict[str, Any]], strategies_map: Dict[str, Li
         if pred["kickoff_at"]:
             print(f"  开球: {pred['kickoff_at'][:16].replace('T', ' ')}")
 
-        print(f"\n  【胜平负】")
+        print("\n  【胜平负】")
         print(f"    主胜: {spf['home']:.1%} | 平局: {spf['draw']:.1%} | 客胜: {spf['away']:.1%}")
         best_spf = max(spf, key=spf.get)
         print(f"    → 模型估算: {'主胜' if best_spf=='home' else '平局' if best_spf=='draw' else '客胜'} ({spf[best_spf]:.1%})")
 
-        print(f"\n  【比分 TOP 5】")
+        print("\n  【比分 TOP 5】")
         for score, prob in pred["score_top5"]:
             print(f"    {score}: {prob:.1%}")
 
-        print(f"\n  【总进球 TOP 5】")
+        print("\n  【总进球 TOP 5】")
         for goals, prob in pred["goals_top5"]:
             print(f"    {goals}球: {prob:.1%}")
 
         # 投注策略
         strategies = strategies_map.get(match_code, [])
         if strategies:
-            print(f"\n  【投注策略】")
+            print("\n  【投注策略】")
             for s in strategies:
                 ev_sign = "+" if s.ev > 0 else ""
                 print(f"    [{s.strategy_name}] {s.play_label} - {s.selection_label}")
@@ -533,7 +527,7 @@ def print_report(predictions: List[Dict[str, Any]], strategies_map: Dict[str, Li
 
         # 模型拆解
         raw = pred["raw"]
-        print(f"\n  【模型拆解】")
+        print("\n  【模型拆解】")
         print(f"    Elo:     主胜={raw['elo']['home']:.1%} 平={raw['elo']['draw']:.1%} 客={raw['elo']['away']:.1%}")
         print(f"    Poisson: 主胜={raw['poisson']['home']:.1%} 平={raw['poisson']['draw']:.1%} 客={raw['poisson']['away']:.1%}")
         print(f"    Players: 战力修正={raw['players']:.3f}")
@@ -597,16 +591,16 @@ def audit_predictions(db: Session) -> Dict[str, Any]:
     print("\n" + "=" * 60)
     print("  足彩预测链路审计报告")
     print("=" * 60)
-    print(f"\n  统计:")
+    print("\n  统计:")
     print(f"    足彩比赛总数:     {stats['total_jingcai_matches']}")
     print(f"    已生成预测:       {stats['matches_with_predictions']}")
     print(f"    缺少赔率:         {stats['matches_missing_odds']}")
     print(f"    未知球队(ELO=1500): {stats['matches_unknown_teams']}")
     print(f"    活跃权重配置:     {fw_count}")
-    print(f"\n  信心分布:")
+    print("\n  信心分布:")
     for k, v in stats["confidence_distribution"].items():
         print(f"    {k}: {v}")
-    print(f"\n  玩法覆盖:")
+    print("\n  玩法覆盖:")
     for k, v in stats["predictions_by_playtype"].items():
         print(f"    {k}: {v}")
 
@@ -617,7 +611,7 @@ def audit_predictions(db: Session) -> Dict[str, Any]:
         if len(issues) > 10:
             print(f"    ... 还有 {len(issues) - 10} 个")
     else:
-        print(f"\n  ✅ 审计通过，无异常")
+        print("\n  ✅ 审计通过，无异常")
 
     print("=" * 60)
     return {"stats": stats, "issues": issues}
@@ -1035,7 +1029,7 @@ def cmd_issue_list():
     try:
         issues = db.query(JingcaiIssue).order_by(JingcaiIssue.issue_id.desc()).all()
         print(f"\n{'='*70}")
-        print(f"  足彩期号列表")
+        print("  足彩期号列表")
         print(f"{'='*70}")
         print(f"  {'期号':<10} {'类型':<8} {'状态':<10} {'比赛数':<6} {'开奖时间':<20}")
         print(f"  {'-'*60}")

@@ -1,6 +1,5 @@
 """Tests for LogisticFusionTrainer with synthetic data."""
 import numpy as np
-import pytest
 
 from fusion.logistic_fusion import LogisticFusionTrainer, LogisticFusionWeights
 

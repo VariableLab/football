@@ -143,12 +143,12 @@ def push_to_server(dry_run: bool = False) -> bool:
             sql_path,
             f"{SSH_USER}@{SSH_HOST}:{REMOTE_PROJECT}/backend/_jc_sync_temp.sql",
         ]
-        log(f"SCP 上传...")
+        log("SCP 上传...")
         subprocess.run(scp_sql_cmd, check=True, capture_output=True)
         log("✅ 上传完成")
 
         if dry_run:
-            log(f"⏭️  dry-run 模式，跳过执行")
+            log("⏭️  dry-run 模式，跳过执行")
             log(f"SQL 文件: {sql_path}")
             return True
 
@@ -160,7 +160,7 @@ def push_to_server(dry_run: bool = False) -> bool:
             f"{SSH_USER}@{SSH_HOST}",
             f"cd {REMOTE_PROJECT}/backend && venv/bin/python -c 'import sqlite3; conn=sqlite3.connect(\"database.sqlite\"); conn.executescript(open(\"_jc_sync_temp.sql\").read()); conn.commit(); conn.close(); print(\"Applied\")' && rm _jc_sync_temp.sql"
         ]
-        log(f"SSH 执行导入...")
+        log("SSH 执行导入...")
         result = subprocess.run(ssh_apply_cmd, check=True, capture_output=True, text=True, timeout=30)
         log(f"✅ {result.stdout.strip()}")
 
@@ -218,7 +218,7 @@ def main():
     SSH_KEY = os.path.expanduser(args.ssh_key)
 
     print(f"\n{'#'*50}")
-    print(f"  竞彩数据同步工具")
+    print("  竞彩数据同步工具")
     print(f"  {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
     print(f"  本地 → {SSH_USER}@{SSH_HOST}")
     print(f"{'#'*50}")

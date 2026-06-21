@@ -1,6 +1,5 @@
 import asyncio
 import asyncpg
-import sys
 
 async def test_connection():
     # User is 'postgre', password is 'prefect'

@@ -1,15 +1,13 @@
 import sys
 import os
-import json
 import numpy as np
 import torch
 import torch.nn as nn
-from datetime import datetime, timezone
 
 # Ensure we can import from backend
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from residual_nn import ResidualNet, ResidualDataset, extract_residual_features, MODEL_DIR, RESIDUAL_MODEL_PATH
+from residual_nn import ResidualNet, RESIDUAL_MODEL_PATH
 from utils.logger import get_logger
 
 logger = get_logger("profit_nn")

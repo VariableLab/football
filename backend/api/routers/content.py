@@ -1,5 +1,4 @@
 import sys
-import os
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -12,11 +11,9 @@ _research_src = _root_dir / "research" / "src"
 if str(_research_src) not in sys.path:
     sys.path.append(str(_research_src))
 
-from database.models import get_db, Match, MatchStatus
+from database.models import get_db, Match
 from footy.content.engine import WorldCupContentEngine
 from api.auth import get_optional_user
-import os
-from datetime import datetime
 
 router = APIRouter(prefix="/api/content", tags=["Content"])
 

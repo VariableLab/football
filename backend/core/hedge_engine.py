@@ -24,12 +24,10 @@ hedge = engine.compute_hedge(
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
-from datetime import datetime, timezone, timedelta
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
 
 from utils.logger import get_logger
 
@@ -150,7 +148,6 @@ class HedgeEngine:
         检测是否存在 sum(1/best_odds) < 1 的套利窗口。
         """
         from database.models import Match, MatchBookmakerOdds
-        from sqlalchemy import func
         from collections import defaultdict
 
         # 批量加载所有比赛和赔率

@@ -1,5 +1,5 @@
 """录入竞彩开奖结果 v2 — 修复 unknown 值"""
-from database.models import SessionLocal, JingcaiIssue, JingcaiIssueMatch, Match
+from database.models import SessionLocal, JingcaiIssue, JingcaiIssueMatch
 from jingcai_predictor import record_draw_result
 
 VALID_OUTCOMES = {"home", "draw", "away"}

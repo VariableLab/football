@@ -10,7 +10,7 @@
 import json
 import os
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import torch
@@ -140,7 +140,7 @@ class HalftimeTrainer:
         self.feature_std: Optional[np.ndarray] = None
 
     def build_training_data(self) -> Optional[Tuple[np.ndarray, np.ndarray]]:
-        from database.models import SessionLocal, Match, MatchStatus, Team
+        from database.models import SessionLocal, Match, MatchStatus
 
         session = SessionLocal()
         try:

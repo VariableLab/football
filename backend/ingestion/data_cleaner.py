@@ -26,13 +26,12 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
 
-from sqlalchemy import func, text
+from sqlalchemy import text
 from database.models import (
     Match, MatchStatus, MatchType,
-    Team, OddsHistory, Prediction, PlayType,
-    JingcaiIssue,
+    Team, OddsHistory, Prediction,
 )
 
 import yaml

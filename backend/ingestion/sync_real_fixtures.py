@@ -12,13 +12,13 @@
     4. 为所有新增比赛生成预测快照
 """
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from database.config import get_settings
 from database.models import (
     init_db, get_db, Team, Match, MatchStatus, MatchType,
-    Prediction, PlayType
+    Prediction
 )
 from core.prediction_engine import PredictionEngine, MatchContext, TeamContext
 from utils.logger import get_logger
@@ -386,14 +386,14 @@ def main():
     print("\n" + "=" * 60)
     print("Sync complete!")
     print("=" * 60)
-    print(f"\n数据概览:")
+    print("\n数据概览:")
     print(f"  球队总数: {total_teams} 支")
     print(f"  世界杯比赛: {total_wc} 场")
     print(f"  真实友谊赛: {total_friendly} 场")
-    print(f"\n提示:")
-    print(f"  1. 访问 http://localhost:8000/static/index.html")
-    print(f"  2. 切换到「热身赛」Tab 查看真实赛程")
-    print(f"  3. 赛后用 Admin API 录入实际比分，验证看板自动更新")
+    print("\n提示:")
+    print("  1. 访问 http://localhost:8000/static/index.html")
+    print("  2. 切换到「热身赛」Tab 查看真实赛程")
+    print("  3. 赛后用 Admin API 录入实际比分，验证看板自动更新")
 
 
 if __name__ == "__main__":

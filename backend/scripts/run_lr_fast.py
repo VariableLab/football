@@ -1,5 +1,7 @@
 """快速全量LR重训 + class_weight + 跳过CV"""
-import sys, logging, time
+import sys
+import logging
+import time
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 
 from fusion.fusion_trainer import FusionTrainer

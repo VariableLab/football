@@ -14,7 +14,7 @@ async def test_endpoint(client, name, method, path):
             resp = await client.post(f"{TARGET_URL}{path}", timeout=30.0)
         duration = time.time() - start
         return name, resp.status_code, duration
-    except Exception as e:
+    except Exception:
         return name, "ERROR", time.time() - start
 
 async def run_stress_test(concurrency=20, total_requests=100):

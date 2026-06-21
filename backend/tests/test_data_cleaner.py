@@ -2,7 +2,7 @@
 import datetime
 import pytest
 from database.models import SessionLocal, Team, Match, MatchStatus, OddsHistory, PlayerStats, Base, engine
-from ingestion.data_cleaner import DataCleaner, resolve_team_db, resolve_team_name
+from ingestion.data_cleaner import DataCleaner, resolve_team_db
 
 @pytest.fixture
 def db_session():

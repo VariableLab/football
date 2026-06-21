@@ -9,14 +9,14 @@
 - FeatureBuilder 特征构建
 - PredictionEngine 端到端预测
 """
-import sys, os
+import sys
+import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 import numpy as np
-from datetime import datetime, timezone, timedelta
 
-from core.context import TeamContext, MatchContext, RefereeContext, PredictionResult
+from core.context import TeamContext, MatchContext, PredictionResult
 from core.models.elo import EloModel
 from core.models.poisson import PoissonModel
 from core.models.market import MarketModel
@@ -31,11 +31,9 @@ from core.models.squad_availability import SquadAvailabilityModel
 from core.models.draw_detection import DrawDetectionModel
 from core.constants import (
     MAX_GOALS, DIXON_COLES_RHO, DRAW_INFLATION_FACTOR,
-    HOME_ADVANTAGE_ELO, HT_FT_TRANSITION, HALF_TIME_RATIO,
-    KNOCKOUT_GOAL_FACTORS,
-    WEATHER_PENALTY, PITCH_PENALTY, REST_PENALTY,
+    HT_FT_TRANSITION, KNOCKOUT_GOAL_FACTORS,
+    WEATHER_PENALTY,
 )
-from core.models.tactical import TacticalModel
 TACTICAL_MATRIX = TacticalModel.TACTICAL_MATRIX
 from features.feature_builder import FeatureBuilder
 

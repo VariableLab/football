@@ -13,24 +13,20 @@
 import csv
 import io
 import json
-import logging
 import math
 import random
-import re
 import threading
 import time
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urlencode
 
 import httpx
 from sqlalchemy.orm import Session
 
 from database.config import get_settings
-from database.models import Match, AuditLog, OddsHistory
+from database.models import Match, OddsHistory
 
 from utils.logger import get_logger
 from data_source.base import OddsSnapshot, OddsSource

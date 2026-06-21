@@ -252,6 +252,6 @@ if __name__ == "__main__":
         log.error("错误信息", extra={"extra_data": {"error_code": "E001"}})
 
     print(f"\n日志文件已写入: {LOG_DIR}")
-    print(f"文件列表:")
+    print("文件列表:")
     for f in sorted(LOG_DIR.glob("*.log")):
         print(f"  {f.name}")

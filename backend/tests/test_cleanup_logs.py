@@ -13,8 +13,6 @@
 修复背景: 6-16 体积审计发现 utils/logs/ 累积 12MB / 713 个文件
 """
 
-import os
-import sys
 import json
 import tempfile
 import argparse

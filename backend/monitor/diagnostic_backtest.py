@@ -1,6 +1,5 @@
 import sys
 import os
-import json
 from datetime import datetime, timedelta, timezone
 
 # Ensure we can import from backend and all subfolders
@@ -15,7 +14,7 @@ sys.path.append(_root)
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database.models import Match, Prediction, MatchStatus
+from database.models import Match, MatchStatus
 from database.config import get_settings
 
 def run_diagnostic():

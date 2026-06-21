@@ -6,8 +6,7 @@
 2. 后期可接入自动遍历寻优，批量跑不同参数组合
 3. 模型变、参数就能自动跟着寻优适配
 """
-from dataclasses import dataclass, field
-from typing import Dict, Optional
+from dataclasses import dataclass
 import json
 import os
 
@@ -119,7 +118,7 @@ def compute_position_ratio(
     2. 低赔率主胜降权 (优化2)
     3. 赔率区间自适应 (优化3)
     """
-    from tiered_strategy import TIER_HIGH, TIER_MEDIUM, TIER_SKIP
+    from tiered_strategy import TIER_HIGH, TIER_SKIP
 
     if tier == TIER_SKIP:
         return 0.0

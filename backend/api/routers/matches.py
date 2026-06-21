@@ -1,7 +1,7 @@
-from typing import Optional, List
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload, selectinload
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 import os
 
 from database.models import get_db, Match, MatchStatus, Prediction
@@ -11,7 +11,6 @@ from schemas import (
 )
 from auth import get_optional_user
 from strategy_pipeline import StrategyPipeline
-from odds_tracker import OddsTracker
 from utils.cache import cached_api
 
 

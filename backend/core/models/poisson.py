@@ -3,7 +3,6 @@
 使用 Dixon-Coles 修正替代独立泊松，更准确地校准低比分概率。
 """
 
-import math
 from typing import Any, Dict, Tuple
 
 import numpy as np

@@ -3,9 +3,8 @@ import json
 import os
 import sqlite3
 from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-import pytest
 
 from health_daemon import (
     HealthDaemon, HealthReport, CheckResult,

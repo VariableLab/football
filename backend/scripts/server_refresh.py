@@ -12,7 +12,6 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(_backend_root, ".env"))
 
 from database.models import SessionLocal, Match, Prediction, MatchStatus, Team
-from ingestion.data_cleaner import DataCleaner
 from core.prediction_engine import PredictionEngine, build_context_from_match
 from sqlalchemy import or_
 

@@ -19,8 +19,6 @@ Elo → xG 映射基于回归分析：
 
 from __future__ import annotations
 
-import sys
-import math
 from typing import Dict, Optional, Tuple
 
 from sqlalchemy.orm import Session

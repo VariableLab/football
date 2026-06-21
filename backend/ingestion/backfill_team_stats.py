@@ -5,7 +5,6 @@ form_last5: For each team, compute W/D/L from their last 5 finished matches.
 
 Run once to fix the default values in the teams table.
 """
-import json
 import sqlite3
 from collections import defaultdict
 from datetime import datetime, timezone

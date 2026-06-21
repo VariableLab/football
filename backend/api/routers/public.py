@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any
 
 from database.models import get_db, Team
 from schemas import TeamListResponse, ArbitrageResponse

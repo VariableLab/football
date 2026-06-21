@@ -11,9 +11,7 @@
   python import_worldcup.py --dry-run           # 仅预览
 """
 
-import json
-import sys
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import Dict, Optional
 
 import httpx

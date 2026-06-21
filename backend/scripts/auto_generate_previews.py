@@ -1,6 +1,5 @@
 import sys
 import os
-import json
 from datetime import datetime, timedelta, timezone
 
 # 确保导入路径正确 (针对服务器环境)
@@ -10,8 +9,7 @@ sys.path.append(os.path.join(PROJECT_ROOT, "research", "src"))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database.models import Match, MatchStatus
-from footy.content.engine import WorldCupContentEngine
+from database.models import Match
 from footy.evaluation.visualizer import MatchCardGenerator
 from footy.models.poisson import PoissonPredictor
 

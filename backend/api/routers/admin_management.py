@@ -1,6 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-import hmac
 
 from database.config import get_settings
 from database.models import get_db, Match

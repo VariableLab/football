@@ -17,7 +17,7 @@ v2 优化:
 输入(单场数据 + 全套NN输出) → 粗筛(skip?) → NN分层(high/medium) → 5种玩法各自出建议
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
+from typing import Dict, Optional, Any
 
 from edge_calculator import EdgeCalculator
 try:
@@ -26,8 +26,7 @@ except ImportError:
     from strategy.position_sizer import PositionSizer, RiskTier
 
 from strategy_config import (
-    StrategyParams, load_params, DEFAULT_PARAMS,
-    compute_position_ratio,
+    StrategyParams, load_params, compute_position_ratio,
 )
 from utils.logger import get_logger
 
@@ -752,7 +751,6 @@ def analyze_match_from_db(
         sub_results: Dict[str, Dict] = {}
 
         try:
-            from sub_model_halftime import HalftimePredictor
             ht = HaltimePredictor()
             if ht.is_ready():
                 r = ht.predict_from_db(match_id)

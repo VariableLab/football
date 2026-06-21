@@ -1,20 +1,18 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 import httpx
-import logging
 import time
 import json
 import asyncio
 
-from database.models import get_db, Match, Team, Prediction, UserQuantProfile
+from database.models import get_db, Match, UserQuantProfile
 from api.auth import get_optional_user
 from utils.logger import get_logger
 from database.config import get_settings
 from core.prediction_engine import PredictionEngine, build_context_from_match
-from core.agent_brain import get_agent_context_prompt
 from core.agent_engine import AgentEngine, AgentContext
 from monitor.validation_engine import ValidationEngine
 
@@ -52,7 +50,6 @@ async def generate_match_report(
     from anyio.to_thread import run_sync
     from database.models import MatchAIReport
     import hashlib
-    import asyncio
 
     match = db.query(Match).filter(Match.id == match_id).first()
     if not match:

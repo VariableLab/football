@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -43,9 +43,9 @@ def update_user_settings(
     valid_plays = {"spf", "rq", "score", "goals", "half"}
 
     if risk_tier is not None and risk_tier not in valid_tiers:
-        raise HTTPException(400, f"无效风险等级")
+        raise HTTPException(400, "无效风险等级")
     if default_play_type is not None and default_play_type not in valid_plays:
-        raise HTTPException(400, f"无效玩法")
+        raise HTTPException(400, "无效玩法")
 
     s = db.query(UserSettings).filter(UserSettings.user_id == user.id).first()
     if not s:

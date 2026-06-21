@@ -10,7 +10,6 @@
 
 核心: 双变量泊松 + Dixon-Coles 低比分相关性修正 + 13 步修正因子链
 """
-import math
 from typing import Dict, Tuple, Any
 
 import numpy as np

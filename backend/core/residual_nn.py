@@ -7,13 +7,14 @@ Residual Bet Neural Network — 残差修正网络 (v3)
   - 目标：实际赛果 (one-hot)
   - 模式：从“残差回归”升级为“Stacking 分类”，直接学习融合后的置信度。
 """
-import json, os
+import json
+import os
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import OneCycleLR
 from utils.logger import get_logger
 
@@ -78,7 +79,7 @@ class StackingTrainer:
         """
         从数据库构建全量特征训练集（已按时间升序排列以防泄露）。
         """
-        from database.models import Match, MatchStatus, Prediction, PlayType
+        from database.models import Match, MatchStatus
         from core.prediction_engine import build_context_from_match
         from features.feature_builder import FeatureBuilder
         

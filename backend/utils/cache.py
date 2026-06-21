@@ -7,7 +7,6 @@ ProQuant 高性能缓存中间件
 3. 装饰器支持，一键加速 API 响应
 """
 import functools
-import json
 import logging
 from typing import Optional, Any
 from datetime import datetime, timedelta

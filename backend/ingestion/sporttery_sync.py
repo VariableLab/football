@@ -13,7 +13,7 @@ sporttery.cn 数据同步模块 — 主力数据源
 import json
 import hashlib
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Any
 
 from database.models import (
     SessionLocal, Team, Match, MatchStatus, MatchType,
@@ -366,7 +366,7 @@ def _generate_prediction(db, match: Match) -> None:
     engine = PredictionEngine(db_session=db)
     pred_result = engine.predict(ctx)
 
-    from database.models import Prediction, PlayType
+    from database.models import Prediction
     for payload in pred_result.to_db_payload():
         existing = db.query(Prediction).filter(
             Prediction.match_id == match.id,

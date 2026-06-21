@@ -14,12 +14,12 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from itertools import product
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from strategy_config import StrategyParams, save_params, load_params
 from tiered_strategy import (
     TIER_HIGH, TIER_MEDIUM, TIER_SKIP,
-    classify_tier, analyze_match,
+    classify_tier,
 )
 from utils.logger import get_logger
 

@@ -18,16 +18,13 @@
 from __future__ import annotations
 
 import os
-import json
-import logging
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
 
 import requests
 from sqlalchemy.orm import Session
 
 from database.models import SessionLocal, Match, MatchStatus, Team
-from database.config import get_settings
 from utils.logger import get_logger
 
 logger = get_logger("injury_sync")

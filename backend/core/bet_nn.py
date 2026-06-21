@@ -12,8 +12,8 @@ Bet Neural Network — 独立预测学习系统
 """
 import json
 import os
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import torch

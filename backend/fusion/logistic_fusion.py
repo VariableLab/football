@@ -18,9 +18,9 @@
 """
 import json
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from scipy.optimize import minimize
@@ -342,7 +342,7 @@ class LogisticFusionTrainer:
             lines.append(
                 f"  {name:25s}  home={weights.coef_home[i]:+.4f}  away={weights.coef_away[i]:+.4f}"
             )
-        logger.info(f"[logistic_fusion] Top 10 features:\n" + "\n".join(lines))
+        logger.info("[logistic_fusion] Top 10 features:\n" + "\n".join(lines))
 
 
 def cross_validate_lambda(

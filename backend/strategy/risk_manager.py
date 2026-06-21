@@ -18,8 +18,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set
-from math import log
+from typing import Dict, List, Optional
 
 
 @dataclass(frozen=True)

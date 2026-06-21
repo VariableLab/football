@@ -1,8 +1,6 @@
 import sqlite3
 import sys
 import os
-import json
-import numpy as np
 
 # Ensure we can import from backend
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -21,7 +19,7 @@ def test_raw_sqlite():
     engine = PredictionEngine()
     target_leagues = ["EPL", "LaLiga", "SerieA", "Bundesliga"]
     
-    print(f"🚀 开始测试 '分联赛垂直权重' 的实战表现...")
+    print("🚀 开始测试 '分联赛垂直权重' 的实战表现...")
     
     for league in target_leagues:
         query = """

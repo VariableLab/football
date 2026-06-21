@@ -9,7 +9,6 @@
 """
 import json
 import os
-from collections import Counter
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
@@ -168,7 +167,7 @@ class ScoreTrainer:
         self.feature_std: Optional[np.ndarray] = None
 
     def build_training_data(self) -> Optional[Tuple[np.ndarray, np.ndarray]]:
-        from database.models import SessionLocal, Match, MatchStatus, Team
+        from database.models import SessionLocal, Match, MatchStatus
 
         session = SessionLocal()
         try:

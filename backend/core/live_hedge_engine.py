@@ -20,8 +20,8 @@ alerts = engine.check_hedge_opportunities(match_id=42)
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 from datetime import datetime, timezone
 from enum import Enum
 

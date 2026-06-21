@@ -1,5 +1,7 @@
 """补录6期竞彩开奖结果"""
-import sys, json, logging
+import sys
+import json
+import logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 from sqlalchemy import text
 from database.models import SessionLocal, JingcaiIssue

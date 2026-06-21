@@ -30,9 +30,8 @@ load_dotenv(os.path.join(_backend_root, ".env"))
 from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
-from sqlalchemy import or_
 
-from database.models import SessionLocal, Match, Team, MatchAIReport, Prediction, MatchStatus
+from database.models import SessionLocal, Match, MatchAIReport, Prediction, MatchStatus
 from core.prediction_engine import PredictionEngine, build_context_from_match
 
 # ─── Pydantic Schema 定义 ───
@@ -75,7 +74,7 @@ def process_match_morale(db, match, client, dry_run=False):
     print(f"\n🚀 开始处理比赛 [{match.match_code}] {home_name} vs {away_name} (ID: {match.id})")
     
     # ─── 阶段 1：联网检索 ───
-    print(f"  [Stage 1] 联网检索中...")
+    print("  [Stage 1] 联网检索中...")
     grounding_tool = types.Tool(
         google_search=types.GoogleSearch()
     )
@@ -101,7 +100,7 @@ def process_match_morale(db, match, client, dry_run=False):
     print(f"  [Stage 1] 联网检索成功，已生成 {len(search_text)} 字赛前情报纪要。")
     
     # ─── 阶段 2：结构化量化提取 ───
-    print(f"  [Stage 2] 提取结构化数据中...")
+    print("  [Stage 2] 提取结构化数据中...")
     extract_prompt = f"""
 You are an expert football data analyst. Analyze the following news report about the upcoming match between {home_name} (Home) and {away_name} (Away).
 Based ONLY on the provided news context, extract the structured information.

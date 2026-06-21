@@ -4,14 +4,13 @@ Agent Tools — 智能体“感官”系统
 本模块为 Agent 提供直接访问项目底层数据的接口，使其具备“自主调研”能力。
 """
 
-from typing import Dict, List, Any
+from typing import Dict, List
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 
-from database.models import Match, MatchStatus, AccuracySnapshot, Team
+from database.models import Match, MatchStatus, AccuracySnapshot
 from monitor.validation_engine import ValidationEngine
 from core.prediction_engine import PredictionEngine, build_context_from_match
-from strategy_pipeline import StrategyPipeline
 
 class AgentTools:
     @staticmethod

@@ -2,10 +2,9 @@
 Unit tests for v4.0 Deep Frontier temporal xG model and predictor (test_deep_frontier.py)
 """
 import pytest
-import numpy as np
 import torch
 from unittest.mock import MagicMock
-from core.deep_frontier_nn import xGTransformerNet, DeepFrontierPredictor, build_match_history_vector
+from core.deep_frontier_nn import xGTransformerNet, build_match_history_vector
 
 
 def test_network_shapes_and_positivity():

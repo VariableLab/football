@@ -2,7 +2,6 @@
 from types import SimpleNamespace
 
 import numpy as np
-import pytest
 
 from features.feature_builder import FeatureBuilder
 

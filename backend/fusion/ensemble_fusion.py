@@ -8,17 +8,16 @@ Ensemble 融合器 — LR + RF + XGBoost 软投票
 import json
 import os
 import pickle
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional
 
 import numpy as np
-from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from xgboost import XGBClassifier
 
 from fusion.logistic_fusion import (
-    LogisticFusionWeights, LogisticFusionTrainer, FEATURE_NAMES
+    LogisticFusionWeights, LogisticFusionTrainer
 )
 from utils.logger import get_logger
 

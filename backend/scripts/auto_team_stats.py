@@ -1,9 +1,9 @@
-import sys, os
+import sys
+import os
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(_root)
 
 from database.models import SessionLocal, Team, Match, MatchStatus
-from sqlalchemy import text
 from datetime import datetime, timezone
 
 def calculate_dynamic_stats():

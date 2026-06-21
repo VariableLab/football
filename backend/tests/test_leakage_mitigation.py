@@ -1,8 +1,7 @@
 """Tests for P0 leakage mitigation and feature alignment."""
 import datetime
-import numpy as np
 import pytest
-from database.models import SessionLocal, Team, Match, MatchStatus, MatchType, Prediction, PlayType
+from database.models import SessionLocal, Team, Match, MatchStatus, Prediction, PlayType
 from scripts.weight_learner import WeightLearner
 from core.residual_nn import StackingTrainer
 

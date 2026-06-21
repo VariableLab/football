@@ -1,4 +1,5 @@
-import sys, traceback
+import sys
+import traceback
 try:
     from fusion.fusion_trainer import FusionTrainer
     import logging

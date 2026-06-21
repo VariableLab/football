@@ -15,7 +15,7 @@ import math
 import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from strategy_config import StrategyParams, load_params, compute_position_ratio
 from tiered_strategy import (

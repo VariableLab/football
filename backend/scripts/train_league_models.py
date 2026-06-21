@@ -7,7 +7,6 @@ import logging
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from fusion.fusion_trainer import FusionTrainer
-from database.config import get_settings
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("league_trainer")
@@ -30,7 +29,7 @@ def train_all_leagues():
                 path = w.save()
                 print(f"  💾 已保存: {path}")
             else:
-                print(f"  ⚠️ 失败: 样本不足或训练未收敛")
+                print("  ⚠️ 失败: 样本不足或训练未收敛")
         except Exception as e:
             print(f"  ❌ 错误: {e}")
             

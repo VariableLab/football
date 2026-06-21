@@ -1,5 +1,5 @@
 """Auto-Learner: 结果同步→验证→NN增量训练→自愈闭环"""
-import os, glob
+import glob
 from datetime import datetime, timezone, timedelta
 from database.models import SessionLocal, Match, MatchStatus
 from utils.logger import get_logger

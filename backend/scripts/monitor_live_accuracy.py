@@ -76,7 +76,7 @@ def check_live_performance():
         if total > 0:
             accuracy = hits / total
             avg_brier = brier_sum / total
-            print(f"\n📈 总结报告:")
+            print("\n📈 总结报告:")
             print(f"  - 样本量: {total} 场")
             print(f"  - 实时准确率: {accuracy:.1%}")
             print(f"  - 平均 Brier Score: {avg_brier:.4f} (越低越好)")

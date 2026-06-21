@@ -15,9 +15,8 @@
 
 import logging
 import re
-import time
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import httpx
 from bs4 import BeautifulSoup

@@ -9,7 +9,6 @@ P0级时序安全性与防数据泄漏单元测试
 import datetime
 import random
 import pytest
-import numpy as np
 from database.models import SessionLocal, Team, Match, MatchStatus, Prediction, PlayType
 from core.calibrator import Calibrator
 from core.residual_nn import StackingTrainer

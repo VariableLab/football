@@ -19,7 +19,7 @@ G. Meta (3维):    rest_advantage, is_knockout, is_derby
   market_win × source_count
   ...
 """
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional
 
 import numpy as np
 

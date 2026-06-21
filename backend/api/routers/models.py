@@ -1,8 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy.orm import Session
-from typing import Optional, Dict, Any
 
-from database.models import get_db
 from schemas import (
     BetNNStatusResponse, BetNNPredictResponse, BetNNTrainResponse
 )

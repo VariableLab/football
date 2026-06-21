@@ -11,10 +11,9 @@
 关键改进: 使用 weighted sampling 让每个batch中draw样本占40%, 避免模型只学"大多数不是平局"
 """
 import json
-import math
 import os
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import torch

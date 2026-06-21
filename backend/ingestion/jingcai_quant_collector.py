@@ -6,12 +6,9 @@ JingcaiQuantCollector — 竞彩专用量化数据采集器
 2. 将 SP 异动转化为量化特征 (Market Momentum)
 3. 记录期号生命周期中的关键资金流入信号
 """
-import time
-import json
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Any
 
-from database.models import SessionLocal, Match, OddsHistory, JingcaiIssueMatch
+from database.models import SessionLocal, Match, OddsHistory
 from odds_collector import JingcaiSource
 from utils.logger import get_logger
 

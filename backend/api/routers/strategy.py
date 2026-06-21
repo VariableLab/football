@@ -1,8 +1,6 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from typing import Optional, List
 
-from database.models import get_db, User
+from database.models import User
 from api.auth import get_current_active_user
 
 router = APIRouter(prefix="/api/strategy", tags=["Strategy"])

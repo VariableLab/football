@@ -7,7 +7,6 @@ ProQuant 量化工厂 - 全自动生产流水线 (MLOps)
 3. 自动化复盘、模型绩效审计与重训逻辑
 """
 import logging
-import asyncio
 from datetime import datetime
 from ingestion.zgzcw_jc_sync import sync_jc_matches
 from ingestion.jingcai_quant_collector import run_quant_collector_job

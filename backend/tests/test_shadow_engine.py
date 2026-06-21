@@ -1,8 +1,8 @@
 """Tests for ShadowPredictor and physical alignment."""
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 from core.shadow_engine import ShadowPredictor
-from core.prediction_engine import PredictionEngine, PredictionResult
+from core.prediction_engine import PredictionResult
 
 def make_mock_team(name="TeamA", elo=1500):
     t = MagicMock()

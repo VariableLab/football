@@ -1,4 +1,5 @@
-import sys, os
+import sys
+import os
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(_root)
 
@@ -63,7 +64,6 @@ def inject_norwegian_stats():
 
 def trigger_recalc():
     print("🚀 Triggering Recalculation for Upcoming Matches...")
-    from core.prediction_recalc import trigger_recalc as core_trigger
     db = SessionLocal()
     # 找到所有未开始的比赛
     matches = db.query(Match).filter(Match.status != "finished").all()

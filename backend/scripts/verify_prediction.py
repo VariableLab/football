@@ -9,7 +9,7 @@
 """
 
 from prediction_engine import (
-    PredictionEngine, MatchContext, TeamContext, build_context_from_match,
+    PredictionEngine, build_context_from_match,
 )
 from database.models import SessionLocal, Match
 
@@ -73,7 +73,7 @@ def verify():
         diff_draw = abs(result_new.spf.get("draw", 0) - result_old.spf.get("draw", 0))
         diff_away = abs(result_new.spf.get("away", 0) - result_old.spf.get("away", 0))
 
-        print(f"\n=== 差异 ===")
+        print("\n=== 差异 ===")
         print(f"  主胜概率差: {diff_home:.2%}")
         print(f"  平局概率差: {diff_draw:.2%}")
         print(f"  客胜概率差: {diff_away:.2%}")

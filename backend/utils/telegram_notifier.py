@@ -44,7 +44,6 @@ def send_telegram_markdown_message(text: str) -> bool:
 
 if __name__ == "__main__":
     # 临时测试本地连通性
-    import sys
     from dotenv import load_dotenv
     load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
     

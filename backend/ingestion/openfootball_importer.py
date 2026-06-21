@@ -29,7 +29,7 @@ import sqlite3
 import sys
 import time
 import urllib.request
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
 

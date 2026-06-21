@@ -1,8 +1,7 @@
 """球员状态修正模型 — 根据球员可用性和疲劳度输出战力修正系数。"""
 
-from typing import Tuple
 
-from core.context import MatchContext, TeamContext
+from core.context import MatchContext
 
 
 class PlayerAdjustmentModel:

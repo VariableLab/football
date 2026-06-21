@@ -16,15 +16,12 @@ zgzcw_jc_sync.py — 从 zgzcw 同步竞彩比赛到数据库
   5. 写入赔率数据
 """
 
-import os
 import httpx
 import json
 import random
-import re
-import sqlite3
 import time
-from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple
+from datetime import timezone
+from typing import Dict, List, Optional
 
 from bs4 import BeautifulSoup
 from utils.logger import get_logger

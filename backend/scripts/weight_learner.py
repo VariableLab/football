@@ -18,31 +18,25 @@ result = learner.learn_all(metric="brier")
 
 from __future__ import annotations
 
-import math
 import json
 from dataclasses import dataclass
-from typing import Dict, List, Tuple, Optional, Any
-from datetime import datetime
+from typing import Dict, List, Tuple, Optional
 
 import numpy as np
 from scipy.optimize import minimize
 from scipy.optimize import OptimizeResult
 from sqlalchemy.orm import Session
 
-from database.models import Match, Prediction, FusionWeight, PlayType, MatchStatus, Team, MatchAIReport
+from database.models import Match, Prediction, FusionWeight, PlayType, MatchStatus, MatchAIReport
 from sqlalchemy.orm import joinedload
 from prediction_engine import (
-    PredictionEngine,
     MatchContext,
     TeamContext,
     EloModel,
     PoissonModel,
     PlayerAdjustmentModel,
     MarketModel,
-    DrawDetectionModel,
     DEFAULT_WEIGHTS,
-    brier_score,
-    direction_correct,
 )
 from utils.logger import get_logger
 

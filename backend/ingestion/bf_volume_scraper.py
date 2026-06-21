@@ -23,7 +23,7 @@ _backend_root = os.path.dirname(_current_dir)
 if _backend_root not in sys.path:
     sys.path.insert(0, _backend_root)
 
-from database.models import SessionLocal, Match, Team, MatchStatus, BettingExchangeVolume
+from database.models import SessionLocal, Match, MatchStatus, BettingExchangeVolume
 
 # 默认球探网必发指数综合页
 BF_INDEX_URL = "http://bf.win007.com/"

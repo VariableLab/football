@@ -20,9 +20,8 @@ from __future__ import annotations
 
 import os
 import sys
-from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Dict, List, Optional
 
 import httpx
 from sqlalchemy.orm import Session

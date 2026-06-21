@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup
 
 from database.models import Match, MatchStatus, Team
 from utils.logger import get_logger
-from zgzcw_source import TEAM_NAME_ALIAS, _normalise_team_name
+from zgzcw_source import TEAM_NAME_ALIAS
 
 logger = get_logger("zgzcw_draw")
 
@@ -464,7 +464,7 @@ def _auto_draw_ready_issues(db) -> int:
     扫描 status='on_sale' 的期号，若所有关联比赛都有 actual_outcome，
     则自动设置 status='drawn' 以便 _fill_issue_draw_results 填充开奖结果。
     """
-    from database.models import JingcaiIssue, Match, MatchStatus
+    from database.models import JingcaiIssue, MatchStatus
     from sqlalchemy import text
 
     autodrawn = 0

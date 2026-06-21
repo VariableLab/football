@@ -165,7 +165,7 @@ def cmd_create_match(args):
         "odds_away": args.odds_away or 0.0,
     }
     data = _post("/api/admin/matches", payload)
-    print(f"\n✅ 比赛创建成功")
+    print("\n✅ 比赛创建成功")
     _print_json(data)
 
 
@@ -176,7 +176,7 @@ def cmd_result(args):
         "actual_away_goals": args.away_goals,
     }
     data = _patch(f"/api/admin/matches/{args.match_id}/result", payload)
-    print(f"\n✅ 赛果已更新")
+    print("\n✅ 赛果已更新")
     _print_json(data)
 
 
@@ -186,14 +186,14 @@ def cmd_odds(args):
         f"/api/admin/matches/{args.match_id}/odds",
         {"odds_home": args.home, "odds_draw": args.draw, "odds_away": args.away}
     )
-    print(f"\n✅ 赔率已更新")
+    print("\n✅ 赔率已更新")
     _print_json(data)
 
 
 def cmd_predict(args):
     """为比赛生成预测（调用公共策略接口）"""
     data = _get(f"/api/matches/{args.match_id}/strategy")
-    print(f"\n🔮 比赛预测与策略")
+    print("\n🔮 比赛预测与策略")
     print("─" * 50)
     print(f"比赛ID: {data.get('match_id')}")
     print(f"状态:   {data.get('status')}")
@@ -212,13 +212,13 @@ def cmd_validate(args):
     """运行赛后验证"""
     if args.match_id:
         data = _get(f"/api/admin/validation/matches/{args.match_id}")
-        print(f"\n✅ 单场比赛验证结果")
+        print("\n✅ 单场比赛验证结果")
     else:
         params = {}
         if args.match_type:
             params["match_type"] = args.match_type
         data = _get("/api/admin/validation", params=params)
-        print(f"\n✅ 批量验证报告")
+        print("\n✅ 批量验证报告")
     _print_json(data)
 
 
@@ -297,7 +297,7 @@ def cmd_backup():
 
     import shutil
     shutil.copy2(db_path, backup_path)
-    print(f"\n💾 数据库已备份")
+    print("\n💾 数据库已备份")
     print(f"   源文件: {db_path}")
     print(f"   备份:   {backup_path}")
     print()

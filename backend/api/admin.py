@@ -4,7 +4,6 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Header, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from database.config import get_settings
 from database.models import (
@@ -12,7 +11,7 @@ from database.models import (
 )
 from schemas import (
     TeamCreate, TeamOut, MatchCreate, MatchOut, MatchUpdateResult,
-    PredictionCreate, PredictionOut, DashboardStats, LicenseKeyCreate, LicenseKeyOut
+    PredictionCreate, PredictionOut, DashboardStats, LicenseKeyCreate
 )
 from validation_engine import ValidationEngine, MatchValidator
 

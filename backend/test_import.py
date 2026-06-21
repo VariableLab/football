@@ -1,6 +1,5 @@
-import sys, os
 try:
-    import main
-except Exception as e:
+    pass
+except Exception:
     import traceback
     traceback.print_exc()

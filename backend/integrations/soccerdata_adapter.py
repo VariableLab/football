@@ -25,11 +25,10 @@ SoccerData (github.com/probberechts/soccerdata) 集成适配器
 from __future__ import annotations
 
 import json
-import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Any
 
 import pandas as pd
 from sqlalchemy.orm import Session

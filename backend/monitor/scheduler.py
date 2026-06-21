@@ -5,9 +5,7 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
-from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
-import logging
 import os
 
 from database.config import get_settings
@@ -355,7 +353,8 @@ except ImportError:
 
 def _fetch_openfootball_json(league_code: str, season: str = _OPENFOOTBALL_SEASON):
     """从 openfootball 获取赛季数据"""
-    import urllib.request, json as _json
+    import urllib.request
+    import json as _json
     # 本地优先
     if _OPENFOOTBALL_LOCAL:
         local_path = os.path.join(_OPENFOOTBALL_LOCAL, season, f"{league_code}.json")
@@ -491,10 +490,8 @@ def backup_database_job(
       - 总大小上限: max_size_gb GB,超出时按 mtime 删最旧
     """
     import os
-    import glob
     import sqlite3
     import hashlib
-    import re
 
     # 💡 动态解析绝对路径，防止 CWD 漂移导致找不到数据库
     try:
@@ -607,7 +604,7 @@ def cleanup_old_backups(
     """
     import os
     import re
-    from datetime import datetime, timedelta
+    from datetime import datetime
 
     pattern = re.compile(r"db_(\d{8})_(\d{6})\.sqlite$")
     files = []
@@ -880,7 +877,7 @@ def calculate_accuracy_job():
 # 足彩期号自动验证 — 检查已开奖但未验证的期号并执行verify
 # ────────────────────────────
 def jingcai_auto_verify_wrapper():
-    from database.models import get_db, JingcaiIssue
+    from database.models import JingcaiIssue
     from jingcai_predictor import verify_issue
     db = next(get_db())
     try:
@@ -1516,7 +1513,6 @@ def start_scheduler():
     )
     # ── Fusion 逻辑回归训练：每周一 06:05（含 A/B 验证部署）──
     def data_quality_wrapper():
-        from database.models import get_db
         from data_cleaner import DataCleaner
         db = next(get_db())
         try:

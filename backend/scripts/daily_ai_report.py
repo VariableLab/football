@@ -54,7 +54,7 @@ async def send_to_telegram(client, text, match_title):
             "parse_mode": "Markdown"
         })
         if resp.status_code == 200:
-            print(f"📡 已成功推送到 Telegram Bot")
+            print("📡 已成功推送到 Telegram Bot")
         else:
             print(f"❌ Telegram 推送失败: {resp.status_code} {resp.text}")
     except Exception as e:
@@ -148,7 +148,7 @@ async def generate_daily_report():
                         new_rep = MatchAIReport(match_id=match.id, content=analysis, input_checksum=checksum)
                         db.add(new_rep)
                     db.commit()
-                    print(f"📦 已预填充数据库缓存 (Concurrent-Safe)")
+                    print("📦 已预填充数据库缓存 (Concurrent-Safe)")
                     
                     # 🚀 测试阶段暂停 Telegram 推送
                     # await send_to_telegram(client, analysis, f"{home.name} vs {away.name}")

@@ -6,7 +6,6 @@ import sqlite3
 import os
 from datetime import datetime, timezone, timedelta
 from dataclasses import dataclass, field
-from typing import Optional
 
 from utils.logger import get_logger
 from alert_manager import fire_alert, get_active_alerts, check_consecutive_failures, odds_freshness_check
@@ -673,7 +672,7 @@ def health_check_job() -> None:
         now = datetime.now(timezone.utc).timestamp()
         if now - _health_critical_cooldown > 21600:
             fire_alert("health_daemon", "critical",
-                       f"系统健康检查失败: "
+                       "系统健康检查失败: "
                        + ", ".join(c.message for c in report.checks if c.status == "fail"))
             _health_critical_cooldown = now
 
