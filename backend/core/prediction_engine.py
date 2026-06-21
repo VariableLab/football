@@ -745,7 +745,7 @@ class PredictionEngine:
                 # 预测 xG 并通过物理对齐推导
                 lam_h_pred, lam_a_pred = df_predictor.predict_xg(self.db, ctx, static_feats[:48])
                 real_handicap = getattr(ctx, "handicap", 0) or 0
-                deep_data = ShadowPredictor.predict(ctx, real_handicap, target_spf=fused_spf, custom_lambdas=(lam_h_pred, lam_a_pred))
+                deep_data = ShadowPredictor.predict(ctx, real_handicap, target_spf=None, custom_lambdas=(lam_h_pred, lam_a_pred))
         except Exception as e:
             import logging
             logging.getLogger("prediction_engine").warning(f"[Deep Frontier] Predict failed: {e}")
