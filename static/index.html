@@ -3,559 +3,381 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WC Analytics — 专业量化决策终端 (v5.0)</title>
+  <title>WC Analytics</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['-apple-system', 'Inter', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['SF Mono', 'Fira Code', 'JetBrains Mono', 'monospace'],
+          },
           colors: {
-            accent: '#C04A1A',
-            paper: '#F9F7F2',
-            ink: '#1A1A1A',
-            sidebar: '#F4F1EA'
+            fg: '#111111',
+            muted: '#6b7280',
+            border: '#e5e7eb',
+            green: '#16a34a',
+            red: '#dc2626',
+            blue: '#2563eb',
           }
         }
       }
     }
   </script>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=JetBrains+Mono:wght@100..800&family=Inter:wght@100..900&display=swap" rel="stylesheet">
   <style>
-    :root {
-        --paper: #F9F7F2;
-        --ink: #1A1A1A;
-        --accent: #C04A1A;
-        --sidebar: #F4F1EA;
-    }
-    body {
-        background-color: var(--paper);
-        color: var(--ink);
-        font-family: 'Inter', sans-serif;
-        overflow: hidden;
-    }
-    .serif { font-family: 'Newsreader', serif; }
-    .mono { font-family: 'JetBrains Mono', monospace; }
-    
-    /* 纸张纹理叠加 */
-    body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png');
-        opacity: 0.04;
-        pointer-events: none;
-        z-index: 100;
-    }
-
-    .fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(15px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .match-row.active {
-        background: white;
-        border-right: 4px solid var(--accent);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    }
-    .edge-positive { color: #2D5A27; background: #E8F5E9; }
-    .edge-negative { color: #A62626; background: #FFEBEE; }
-    .stamp {
-        border: 4px solid var(--ink);
-        padding: 0.75rem 1.5rem;
-        transform: rotate(-2deg);
-        display: inline-block;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 0.2em;
-    }
     [x-cloak] { display: none !important; }
-
-    /* 自定义滚动条修复 */
-    .custom-scrollbar {
-        overflow-y: auto !important;
-        scrollbar-width: thin !important;
-    }
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 4px !important;
-        display: block !important;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent !important;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: var(--accent);
-        border-radius: 10px !important;
-    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    body { font-family: -apple-system, Inter, 'Segoe UI', Roboto, sans-serif; }
   </style>
 </head>
-<body x-data x-init="$store.app.init()">
+<body class="bg-white text-fg antialiased overflow-hidden">
 
-<div class="flex h-screen w-full overflow-hidden">
-  
-  <!-- Sidebar: Signal Explorer -->
-  <aside :class="{ 'hidden md:flex': $store.app.mobileView === 'detail', 'flex': $store.app.mobileView === 'list' }"
-         class="w-full md:w-[380px] h-full border-r border-black/5 flex-col bg-[#F4F1EA] relative z-10 shrink-0">
-    <!-- Branding -->
-    <div class="p-6 md:p-8 border-b border-black/5 flex justify-between items-end">
-      <div>
-        <div class="text-2xl font-serif italic font-black tracking-tighter mb-1">f.</div>
-        <div class="text-[9px] font-black uppercase tracking-[0.2em] text-ink/40">WC Analytics · Vol. 5.0</div>
+<div class="flex h-screen w-full">
+
+  <!-- Sidebar: Match List -->
+  <aside
+    :class="mobileView === 'detail' ? '-ml-[100vw]' : 'ml-0'"
+    class="fixed md:relative md:ml-0 w-[100vw] md:w-[340px] h-full border-r border-border flex flex-col bg-white shrink-0 transition-transform duration-200 ease-out z-30"
+  >
+    <!-- Header -->
+    <div class="px-5 py-4 border-b border-border flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-lg bg-fg flex items-center justify-center">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="white">
+            <circle cx="7" cy="7" r="6" stroke="white" stroke-width="1.5" fill="none"/>
+            <circle cx="7" cy="7" r="2" fill="white"/>
+          </svg>
+        </div>
+        <div>
+          <div class="text-sm font-semibold tracking-tight leading-tight">WC Analytics</div>
+          <div class="text-[10px] text-muted leading-tight">Live Prediction Engine</div>
+        </div>
       </div>
-      <div class="flex gap-4 mb-1">
-          <button @click="$store.app.setFilter('upcoming')" :class="$store.app.filter==='upcoming' ? 'text-accent font-bold':'text-ink/30'" class="text-[10px] uppercase tracking-widest">全部</button>
-          <button @click="$store.app.setFilter('today')" :class="$store.app.filter==='today' ? 'text-accent font-bold':'text-ink/30'" class="text-[10px] uppercase tracking-widest">今日</button>
-          <button @click="$store.app.setFilter('tomorrow')" :class="$store.app.filter==='tomorrow' ? 'text-accent font-bold':'text-ink/30'" class="text-[10px] uppercase tracking-widest">明日</button>
+      <div class="flex items-center gap-1">
+        <button @click="mobileView = 'list'" class="md:hidden p-1.5 hover:bg-gray-50 rounded-md text-muted">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3L5 8l5 5"/></svg>
+        </button>
       </div>
     </div>
 
-    <!-- Signal Stream -->
-    <div class="flex-1 overflow-y-auto custom-scrollbar min-h-0">
-      <div class="px-6 md:px-8 py-4 text-[9px] font-black uppercase tracking-widest text-ink/30 border-b border-black/5 flex justify-between bg-black/[0.01]">
-        <span>Market Signal Stream</span>
-        <span class="text-accent animate-pulse">● LIVE</span>
-      </div>
-      
-      <template x-if="$store.app.loading">
-        <div class="p-12 text-center opacity-20">
-          <div class="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <div class="text-[10px] font-bold uppercase tracking-widest">正在拉取全量快照...</div>
-        </div>
-      </template>
-
-      <template x-for="m in $store.app.matches" :key="m.id">
-        <div @click="$store.app.selectMatch(m.id)"
-             :class="$store.app.selectedId === m.id ? 'active' : ''"
-             class="match-row cursor-pointer transition-all duration-300 border-b border-black/5 p-6 flex flex-col gap-2">
-          <div class="flex justify-between items-center">
-            <span class="text-[9px] font-bold text-accent uppercase tracking-widest truncate max-w-[200px]" x-text="m.competition"></span>
-            <span class="mono text-[9px] opacity-40" x-text="fmtBJ(m.kickoff_at)"></span>
-          </div>
-          <div class="flex justify-between items-end">
-            <div class="text-sm font-black text-ink">
-               <span x-text="m.home_team?.name"></span>
-               <span class="opacity-20 mx-1">/</span>
-               <span x-text="m.away_team?.name"></span>
-            </div>
-            <div class="px-2 py-0.5 rounded-sm mono text-[9px] font-bold edge-positive" 
-                 x-text="(m.predictions?.find(p=>p.play_type==='SPF')?.edge * 100 || 0).toFixed(1) + '%'">
-            </div>
-          </div>
-        </div>
-      </template>
+    <!-- Filters -->
+    <div class="px-4 py-2.5 border-b border-border flex gap-1 shrink-0">
+      <button
+        @click="setFilter('today')"
+        :class="filter === 'today' ? 'bg-fg text-white' : 'text-muted hover:text-fg hover:bg-gray-50'"
+        class="flex-1 py-1.5 text-[11px] font-medium rounded-md transition-colors"
+      >今日</button>
+      <button
+        @click="setFilter('tomorrow')"
+        :class="filter === 'tomorrow' ? 'bg-fg text-white' : 'text-muted hover:text-fg hover:bg-gray-50'"
+        class="flex-1 py-1.5 text-[11px] font-medium rounded-md transition-colors"
+      >明日</button>
+      <button
+        @click="setFilter('upcoming')"
+        :class="filter === 'upcoming' ? 'bg-fg text-white' : 'text-muted hover:text-fg hover:bg-gray-50'"
+        class="flex-1 py-1.5 text-[11px] font-medium rounded-md transition-colors"
+      >全部</button>
     </div>
 
-    <!-- Agent Thinking Box -->
-    <div class="p-6 md:p-8 bg-black text-white">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></div>
-        <span class="text-[9px] font-black uppercase tracking-widest opacity-60">Agent Thinking Stream</span>
-      </div>
-      <div class="mono text-[10px] leading-relaxed opacity-80 h-10 overflow-hidden" x-text="$store.app.agentLog"></div>
-      <div class="mt-4 pt-4 border-t border-white/10 flex justify-between">
-          <a href="https://t.me/your_bot_username" target="_blank" class="text-[8px] font-bold uppercase tracking-widest text-accent hover:text-white transition-all underline decoration-accent/30">Connect to Telegram Bot</a>
-          <span class="text-[8px] font-mono opacity-30">V4.5-STK</span>
-      </div>
+    <!-- Match List -->
+    <div class="flex-1 overflow-y-auto min-h-0">
+      <template x-if="loading">
+        <div class="flex flex-col items-center justify-center h-40 text-muted">
+          <div class="w-5 h-5 border-2 border-fg border-t-transparent rounded-full animate-spin mb-2"></div>
+          <span class="text-xs">加载中...</span>
+        </div>
+      </template>
+
+      <template x-for="m in matches" :key="m.id">
+        <div
+          @click="selectMatch(m.id)"
+          :class="selectedId === m.id ? 'bg-blue-50/60 border-l-[3px] border-blue-500' : 'border-l-[3px] border-transparent hover:bg-gray-50'"
+          class="cursor-pointer px-4 py-3 border-b border-border transition-colors"
+        >
+          <!-- Competition + Time -->
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-[10px] font-medium text-muted" x-text="m.competition || ''"></span>
+            <span class="text-[10px] font-mono text-muted" x-text="fmtBJ(m.kickoff_at)"></span>
+          </div>
+
+          <!-- Teams -->
+          <div class="flex items-center justify-between">
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium truncate" x-text="m.home_team?.name"></div>
+              <div class="text-sm font-medium truncate text-muted" x-text="m.away_team?.name"></div>
+            </div>
+
+            <!-- Edge badge -->
+            <div class="ml-3 shrink-0">
+              <template x-if="getEdge(m) !== null">
+                <span :class="getEdge(m) > 0 ? 'text-green bg-green/10' : 'text-red bg-red/10'"
+                      class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-semibold">
+                  <span x-text="(getEdge(m) > 0 ? '+' : '') + (getEdge(m) * 100).toFixed(1) + '%'"></span>
+                </span>
+              </template>
+              <template x-if="getEdge(m) === null">
+                <span class="text-[11px] text-muted font-mono">—</span>
+              </template>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Empty state -->
+      <template x-if="!loading && matches.length === 0">
+        <div class="flex flex-col items-center justify-center h-40 text-muted">
+          <span class="text-sm">暂无比赛</span>
+        </div>
+      </template>
     </div>
   </aside>
 
-  <!-- Main Content: Narrative Gallery -->
-  <main :class="{ 'hidden md:block': $store.app.mobileView === 'list', 'block': $store.app.mobileView === 'detail' }"
-        class="flex-1 h-full overflow-y-auto bg-white relative w-full">
-    
-    <!-- Mobile Back Button -->
-    <div class="md:hidden sticky top-0 left-0 w-full bg-white/90 backdrop-blur-sm border-b border-black/5 p-4 z-50">
-        <button @click="$store.app.backToList()" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-ink hover:text-accent transition-colors">
-            ← Back to Signals
-        </button>
+  <!-- Main Content -->
+  <main
+    :class="mobileView === 'list' ? 'translate-x-[100vw]' : 'translate-x-0'"
+    class="flex-1 h-full overflow-y-auto bg-white transition-transform duration-200 ease-out"
+  >
+    <!-- Mobile back button (only visible on small screens) -->
+    <div class="md:hidden sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-border px-4 py-2.5 flex items-center gap-3">
+      <button @click="mobileView = 'list'" class="p-1 -ml-1 text-muted hover:text-fg">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4L6 9l5 5"/></svg>
+      </button>
+      <span class="text-sm font-medium truncate" x-text="selectedMatch?.home_team?.name + ' vs ' + selectedMatch?.away_team?.name"></span>
     </div>
 
-    <!-- Empty State -->
-    <template x-if="!$store.app.selectedId">
-      <div class="h-full flex items-center justify-center opacity-10 serif italic text-4xl">
-        Select a research signal to begin...
+    <!-- Empty state -->
+    <template x-if="!selectedId">
+      <div class="h-full flex flex-col items-center justify-center text-muted select-none">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" class="mb-4 opacity-30">
+          <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M18 20h12M18 24h8M18 28h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span class="text-sm">选择一场比赛查看详情</span>
       </div>
     </template>
 
-    <!-- Loading Preview State -->
-    <template x-if="$store.app.previewLoading">
-      <div class="h-full flex flex-col items-center justify-center space-y-6 opacity-30">
-          <div class="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
-          <div class="text-xl serif italic">正在对齐 59 维特征向量...</div>
+    <!-- Loading -->
+    <template x-if="previewLoading || strategyLoading">
+      <div class="h-full flex flex-col items-center justify-center text-muted">
+        <div class="w-6 h-6 border-2 border-fg border-t-transparent rounded-full animate-spin mb-3"></div>
+        <span class="text-sm" x-text="strategyLoading ? '计算策略...' : '加载数据...'"></span>
       </div>
     </template>
 
-    <!-- The Gallery Content -->
-    <template x-if="$store.app.preview && !$store.app.previewLoading">
-      <div class="max-w-4xl mx-auto p-12 lg:p-24 space-y-24 fade-in-up" :key="$store.app.selectedId">
-        
-        <!-- Section 0: AI Poster (Vision Integration) -->
-        <template x-if="$store.app.selectedMatch?.poster_url">
-          <div class="w-full -mt-12 mb-12 rounded-lg overflow-hidden shadow-2xl border-4 border-black/5">
-            <img :src="$store.app.selectedMatch.poster_url" 
-                 class="w-full h-auto object-cover hover:scale-105 transition-transform duration-700" 
-                 alt="AI Match Poster">
-            <div class="bg-black/80 text-white px-4 py-2 text-[8px] mono uppercase tracking-[0.2em] flex justify-between">
-                <span>AI Visual Persona Generated by Agnes-2.1-Flash</span>
-                <span class="text-accent">© WC Analytics Professional</span>
-            </div>
-          </div>
-        </template>
+    <!-- Detail View -->
+    <template x-if="selectedId && !previewLoading && !strategyLoading">
+      <div class="max-w-4xl mx-auto px-6 py-8 md:px-12 md:py-12">
 
-        <!-- Section 1: Opening Narrative -->
-        <header class="space-y-8">
-          <div class="flex items-center gap-6">
-            <div class="h-[1px] flex-1 bg-black/5"></div>
-            <span class="mono text-[10px] tracking-[0.4em] opacity-30">RESEARCH ARCHIVE #<span x-text="$store.app.selectedId"></span></span>
-            <div class="h-[1px] flex-1 bg-black/5"></div>
+        <!-- Match Header -->
+        <div class="mb-8">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-xs font-medium text-muted" x-text="selectedMatch?.competition || ''"></span>
+            <span class="text-muted">·</span>
+            <span class="text-xs font-mono text-muted" x-text="fmtBJ(selectedMatch?.kickoff_at)"></span>
+            <span class="text-muted">·</span>
+            <span class="text-xs text-muted" x-text="selectedMatch?.stage ? selectedMatch.stage.toUpperCase() : ''"></span>
           </div>
-          <h1 class="text-6xl lg:text-7xl serif italic font-light leading-tight text-ink" x-text="$store.app.preview.content.headline"></h1>
-          <div class="text-2xl leading-relaxed serif text-ink/70 italic border-l-4 border-accent pl-10 py-4 bg-accent/5" 
-               x-text="$store.app.preview.content.insight"></div>
-        </header>
-        <!-- Section 1.5: Quantitative Portfolio & Risk Dashboard -->
-        <section class="border-2 border-ink p-8 bg-[#F4F1EA]/50 space-y-6 relative overflow-hidden">
-          <!-- 背景装饰水印 -->
-          <div class="absolute -right-4 -bottom-6 opacity-[0.02] select-none pointer-events-none">
-            <span class="mono text-[100px] font-bold">KELLY</span>
+          <div class="flex items-center gap-4">
+            <div class="flex-1">
+              <div class="text-2xl md:text-3xl font-semibold tracking-tight" x-text="selectedMatch?.home_team?.name"></div>
+              <div class="text-xs text-muted mt-0.5" x-text="'ELO: ' + (selectedMatch?.home_team?.elo || '—')"></div>
+            </div>
+            <div class="text-2xl font-light text-muted">vs</div>
+            <div class="flex-1 text-right">
+              <div class="text-2xl md:text-3xl font-semibold tracking-tight" x-text="selectedMatch?.away_team?.name"></div>
+              <div class="text-xs text-muted mt-0.5" x-text="'ELO: ' + (selectedMatch?.away_team?.elo || '—')"></div>
+            </div>
           </div>
+        </div>
 
-          <div class="flex justify-between items-center border-b border-black/10 pb-4">
-            <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-accent"></span>
-              <h2 class="text-xs font-black uppercase tracking-widest text-ink">量化资金风控与优势评级 (Kelly Dashboard)</h2>
-            </div>
-            
-            <!-- 推荐状态印章 -->
-            <div>
-              <template x-if="$store.app.strategyLoading">
-                <span class="text-[9px] mono opacity-40 animate-pulse">Calculating strategy...</span>
-              </template>
-              <template x-if="!$store.app.strategyLoading && $store.app.selectedStrategy">
-                <div>
-                  <!-- 推荐状态：Value Bet -->
-                  <template x-if="$store.app.selectedStrategy.is_recommended">
-                    <span class="px-3 py-1 border border-accent text-accent text-[9px] font-black uppercase tracking-widest stamp bg-accent/5">🔥 VALUE BET / 价值洼地</span>
-                  </template>
-                  <!-- 推荐状态：已过滤 -->
-                  <template x-if="!$store.app.selectedStrategy.is_recommended">
-                    <span class="px-3 py-1 border border-black/30 text-ink/40 text-[9px] font-black uppercase tracking-widest stamp bg-black/5">🚫 NO VALUE / 期望为负</span>
-                  </template>
-                </div>
-              </template>
-            </div>
-          </div>
-
-          <!-- 核心指标网格 -->
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 py-2">
-            <!-- 优势边际 -->
-            <div class="p-4 border border-black/5 bg-white space-y-1">
-              <div class="text-[8px] font-black opacity-30 uppercase tracking-wider">优势边际 (Edge)</div>
-              <div class="mono text-2xl font-bold text-accent" x-text="$store.app.selectedStrategy ? (+$store.app.selectedStrategy.edge * 100).toFixed(1) + '%' : '—'"></div>
-            </div>
-            <!-- 期望价值 -->
-            <div class="p-4 border border-black/5 bg-white space-y-1">
-              <div class="text-[8px] font-black opacity-30 uppercase tracking-wider">期望价值 (EV)</div>
-              <div class="mono text-2xl font-bold" :class="$store.app.selectedStrategy?.ev > 0 ? 'text-accent' : 'text-ink/40'" x-text="$store.app.selectedStrategy ? (+$store.app.selectedStrategy.ev).toFixed(3) : '—'"></div>
-            </div>
-            <!-- 原始凯利 -->
-            <div class="p-4 border border-black/5 bg-white space-y-1">
-              <div class="text-[8px] font-black opacity-30 uppercase tracking-wider">原始凯利 (Raw Kelly)</div>
-              <div class="mono text-2xl font-light opacity-60" x-text="$store.app.selectedStrategy ? (+$store.app.selectedStrategy.kelly_fraction * 100).toFixed(1) + '%' : '—'"></div>
-            </div>
-            <!-- 建议风控占比 -->
-            <div class="p-4 border border-black/5 bg-white space-y-1">
-              <div class="text-[8px] font-black opacity-30 uppercase tracking-wider">推荐风控仓位</div>
-              <div class="mono text-2xl font-black text-accent" x-text="$store.app.selectedStrategy ? (+$store.app.selectedStrategy.stake_pct * 100).toFixed(1) + '%' : '0.0%'"></div>
-            </div>
-          </div>
-
-          <!-- 交互模拟器部分 -->
-          <div class="bg-white p-6 border border-black/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div class="flex flex-wrap gap-6 items-center w-full md:w-auto">
-              <!-- 本金输入 -->
-              <div class="flex flex-col gap-1 shrink-0">
-                <label class="text-[8px] font-black opacity-30 uppercase tracking-wider">账户总本金 (Bankroll)</label>
-                <div class="flex items-center border border-black/15 px-2 py-1">
-                  <span class="text-xs opacity-40 mr-1">$</span>
-                  <input type="number" x-model.number="$store.app.bankroll" @input="$store.app.recalcStake()" class="w-24 text-xs font-bold focus:outline-none mono bg-transparent" placeholder="1000" />
-                </div>
-              </div>
-              
-              <!-- 风险档位 -->
-              <div class="flex flex-col gap-1 shrink-0">
-                <label class="text-[8px] font-black opacity-30 uppercase tracking-wider">风险风控偏好 (Risk Tier)</label>
-                <select x-model="$store.app.riskTier" @change="$store.app.changeRiskTier()" class="border border-black/15 px-2 py-1 text-xs font-bold bg-white focus:outline-none">
-                  <option value="conservative">稳健档 (Conservative)</option>
-                  <option value="balanced">均衡档 (Balanced)</option>
-                  <option value="aggressive">进取档 (Aggressive)</option>
-                  <option value="extreme">激进档 (Extreme)</option>
+        <!-- Strategy Card -->
+        <template x-if="selectedStrategy">
+          <div class="mb-8 p-5 border border-border rounded-xl bg-gray-50/50">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-semibold">策略建议</h3>
+              <div class="flex items-center gap-2">
+                <select x-model="riskTier" @change="changeRiskTier()" class="text-xs border border-border rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-gray-300">
+                  <option value="conservative">稳健</option>
+                  <option value="balanced">均衡</option>
+                  <option value="aggressive">进取</option>
+                  <option value="speculative">激进</option>
                 </select>
+                <div class="flex items-center gap-1 ml-2">
+                  <span class="text-xs text-muted">Bankroll:</span>
+                  <input type="number" x-model.number="bankroll" @input="recalcStake()" class="w-20 text-xs border border-border rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-gray-300 font-mono" />
+                </div>
               </div>
             </div>
 
-            <!-- 推荐下注金额输出 -->
-            <div class="w-full md:w-auto text-left md:text-right border-t md:border-t-0 border-black/5 pt-4 md:pt-0 flex md:flex-col justify-between items-center md:items-end">
-              <span class="text-[8px] font-black opacity-30 uppercase tracking-wider md:mb-1">建议投资配比金额</span>
-              <div class="flex items-baseline gap-1 text-accent">
-                <span class="text-xs font-black">$</span>
-                <span class="mono text-4xl font-black" x-text="$store.app.stakeAmount.toFixed(2)">0.00</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 推荐具体玩法方向与文字解释 -->
-          <div class="text-[11px] leading-relaxed serif text-ink/70 bg-black/[0.02] p-4 border-l-2 border-black/20">
-            <template x-if="!$store.app.selectedStrategy">
-              <span>正在计算最佳对冲仓位推荐...</span>
-            </template>
-            <template x-if="$store.app.selectedStrategy">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div>
-                <span class="font-bold text-ink" x-text="'策略建议：' + $store.app.selectedStrategy.play_label + ' → [' + $store.app.selectedStrategy.selection_label + '] @ ' + $store.app.selectedStrategy.odds + ' 赔率。'"></span>
-                <span x-text="$store.app.selectedStrategy.rationale || '模型已根据赛前新闻、舆情以及历史交易量偏离度校准了当前优势率。'"></span>
+                <div class="text-[10px] text-muted uppercase tracking-wider mb-1">Edge</div>
+                <div class="text-xl font-mono font-semibold" :class="selectedStrategy.edge > 0 ? 'text-green' : 'text-muted'"
+                     x-text="(selectedStrategy.edge * 100).toFixed(2) + '%'"></div>
               </div>
-            </template>
-          </div>
-        </section>
+              <div>
+                <div class="text-[10px] text-muted uppercase tracking-wider mb-1">EV</div>
+                <div class="text-xl font-mono font-semibold" :class="selectedStrategy.ev > 0 ? 'text-green' : 'text-muted'"
+                     x-text="selectedStrategy.ev.toFixed(3)"></div>
+              </div>
+              <div>
+                <div class="text-[10px] text-muted uppercase tracking-wider mb-1">Kelly</div>
+                <div class="text-xl font-mono font-semibold text-muted"
+                     x-text="(selectedStrategy.kelly_fraction * 100).toFixed(1) + '%'"></div>
+              </div>
+              <div>
+                <div class="text-[10px] text-muted uppercase tracking-wider mb-1">仓位</div>
+                <div class="text-xl font-mono font-semibold text-blue"
+                     x-text="(stakeAmount).toFixed(0) + ' (' + (selectedStrategy.stake_pct * 100).toFixed(1) + '%)'"></div>
+              </div>
+            </div>
 
-        <!-- Section 2: xG Contrast Infographic -->
-        <section class="grid grid-cols-2 gap-20 py-20 border-y border-black/5">
-          <div class="space-y-8">
-            <div class="text-[10px] font-black uppercase tracking-widest text-ink/40">Expected Goals Analysis (xG)</div>
-            <div class="flex items-end gap-3 h-56">
-              <div class="flex-1 bg-accent/10 relative transition-all group hover:bg-accent/20" 
-                   :style="'height:' + ($store.app.preview.teams.home.xg ? $store.app.preview.teams.home.xg * 40 : 4) + '%'">
-                <span class="absolute -top-12 left-0 mono text-3xl font-bold" x-text="$store.app.preview.teams.home.xg.toFixed(2)"></span>
-                <div class="absolute bottom-[-36px] left-0 text-[10px] font-black uppercase tracking-wider" x-text="$store.app.preview.teams.home.name"></div>
-              </div>
-              <div class="flex-1 bg-black/5 relative transition-all group hover:bg-black/10" 
-                   :style="'height:' + ($store.app.preview.teams.away.xg ? $store.app.preview.teams.away.xg * 40 : 4) + '%'">
-                <span class="absolute -top-12 left-0 mono text-3xl font-bold" x-text="$store.app.preview.teams.away.xg.toFixed(2)"></span>
-                <div class="absolute bottom-[-36px] left-0 text-[10px] font-black uppercase tracking-wider" x-text="$store.app.preview.teams.away.name"></div>
-              </div>
+            <div class="text-sm leading-relaxed text-muted">
+              <span class="font-medium text-fg" x-text="selectedStrategy.rationale || ''"></span>
             </div>
           </div>
-
-          <div class="flex flex-col justify-center space-y-6">
-            <div class="text-[10px] font-black uppercase tracking-widest text-ink/40">Model Reasoning</div>
-            <h3 class="text-3xl serif italic leading-snug">
-               <template x-if="$store.app.preview.quant.data_status === 'complete'">
-                  <span>物理压制 vs 市场偏见</span>
-               </template>
-               <template x-if="$store.app.preview.quant.data_status !== 'complete'">
-                  <span>数据源握手与预处理</span>
-               </template>
-            </h3>
-            
-            <!-- Pro 权限截断处理 -->
-            <template x-if="!$store.app.preview.is_pro_locked">
-                <p class="text-base leading-relaxed text-ink/60 serif font-medium">
-                   基于 59 维特征向量，神经网络识别到当前场次存在约 <span class="text-accent" x-text="($store.app.preview.quant.probabilities.home * 100).toFixed(1) + '%'"></span> 的模型校准胜率。
-                </p>
-            </template>
-            <template x-if="$store.app.preview.is_pro_locked">
-                <div class="p-6 bg-accent/5 border border-accent/20 rounded space-y-4">
-                    <p class="text-sm leading-relaxed text-ink/60 serif font-medium">
-                       🔒 高级特征与模型校准胜率已隐藏。
-                    </p>
-                    <button class="px-4 py-2 bg-accent text-white text-[10px] uppercase tracking-widest font-bold">解锁 Pro 权限</button>
-                </div>
-            </template>
-
-            <div class="flex flex-wrap gap-2 pt-4">
-              <template x-for="tag in $store.app.preview.content.tags" :key="tag">
-                <span class="px-2 py-1 bg-ink/5 border border-ink/5 text-ink/40 text-[8px] font-bold uppercase tracking-widest" x-text="tag"></span>
-              </template>
-            </div>
-          </div>
-        </section>
-
-        <!-- Section 3: Key Player Observation -->
-        <template x-if="$store.app.preview.teams.home.stars.length || $store.app.preview.teams.away.stars.length">
-          <section class="bg-[#F9F7F2] p-16 rounded-sm border border-black/5 relative overflow-hidden group">
-            <div class="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:scale-110 transition-transform duration-1000 select-none">
-              <div class="text-[160px] serif italic font-black leading-none">KEY</div>
-            </div>
-            <div class="relative z-10 space-y-12">
-              <div class="flex items-center gap-3">
-                <div class="w-12 h-[1px] bg-accent"></div>
-                <div class="text-[11px] font-black text-accent uppercase tracking-[0.4em]">Individual Intelligence</div>
-              </div>
-              
-              <div class="grid grid-cols-2 gap-16">
-                 <template x-for="p in $store.app.preview.teams.home.stars.slice(0,1)" :key="p.name">
-                    <div class="space-y-6">
-                       <h2 class="text-5xl serif italic text-ink" x-text="p.name"></h2>
-                       <div class="grid grid-cols-2 gap-8">
-                          <div>
-                             <div class="text-[9px] font-black opacity-30 uppercase mb-1 tracking-widest">xG Per Match</div>
-                             <div class="text-3xl mono font-light" x-text="p.xg"></div>
-                          </div>
-                          <div>
-                             <div class="text-[9px] font-black opacity-30 uppercase mb-1 tracking-widest">Season Goals</div>
-                             <div class="text-3xl mono font-bold text-accent" x-text="p.goals"></div>
-                          </div>
-                       </div>
-                    </div>
-                 </template>
-                 <template x-for="p in $store.app.preview.teams.away.stars.slice(0,1)" :key="p.name">
-                    <div class="space-y-6 text-right">
-                       <h2 class="text-5xl serif italic text-ink" x-text="p.name"></h2>
-                       <div class="grid grid-cols-2 gap-8">
-                          <div>
-                             <div class="text-[9px] font-black opacity-30 uppercase mb-1 tracking-widest">Season Goals</div>
-                             <div class="text-3xl mono font-bold" x-text="p.goals"></div>
-                          </div>
-                          <div>
-                             <div class="text-[9px] font-black opacity-30 uppercase mb-1 tracking-widest">xG Per Match</div>
-                             <div class="text-3xl mono font-light" x-text="p.xg"></div>
-                          </div>
-                       </div>
-                    </div>
-                 </template>
-              </div>
-            </div>
-          </section>
         </template>
 
-        <!-- Section 3.5: Multi-Dimensional Predictions -->
-        <template x-if="$store.app.matchDetails && ($store.app.goalsPrediction || $store.app.scorePrediction)">
-          <section class="border border-black/5 p-8 bg-[#F4F1EA]/30 space-y-8 relative overflow-hidden">
-            <div class="flex items-center gap-3 border-b border-black/10 pb-4">
-              <span class="w-2 h-2 rounded-full bg-accent"></span>
-              <h2 class="text-xs font-black uppercase tracking-widest text-ink">多维模型预测分布 (Multi-Dimensional Forecasts)</h2>
+        <!-- Probability Tables -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+          <!-- SPF -->
+          <template x-if="spfPrediction">
+            <div class="border border-border rounded-xl overflow-hidden">
+              <div class="px-4 py-2.5 border-b border-border bg-gray-50/50">
+                <span class="text-xs font-semibold text-muted">胜平负</span>
+              </div>
+              <table class="w-full text-sm">
+                <tbody>
+                  <template x-for="[k, v] in Object.entries(spfPrediction.probabilities).sort((a,b) => b[1] - a[1])" :key="k">
+                    <tr class="border-b border-border/50 last:border-0">
+                      <td class="px-4 py-2.5 text-muted" x-text="labelSPF(k)"></td>
+                      <td class="px-4 py-2.5 text-right font-mono font-medium" x-text="(v * 100).toFixed(1) + '%'"></td>
+                      <td class="px-4 py-2.5 w-24">
+                        <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all" :class="v > 0.45 ? 'bg-blue-500' : 'bg-gray-300'"
+                               :style="'width:' + (v * 100) + '%'"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
             </div>
+          </template>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <!-- Column 1: 精确比分预测 -->
-              <div class="space-y-4">
-                <div class="text-[9px] font-black opacity-30 uppercase tracking-widest">精确比分预测 (Correct Score)</div>
-                <div class="space-y-3">
-                  <template x-if="!$store.app.scorePrediction">
-                    <div class="text-xs opacity-40 italic py-4">无比分预测数据</div>
-                  </template>
-                  <template x-if="$store.app.scorePrediction">
-                    <div class="space-y-2">
-                      <!-- 提取概率最高的前 5 个比分 -->
-                      <template x-for="[score, prob] in Object.entries($store.app.scorePrediction.probabilities).sort((a, b) => b[1] - a[1]).slice(0, 5)" :key="score">
-                        <div class="space-y-1">
-                          <div class="flex justify-between text-xs mono">
-                            <span class="font-bold text-ink" x-text="score"></span>
-                            <span class="text-accent" x-text="(prob * 100).toFixed(1) + '%'"></span>
-                          </div>
-                          <div class="w-full bg-black/5 h-1">
-                            <div class="bg-accent h-1" :style="'width: ' + (prob * 100) + '%'"></div>
-                          </div>
-                        </div>
-                      </template>
-                    </div>
-                  </template>
-                </div>
+          <!-- RQ -->
+          <template x-if="rqPrediction">
+            <div class="border border-border rounded-xl overflow-hidden">
+              <div class="px-4 py-2.5 border-b border-border bg-gray-50/50 flex items-center justify-between">
+                <span class="text-xs font-semibold text-muted">让球胜平负</span>
+                <span class="text-[10px] text-muted font-mono" x-text="'让 ' + (rqPrediction.probabilities.handicap || 0)"></span>
               </div>
-
-              <!-- Column 2: 总进球数概率 -->
-              <div class="space-y-4">
-                <div class="text-[9px] font-black opacity-30 uppercase tracking-widest">总进球数分布 (Total Goals)</div>
-                <div class="space-y-3">
-                  <template x-if="!$store.app.goalsPrediction">
-                    <div class="text-xs opacity-40 italic py-4">无进球数预测数据</div>
-                  </template>
-                  <template x-if="$store.app.goalsPrediction">
-                    <div class="space-y-2">
-                      <template x-for="[goals, prob] in Object.entries($store.app.goalsPrediction.probabilities).sort((a, b) => parseInt(a[0]) - parseInt(b[0]))" :key="goals">
-                        <div class="space-y-1">
-                          <div class="flex justify-between text-xs mono">
-                            <span x-text="goals + ' 球'"></span>
-                            <span class="text-ink/60" x-text="(prob * 100).toFixed(1) + '%'"></span>
-                          </div>
-                          <div class="w-full bg-black/5 h-1">
-                            <div class="bg-ink h-1" :style="'width: ' + (prob * 100) + '%'"></div>
-                          </div>
+              <table class="w-full text-sm">
+                <tbody>
+                  <template x-for="[k, v] in Object.entries(rqPrediction.probabilities).filter(([k]) => k !== 'handicap').sort((a,b) => b[1] - a[1])" :key="k">
+                    <tr class="border-b border-border/50 last:border-0">
+                      <td class="px-4 py-2.5 text-muted" x-text="labelRQ(k)"></td>
+                      <td class="px-4 py-2.5 text-right font-mono font-medium" x-text="(v * 100).toFixed(1) + '%'"></td>
+                      <td class="px-4 py-2.5 w-24">
+                        <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all" :class="v > 0.4 ? 'bg-blue-500' : 'bg-gray-300'"
+                               :style="'width:' + (v * 100) + '%'"></div>
                         </div>
-                      </template>
-                    </div>
+                      </td>
+                    </tr>
                   </template>
-                </div>
+                </tbody>
+              </table>
+            </div>
+          </template>
+
+          <!-- Score -->
+          <template x-if="scorePrediction">
+            <div class="border border-border rounded-xl overflow-hidden">
+              <div class="px-4 py-2.5 border-b border-border bg-gray-50/50">
+                <span class="text-xs font-semibold text-muted">比分预测 (Top 5)</span>
               </div>
-
-              <!-- Column 3: 半全场与让球预测 -->
-              <div class="space-y-6">
-                <!-- 半全场 -->
-                <div class="space-y-3">
-                  <div class="text-[9px] font-black opacity-30 uppercase tracking-widest">半全场走势 (Half / Full Time)</div>
-                  <template x-if="!$store.app.halfPrediction">
-                    <div class="text-xs opacity-40 italic py-2">无半全场预测数据</div>
-                  </template>
-                  <template x-if="$store.app.halfPrediction">
-                    <div class="space-y-2">
-                      <template x-for="[half, prob] in Object.entries($store.app.halfPrediction.probabilities).sort((a,b) => b[1] - a[1]).slice(0, 3)" :key="half">
-                        <div class="flex justify-between text-xs mono">
-                          <span x-text="half"></span>
-                          <span class="text-ink/60" x-text="(prob * 100).toFixed(1) + '%'"></span>
-                        </div>
-                      </template>
+              <div class="p-3">
+                <template x-for="[score, prob] in Object.entries(scorePrediction.probabilities).sort((a,b) => b[1] - a[1]).slice(0, 5)" :key="score">
+                  <div class="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
+                    <span class="font-mono text-sm font-medium" x-text="score"></span>
+                    <div class="flex items-center gap-3 flex-1 justify-end">
+                      <div class="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full bg-gray-400" :style="'width:' + (prob * 100) + '%'"></div>
+                      </div>
+                      <span class="font-mono text-xs text-muted w-12 text-right" x-text="(prob * 100).toFixed(1) + '%'"></span>
                     </div>
-                  </template>
-                </div>
-
-                <!-- 让球胜平负 -->
-                <div class="space-y-3 pt-2 border-t border-black/5">
-                  <div class="text-[9px] font-black opacity-30 uppercase tracking-widest">让球盘口倾向 (Handicap)</div>
-                  <template x-if="!$store.app.rqPrediction">
-                    <div class="text-xs opacity-40 italic py-2">无让球预测数据</div>
-                  </template>
-                  <template x-if="$store.app.rqPrediction">
-                    <div class="space-y-2">
-                      <template x-for="[rq, prob] in Object.entries($store.app.rqPrediction.probabilities)" :key="rq">
-                        <div class="flex justify-between text-xs mono">
-                          <span x-text="rq === 'home' ? '让球主胜' : (rq === 'draw' ? '让球平局' : '让球客胜')"></span>
-                          <span class="text-accent font-bold" x-text="(prob * 100).toFixed(1) + '%'"></span>
-                        </div>
-                      </template>
-                    </div>
-                  </template>
-                </div>
+                  </div>
+                </template>
               </div>
             </div>
-          </section>
-        </template>
+          </template>
 
-        <!-- Section 4: Final Verdict -->
-        <section class="text-center pt-16 space-y-12 border-t border-black/5">
-          <div class="space-y-4">
-            <div class="text-[10px] font-black uppercase tracking-[0.6em] text-ink-faded mb-6">Final Quantitative Verdict</div>
-            <div class="stamp text-5xl lg:text-6xl serif italic">
-               <span x-text="$store.app.preview.quant.probabilities.home > 0.45 ? 'Strong Buy' : 'Neutral Hold'"></span>
+          <!-- Goals -->
+          <template x-if="goalsPrediction">
+            <div class="border border-border rounded-xl overflow-hidden">
+              <div class="px-4 py-2.5 border-b border-border bg-gray-50/50">
+                <span class="text-xs font-semibold text-muted">总进球分布</span>
+              </div>
+              <div class="p-3">
+                <template x-for="[goals, prob] in Object.entries(goalsPrediction.probabilities).sort((a,b) => parseInt(a[0]) - parseInt(b[0]))" :key="goals">
+                  <div class="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
+                    <span class="font-mono text-sm font-medium" x-text="goals + ' 球'"></span>
+                    <div class="flex items-center gap-3 flex-1 justify-end">
+                      <div class="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full bg-gray-400" :style="'width:' + (prob * 100) + '%'"></div>
+                      </div>
+                      <span class="font-mono text-xs text-muted w-12 text-right" x-text="(prob * 100).toFixed(1) + '%'"></span>
+                    </div>
+                  </div>
+                </template>
+              </div>
             </div>
-          </div>
-          
-          <div class="max-w-md mx-auto space-y-6">
-            <p class="text-[10px] leading-relaxed text-ink/40 uppercase tracking-[0.3em] font-bold">
-              PQ-V5.0: Stacking Residual Intelligence.<br/>
-              First Principles Research Lab © 2026
-            </p>
-            <div class="flex justify-center gap-4">
-               <button @click="window.print()" class="px-6 py-2 border border-black/10 text-[9px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all">Print Archive</button>
-               <button @click="openReport($store.app.selectedId)" class="px-6 py-2 bg-ink text-paper text-[9px] font-black uppercase tracking-widest hover:bg-accent transition-all">View Raw Rationale</button>
-            </div>
-          </div>
-        </section>
+          </template>
 
-        <div class="h-48"></div>
+          <!-- Half/Full -->
+          <template x-if="halfPrediction">
+            <div class="border border-border rounded-xl overflow-hidden md:col-span-2">
+              <div class="px-4 py-2.5 border-b border-border bg-gray-50/50">
+                <span class="text-xs font-semibold text-muted">半全场预测 (Top 3)</span>
+              </div>
+              <div class="p-3">
+                <template x-for="[half, prob] in Object.entries(halfPrediction.probabilities).sort((a,b) => b[1] - a[1]).slice(0, 3)" :key="half">
+                  <div class="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
+                    <span class="font-mono text-sm font-medium" x-text="half"></span>
+                    <div class="flex items-center gap-3 flex-1 justify-end">
+                      <div class="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full bg-gray-400" :style="'width:' + (prob * 100) + '%'"></div>
+                      </div>
+                      <span class="font-mono text-xs text-muted w-12 text-right" x-text="(prob * 100).toFixed(1) + '%'"></span>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Model Info Footer -->
+        <div class="flex items-center justify-between text-[10px] text-muted border-t border-border pt-4">
+          <span x-text="'Model: ' + (selectedStrategy ? (predictions.find(p => p.play_type === 'SPF')?.model_version || 'v2.0') : 'v2.0')"></span>
+          <span x-text="'Odds Source: ' + (selectedMatch?.odds_source || '—')"></span>
+          <span x-text="'Confidence: ' + (selectedMatch?.confidence || '—')"></span>
+        </div>
       </div>
     </template>
-
-    <!-- Decorative text -->
-    <div class="fixed bottom-16 right-12 text-[10px] font-black text-ink/10 uppercase tracking-[0.8em] origin-right rotate-90 select-none pointer-events-none">
-        VARIABLE RESEARCH LAB
-    </div>
   </main>
 </div>
 
 <!-- Scripts -->
-<script src="/static/api_client.js?v=20260616-v5-kelly"></script>
-<script src="/static/i18n.js?v=20260616-v5-kelly"></script>
-<script src="/static/app.js?v=20260616-v5-kelly"></script>
+<script src="/static/api_client.js?v=20260621-redesign"></script>
+<script src="/static/i18n.js?v=20260621-redesign"></script>
+<script src="/static/app.js?v=20260621-redesign"></script>
 <script defer src="/static/vendor/alpine.min.js"></script>
 
 </body>

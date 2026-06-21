@@ -1,70 +1,55 @@
 /**
- * WC Analytics — 专业量化终端版 (v5.0)
- * 重构版：采用“数据叙事画廊”架构，实现高密度信号与深度研判的无缝切换
+ * WC Analytics — Frontend App
+ * 简洁量化终端: 列表 + 详情双栏布局
  */
 
 document.addEventListener('alpine:init', () => {
   Alpine.store('app', {
     matches: [],
-    teams: [],
-    filter: 'upcoming', // 默认切到全部
-    user: null,
+    filter: 'upcoming',
     loading: false,
-    
-    // V5 新增：当前选中的比赛及前瞻内容
     selectedId: null,
-    selectedMatch: null, // 存储完整 match 对象
+    selectedMatch: null,
     preview: null,
     previewLoading: false,
-    selectedStrategy: null, // 存储匹配的策略信息
+    selectedStrategy: null,
     strategyLoading: false,
-    bankroll: 1000,          // 默认模拟账户本金
-    riskTier: 'balanced',    // 默认风险偏好档位
-    agentLog: "正在初始化 59 维特征扫描引擎...",
-    
-    // 多维模型预测绑定
-    matchDetails: null,
-    goalsPrediction: null,
-    scorePrediction: null,
-    halfPrediction: null,
+    bankroll: 1000,
+    riskTier: 'balanced',
+    mobileView: 'list',  // 'list' | 'detail'
+
+    // 预测数据
+    spfPrediction: null,
     rqPrediction: null,
-    
-    // 移动端视图控制: 'list' | 'detail'
-    mobileView: 'list',
+    scorePrediction: null,
+    goalsPrediction: null,
+    halfPrediction: null,
 
     get stakeAmount() {
-      if (!this.selectedStrategy || !this.selectedStrategy.is_recommended) return 0.0;
-      return this.bankroll * (this.selectedStrategy.stake_pct || 0.0);
+      if (!this.selectedStrategy || !this.selectedStrategy.is_recommended) return 0;
+      return this.bankroll * (this.selectedStrategy.stake_pct || 0);
+    },
+
+    get predictions() {
+      // 从 selectedMatch 获取预测数据
+      if (!this.selectedMatch) return [];
+      return this.selectedMatch.predictions || [];
     },
 
     async init() {
-      await I18n.init();
       try {
-        // 並行加載基礎數據與用戶信息
-        // WCApi.Data.getTeams 已在內部解包 items
-        const [teamsArray, me] = await Promise.all([
-          WCApi.Data.getTeams(),
-          WCApi.Auth.me().catch(() => null)
+        await I18n.init();
+        const [me] = await Promise.all([
+          WCApi.Auth.me().catch(() => null),
         ]);
-        
-        this.teams = teamsArray || [];
-        this.user = me;
-        
         await this.loadMatches();
-        
-        // 自动选中第一场有 Edge 的比赛
-        if (this.matches && this.matches.length > 0) {
-          this.selectMatch(this.matches[0].id);
-        }
       } catch (e) {
         console.error('App init failed', e);
-        this.agentLog = "🔴 系统初始化异常，请检查后端连接。";
       }
     },
 
     async loadMatches() {
       this.loading = true;
-      this.agentLog = `正在拉取 ${this.filter} 市场快照...`;
       try {
         let resp;
         if (['today', 'tomorrow'].includes(this.filter)) {
@@ -74,100 +59,77 @@ document.addEventListener('alpine:init', () => {
         } else {
           resp = await WCApi.Data.getMatches(this.filter);
         }
-        // WCApi.Data.getMatches 已在內部使用 unwrapItems
         this.matches = resp || [];
-        this.agentLog = `成功获取 ${this.matches.length} 条实时信号。`;
       } catch (e) {
         console.error('Load matches failed', e);
         this.matches = [];
-        this.agentLog = "⚠️ 信号流抓取中断，正在重试...";
       } finally {
         this.loading = false;
       }
     },
 
     async selectMatch(id) {
-      if (this.selectedId === id) {
-        this.mobileView = 'detail';
-        return;
-      }
+      if (this.selectedId === id) return;
       this.selectedId = id;
-      this.selectedMatch = this.matches.find(m => m.id === id);
       this.mobileView = 'detail';
-      
       this.previewLoading = true;
+      this.strategyLoading = true;
+
+      // Reset predictions
+      this.spfPrediction = null;
+      this.rqPrediction = null;
+      this.scorePrediction = null;
+      this.goalsPrediction = null;
+      this.halfPrediction = null;
       this.preview = null;
       this.selectedStrategy = null;
-      this.strategyLoading = true;
-      
-      this.matchDetails = null;
-      this.goalsPrediction = null;
-      this.scorePrediction = null;
-      this.halfPrediction = null;
-      this.rqPrediction = null;
-      
-      const m = this.selectedMatch;
-      this.agentLog = `正在校准 ${m?.home_team?.name || '未知'} 的 59 维残差特征与对冲对策...`;
 
-      try {
-        const previewData = await WCApi.Content.getPreview(id);
-        this.preview = previewData;
-      } catch (err) {
-        console.error('Preview load failed', err);
-      }
+      const m = this.matches.find(x => x.id === id);
+      this.selectedMatch = m;
 
+      // Load match details (predictions)
       try {
         const matchDetails = await WCApi.Data.getMatch(id);
-        this.matchDetails = matchDetails;
-        if (matchDetails && matchDetails.predictions) {
-          this.goalsPrediction = matchDetails.predictions.find(p => p.play_type === 'GOALS');
-          this.scorePrediction = matchDetails.predictions.find(p => p.play_type === 'SCORE');
-          this.halfPrediction = matchDetails.predictions.find(p => p.play_type === 'HALF');
-          this.rqPrediction = matchDetails.predictions.find(p => p.play_type === 'RQ');
+        this.selectedMatch = matchDetails;
+        if (matchDetails?.predictions) {
+          for (const p of matchDetails.predictions) {
+            if (p.play_type === 'SPF') this.spfPrediction = p;
+            else if (p.play_type === 'RQ') this.rqPrediction = p;
+            else if (p.play_type === 'SCORE') this.scorePrediction = p;
+            else if (p.play_type === 'GOALS') this.goalsPrediction = p;
+            else if (p.play_type === 'HALF') this.halfPrediction = p;
+          }
         }
       } catch (err) {
         console.error('Match details load failed', err);
       }
 
+      // Load strategy
       try {
         const strategyData = await WCApi.Strategy.getStrategy(id, this.riskTier);
-        if (strategyData && strategyData.strategies && strategyData.strategies.length > 0) {
+        if (strategyData?.strategies?.length > 0) {
           this.selectedStrategy = strategyData.strategies[0];
         } else {
           this.selectedStrategy = {
             is_recommended: false,
-            edge: 0.0,
-            ev: 0.0,
-            kelly_fraction: 0.0,
-            stake_pct: 0.0,
+            edge: 0, ev: 0, kelly_fraction: 0, stake_pct: 0,
             play_label: '胜平负 (SPF)',
             selection_label: '暂无推荐',
-            odds: 0.0,
-            rationale: '本场赛事不符合价值洼地过滤门槛 (EV <= 0 或 Edge <= 0)。已自动拦截规避风险。',
-            risk_level: 'low'
+            odds: 0,
+            rationale: '本场赛事不符合价值门槛。',
+            risk_level: 'low',
           };
         }
-        this.agentLog = `✅ ${m?.home_team?.name || '模型'} 推演完成，量化仓位已就绪。`;
       } catch (err) {
         console.error('Strategy load failed', err);
-        // 如果是 403 Forbidden，显示卡密解锁提示而非全局报错崩溃
-        if (err.status === 403 || (err.message && err.message.includes('403')) || String(err).includes('403')) {
-          this.selectedStrategy = {
-            is_recommended: false,
-            edge: 0.0,
-            ev: 0.0,
-            kelly_fraction: 0.0,
-            stake_pct: 0.0,
-            play_label: '胜平负 (SPF)',
-            selection_label: '待解锁',
-            odds: 0.0,
-            rationale: '🔒 本场赛事处于赛前分析锁定期，量化对策仅对付费订阅会员公开。请点击下方“绑定/激活”按钮解锁。',
-            risk_level: 'low'
-          };
-          this.agentLog = "🔒 深度量化仓位已被锁定，需要绑定/激活卡密。";
-        } else {
-          this.agentLog = "❌ 深度特征或量化对策对齐失败，请检查网络。";
-        }
+        this.selectedStrategy = {
+          is_recommended: false, edge: 0, ev: 0, kelly_fraction: 0, stake_pct: 0,
+          play_label: '胜平负 (SPF)',
+          selection_label: '暂无推荐',
+          odds: 0,
+          rationale: '策略计算失败，请检查网络。',
+          risk_level: 'low',
+        };
       } finally {
         this.previewLoading = false;
         this.strategyLoading = false;
@@ -177,29 +139,22 @@ document.addEventListener('alpine:init', () => {
     async changeRiskTier() {
       if (!this.selectedId) return;
       this.strategyLoading = true;
-      this.agentLog = `正在重算 ${this.selectedMatch?.home_team?.name} 在 [${this.riskTier}] 风控偏好下的凯利比例...`;
       try {
         const strategyData = await WCApi.Strategy.getStrategy(this.selectedId, this.riskTier);
-        if (strategyData && strategyData.strategies && strategyData.strategies.length > 0) {
+        if (strategyData?.strategies?.length > 0) {
           this.selectedStrategy = strategyData.strategies[0];
         } else {
           this.selectedStrategy = {
-            is_recommended: false,
-            edge: 0.0,
-            ev: 0.0,
-            kelly_fraction: 0.0,
-            stake_pct: 0.0,
+            is_recommended: false, edge: 0, ev: 0, kelly_fraction: 0, stake_pct: 0,
             play_label: '胜平负 (SPF)',
             selection_label: '暂无推荐',
-            odds: 0.0,
-            rationale: '本场赛事在当前风控档位下未满足期望价值推荐门槛。',
-            risk_level: 'low'
+            odds: 0,
+            rationale: '当前风控档位下无推荐。',
+            risk_level: 'low',
           };
         }
-        this.agentLog = `✅ 风控档位已切换至 [${this.riskTier}]，最新仓位已锁定。`;
       } catch (e) {
         console.error('Change risk tier failed', e);
-        this.agentLog = "❌ 凯利对策重算失败，请检查网络。";
       } finally {
         this.strategyLoading = false;
       }
@@ -211,40 +166,59 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    backToList() {
-      this.mobileView = 'list';
-    },
-
-    setFilter(newFilter) {
-      if (this.filter === newFilter) return;
-      this.filter = newFilter;
+    setFilter(f) {
+      if (this.filter === f) return;
+      this.filter = f;
       this.loadMatches();
     },
 
     logout() {
       WCApi.Auth.logout();
-      this.user = null;
       window.location.reload();
     }
   });
 });
 
-/**
- * 格式化辅助函数
- */
+// ─── Helper Functions ───
+
 function fmtBJ(iso) {
   if (!iso) return '-';
   const d = new Date(iso);
   const offset = 8 * 60;
   const bj = new Date(d.getTime() + (offset + d.getTimezoneOffset()) * 60000);
-  return `${bj.getMonth()+1}/${bj.getDate()} ${bj.getHours().toString().padStart(2, '0')}:${bj.getMinutes().toString().padStart(2, '0')}`;
+  return (bj.getMonth() + 1) + '/' + bj.getDate() + ' ' +
+         String(bj.getHours()).padStart(2, '0') + ':' +
+         String(bj.getMinutes()).padStart(2, '0');
 }
 
-function fmtPct(v) { 
+function fmtPct(v) {
   if (v === undefined || v === null) return '0%';
-  return (v * 100).toFixed(1) + '%'; 
+  return (v * 100).toFixed(1) + '%';
 }
 
-function openReport(matchId) {
-  window.dispatchEvent(new CustomEvent('open-report-modal', { detail: { matchId } }));
+function getEdge(match) {
+  if (!match?.predictions) return null;
+  const spf = match.predictions.find(p => p.play_type === 'SPF');
+  if (!spf?.probabilities) return null;
+  // Edge = model_prob - market_implied
+  // Simple: use the probability difference from fair
+  const maxProb = Math.max(...Object.values(spf.probabilities));
+  return maxProb - 0.33;
 }
+
+function labelSPF(k) {
+  const map = { home: '主胜', draw: '平局', away: '客胜' };
+  return map[k] || k;
+}
+
+function labelRQ(k) {
+  const map = { home: '让球主胜', draw: '让球平', away: '让球客胜' };
+  return map[k] || k;
+}
+
+// Expose helpers globally for Alpine templates
+window.fmtBJ = fmtBJ;
+window.fmtPct = fmtPct;
+window.getEdge = getEdge;
+window.labelSPF = labelSPF;
+window.labelRQ = labelRQ;
