@@ -48,6 +48,8 @@ def regenerate_matches(db: Session, matches: list, label: str = "") -> int:
     created = 0
     failed = 0
 
+    engine = PredictionEngine(db_session=db)
+
     for match in matches:
         db.query(Prediction).filter(
             Prediction.match_id == match.id,
@@ -59,7 +61,6 @@ def regenerate_matches(db: Session, matches: list, label: str = "") -> int:
             if ctx is None:
                 failed += 1
                 continue
-            engine = PredictionEngine(db_session=db)
             result = engine.predict(ctx)
             checksum = _compute_checksum(ctx)
 
@@ -79,10 +80,12 @@ def regenerate_matches(db: Session, matches: list, label: str = "") -> int:
                     f"[{match.match_code}] SPF: H={result.spf.get('home', 0):.1%} "
                     f"D={result.spf.get('draw', 0):.1%} A={result.spf.get('away', 0):.1%}"
                 )
+            if created % 100 == 0:
+                db.commit()
+                
         except Exception as e:
+            logger.error(f"Failed to regenerate prediction for {match.match_code}: {e}")
             failed += 1
-            if failed <= 5:
-                logger.error(f"[{match.match_code}] Prediction failed: {e}")
 
     db.commit()
     logger.info(f"{label} Regenerated {created}/{len(matches)} matches ({failed} failed)")
