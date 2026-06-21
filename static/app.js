@@ -4,7 +4,7 @@
  */
 
 document.addEventListener('alpine:init', () => {
-  Alpine.store('app', {
+  Alpine.data('app', () => ({
     matches: [],
     filter: 'upcoming',
     loading: false,
@@ -176,7 +176,7 @@ document.addEventListener('alpine:init', () => {
       WCApi.Auth.logout();
       window.location.reload();
     }
-  });
+  }));
 });
 
 // ─── Helper Functions ───
