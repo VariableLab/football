@@ -88,22 +88,22 @@ def regenerate_matches(db: Session, matches: list, label: str = "") -> int:
             failed += 1
 
     db.commit()
-    logger.info(f"{label} Regenerated {created}/{len(matches)} matches ({failed} failed)")
+    logger.info(f"{label} Regenerated {created} matches ({failed} failed)")
     return created
 
 
-def regenerate_all(db: Session) -> int:
-    matches = db.query(Match).filter(Match.status == MatchStatus.SCHEDULED).all()
+def regenerate_scheduled(db: Session) -> int:
+    matches = db.query(Match).filter(Match.status == MatchStatus.SCHEDULED).yield_per(100)
     return regenerate_matches(db, matches, "[scheduled]")
 
 
 def regenerate_finished(db: Session) -> int:
-    matches = db.query(Match).filter(Match.status == MatchStatus.FINISHED).all()
+    matches = db.query(Match).filter(Match.status == MatchStatus.FINISHED).yield_per(100)
     return regenerate_matches(db, matches, "[finished]")
 
 
 def regenerate_everything(db: Session) -> int:
-    matches = db.query(Match).all()
+    matches = db.query(Match).yield_per(100)
     return regenerate_matches(db, matches, "[all]")
 
 
