@@ -354,6 +354,22 @@ class TraceStep(BaseModel):
 class LogicChain(BaseModel):
     steps: List[TraceStep]
 
+class PortfolioLegOut(BaseModel):
+    type: str
+    play: str
+    selection: str
+    odds: float
+    probability: float
+    stake_pct: float
+
+class PortfolioStrategyOut(BaseModel):
+    strategy_type: str
+    name: str
+    legs: List[PortfolioLegOut]
+    expected_roi: float
+    win_prob_combined: float
+    rationale: str
+
 class StrategyResponse(BaseModel):
     match_id: int
     status: str
@@ -361,6 +377,7 @@ class StrategyResponse(BaseModel):
     odds_degraded: bool = False
     risk_tier: str = "balanced"
     strategies: List[StrategyPickOut]
+    portfolios: List[PortfolioStrategyOut] = []
     predictions: List[PredictionOut]
     trace: Optional[LogicChain] = None
 

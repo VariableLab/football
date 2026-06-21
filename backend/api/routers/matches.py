@@ -7,7 +7,7 @@ import os
 from database.models import get_db, Match, MatchStatus, Prediction
 from schemas import (
     MatchListResponse, MatchOut, StrategyResponse, 
-    OddsMovementResponse, StrategyPickOut
+    OddsMovementResponse, StrategyPickOut, PortfolioStrategyOut
 )
 from auth import get_optional_user
 from strategy_pipeline import StrategyPipeline
@@ -261,6 +261,40 @@ def get_strategy(
         for p in picks
     ]
 
+    try:
+        from strategy.hedged_portfolio import HedgedPortfolioGenerator
+        port_gen = HedgedPortfolioGenerator(
+            match_predictions=predictions,
+            odds_home=match.odds_home or 2.0,
+            odds_draw=match.odds_draw or 3.2,
+            odds_away=match.odds_away or 3.5
+        )
+        # 提取 dict 格式的 portfolio
+        portfolios = []
+        for port in port_gen.generate(min_ev=0.03):
+            portfolios.append({
+                "strategy_type": port.strategy_type,
+                "name": port.name,
+                "legs": [
+                    {
+                        "type": leg.type,
+                        "play": leg.play,
+                        "selection": leg.selection,
+                        "odds": leg.odds,
+                        "probability": leg.probability,
+                        "stake_pct": leg.stake_pct
+                    }
+                    for leg in port.legs
+                ],
+                "expected_roi": port.expected_roi,
+                "win_prob_combined": port.win_prob_combined,
+                "rationale": port.rationale
+            })
+    except Exception as e:
+        import logging
+        logging.getLogger("matches").error(f"Portfolio generation failed: {e}")
+        portfolios = []
+
     return StrategyResponse(
         match_id=match_id,
         status=match.status,
@@ -268,6 +302,7 @@ def get_strategy(
         odds_degraded=match.odds_degraded,
         risk_tier=risk_tier,
         strategies=strategies,
+        portfolios=portfolios,
         predictions=predictions,
     )
 
