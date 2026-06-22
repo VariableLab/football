@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     
     # 数据库配置
-    DATABASE_URL: str = "sqlite:///./backend/database.sqlite"
+    DATABASE_URL: str = os.environ.get("DATABASE_URL", "postgresql+asyncpg://postgre:prefect@129.146.124.72:5432/football")
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 5
     DB_POOL_TIMEOUT: int = 30
