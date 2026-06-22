@@ -70,7 +70,7 @@ class TeamCreate(BaseModel):
     flag: str = "🏳️"
     fifa_rank: Optional[int] = None
     elo: Optional[float] = None
-    group: Optional[str] = None
+    group_name: Optional[str] = None
     continent: Optional[str] = None
 
 
@@ -82,7 +82,7 @@ class TeamOut(BaseModel):
     flag: Optional[str] = None
     fifa_rank: Optional[int]
     elo: Optional[float]
-    group: Optional[str]
+    group_name: Optional[str]
     form_factor: Optional[float]
     avg_goals_scored: Optional[float]
     avg_goals_conceded: Optional[float]
@@ -109,7 +109,7 @@ class MatchCreate(BaseModel):
     home_team_id: int
     away_team_id: int
     kickoff_at: Optional[datetime] = None
-    group: Optional[str] = None
+    group_name: Optional[str] = None
     stage: str = "group"
     venue: Optional[str] = None
 
@@ -147,7 +147,7 @@ class MatchOut(BaseModel):
     away_team: Optional[TeamOut] = None
     kickoff_at: Optional[datetime]
     kickoff_bj: Optional[str] = None
-    group: Optional[str]
+    group_name: Optional[str]
     stage: Optional[str] = None
     match_type: Optional[str] = None
     competition: Optional[str]
@@ -289,7 +289,7 @@ class MatchListItem(BaseModel):
     away_team: Optional[TeamOut] = None
     kickoff_at: Optional[datetime]
     kickoff_bj: Optional[str] = None
-    group: Optional[str]
+    group_name: Optional[str]
     stage: Optional[str] = None
     match_type: Optional[str] = None
     competition: Optional[str]

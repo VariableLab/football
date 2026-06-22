@@ -83,7 +83,7 @@ def list_teams(
     """List all teams. Filter by group if provided."""
     q = db.query(Team)
     if group:
-        q = q.filter(Team.group == group.upper())
+        q = q.filter(Team.group_name == group.upper())
     return q.all()
 
 
@@ -135,7 +135,7 @@ def list_matches(
     if status:
         q = q.filter(Match.status == status)
     if group:
-        q = q.filter(Match.group == group.upper())
+        q = q.filter(Match.group_name == group.upper())
     if stage:
         q = q.filter(Match.stage == stage)
     return q.order_by(Match.kickoff_at).all()

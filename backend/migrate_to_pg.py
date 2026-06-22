@@ -26,7 +26,12 @@ import psycopg2
 import psycopg2.extras
 
 # ─── 配置 ───
+import argparse
 DB_PATH = os.path.join(os.path.dirname(__file__), "database.sqlite")
+parser = argparse.ArgumentParser()
+parser.add_argument('--sqlite', default=DB_PATH, help='Path to SQLite database')
+args = parser.parse_args()
+DB_PATH = args.sqlite
 PG_DSN = os.environ.get("DATABASE_URL", "")
 
 if not PG_DSN:
@@ -104,7 +109,7 @@ CREATE TABLE IF NOT EXISTS matches (
     stage VARCHAR(50),
     venue VARCHAR(100),
     match_type VARCHAR(9),
-    competition VARCHAR(50),
+    competition VARCHAR(100),
     status VARCHAR(9),
     odds_home FLOAT,
     odds_draw FLOAT,
@@ -131,7 +136,7 @@ CREATE TABLE IF NOT EXISTS matches (
     opening_odds_home FLOAT,
     opening_odds_draw FLOAT,
     opening_odds_away FLOAT,
-    opening_odds_source VARCHAR(20),
+    opening_odds_source VARCHAR(100),
     opening_odds_at TIMESTAMP,
     odds_degraded BOOLEAN DEFAULT FALSE,
     poster_url VARCHAR(500),

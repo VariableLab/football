@@ -97,7 +97,7 @@ def list_matches(
         q = q.filter(Match.status == status)
 
     if group:
-        q = q.filter(Match.group == group.upper())
+        q = q.filter(Match.group_name == group.upper())
     if match_type:
         q = q.filter(Match.match_type == match_type.lower())
     if date == "today":

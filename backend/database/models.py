@@ -219,7 +219,7 @@ class Team(Base):
     flag = Column(String(10), default="🏳️")
     fifa_rank = Column(Integer, nullable=True)
     elo = Column(Integer, nullable=True)
-    group = Column(String(10), nullable=True)  # A, B, C...
+    group_name = Column('group_name', String(10), nullable=True)  # A, B, C...
     continent = Column(String(50), nullable=True)
 
     # ─── 动态统计 ───
@@ -277,7 +277,7 @@ class Match(Base):
 
     # Schedule
     kickoff_at = Column(DateTime(timezone=True), nullable=True, index=True)
-    group = Column(String(10), nullable=True, index=True)
+    group_name = Column('group_name', String(10), nullable=True, index=True)
     stage = Column(String(50), default="group")  # group / R32 / R16 / QF / SF / F
     venue = Column(String(100), nullable=True)
 
