@@ -37,9 +37,8 @@ from database.models import (
 )
 from core.prediction_engine import (
     PredictionEngine, MatchContext, build_context_from_match,
-    StrategyPick,
 )
-from strategy_pipeline import StrategyPipeline
+from strategy.strategy_pipeline import StrategyPipeline, OptimalPick as StrategyPick
 from utils.logger import get_logger
 
 logger = get_logger("jingcai")
