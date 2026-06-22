@@ -672,6 +672,52 @@ class PredictionEngine:
             fused_spf = self._apply_residual_correction(fused_spf, ctx, poisson_out, market_out)
             trace.add_step("利润导向 NN 修正", "神经网络通过残差学习捕捉市场错价空间，优化最终 ROI 期望", fused_spf)
 
+        # 2e. BetNN 投注价值修正：用 BetNet 判断 SPf 是否值得投注
+        try:
+            from core.bet_nn import BetNetPredictor
+            bet_nn = BetNetPredictor()
+            if bet_nn.is_ready():
+                # 复用已构建的特征
+                form_features = None
+                h2h_features = None
+                if self.fusion._db is not None:
+                    try:
+                        from features.form_markov_model import FormMarkovModel
+                        from features.h2h_model import H2HModel
+                        fm = FormMarkovModel(self.fusion._db)
+                        form_features = fm.compute(ctx.home_team.recent_results, ctx.home_team.team_id)
+                        hm = H2HModel(self.fusion._db)
+                        h2h_features = hm.compute(ctx.home_team.team_id, ctx.away_team.team_id)
+                    except: pass
+
+                base_feats = self._feature_builder.build(
+                    elo_probs=EloModel.predict(ctx),
+                    poisson_result=poisson_out,
+                    players_factor=PlayerAdjustmentModel.predict(ctx),
+                    market_probs=market_out,
+                    form_features=form_features,
+                    h2h_features=h2h_features,
+                    ctx=ctx
+                )
+
+                lr_arr = np.array([fused_spf.get('home', 0.33), fused_spf.get('draw', 0.33), fused_spf.get('away', 0.33)], dtype=np.float32)
+                mkt_arr = np.array([market_out.get('home', 0.33), market_out.get('draw', 0.33), market_out.get('away', 0.33)] if market_out else lr_arr, dtype=np.float32)
+                full_input = np.concatenate([base_feats, lr_arr, mkt_arr])
+
+                bet_nn_spf = bet_nn.predict(full_input)
+                if bet_nn_spf:
+                    # 轻量融合：BetNN 与 StackingNet 各占一半
+                    bet_nn_spf = {k: max(0.001, v) for k, v in bet_nn_spf.items()}
+                    total = sum(bet_nn_spf.values())
+                    bet_nn_spf = {k: v / total for k, v in bet_nn_spf.items()}
+                    fused_spf = {k: 0.5 * fused_spf[k] + 0.5 * bet_nn_spf[k] for k in ["home", "draw", "away"]}
+                    total = sum(fused_spf.values())
+                    fused_spf = {k: v / total for k, v in fused_spf.items()}
+                    trace.add_step("BetNN 投注价值修正", "BetNet 从投注价值角度二次校准 SPF 概率", fused_spf)
+        except Exception as e:
+            import logging
+            logging.getLogger("prediction_engine").debug(f"[BetNN] correction skipped: {e}")
+
         # 3. 让球：基于泊松输出，但用融合后的 spf 做最终归一化参考
         rq_raw = poisson_out["rq"].copy()
         # 让球概率的方向应与融合spf一致
