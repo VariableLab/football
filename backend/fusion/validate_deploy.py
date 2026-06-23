@@ -33,10 +33,13 @@ def _safe_log_loss(y_true, y_pred):
         from sklearn.metrics import log_loss
         return float(log_loss(y_true, y_pred, labels=[0, 1, 2]))
     except ImportError:
-        # Fallback: cross-entropy approximation
+        # Fallback: multiclass cross-entropy
         eps = 1e-15
         y_pred_clipped = np.clip(y_pred, eps, 1 - eps)
-        return float(-np.mean(y_true * np.log(y_pred_clipped)))
+        n = len(y_true)
+        y_onehot = np.zeros((n, y_pred.shape[1]))
+        y_onehot[np.arange(n), y_true] = 1.0
+        return float(-np.mean(np.sum(y_onehot * np.log(y_pred_clipped), axis=1)))
 
 
 def _find_latest_weight() -> str:
