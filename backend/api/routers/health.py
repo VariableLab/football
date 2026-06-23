@@ -19,7 +19,7 @@ def health(db: Session = Depends(get_db)):
         checks["status"] = "degraded"
 
     try:
-        from scheduler import scheduler
+        from monitor.scheduler import scheduler
         checks["checks"]["scheduler"] = "running" if scheduler.running else "stopped"
         if not scheduler.running:
             checks["status"] = "degraded"
@@ -27,25 +27,21 @@ def health(db: Session = Depends(get_db)):
         checks["checks"]["scheduler"] = "unknown"
 
     try:
-        from database.models import MatchBookmakerOdds
+        from database.models import OddsHistory
         from datetime import datetime, timezone as _tz2
-        latest = db.query(MatchBookmakerOdds).order_by(MatchBookmakerOdds.id.desc()).first()
+        latest = db.query(OddsHistory).order_by(OddsHistory.recorded_at.desc()).first()
         if latest:
-            updated_at = getattr(latest, 'updated_at', None) or getattr(latest, 'created_at', None)
-            if updated_at:
-                age_hours = (datetime.now(_tz2.utc) - updated_at).total_seconds() / 3600
-                checks["checks"]["odds_freshness"] = f"{age_hours:.1f}h"
-                if age_hours > 24:
-                    checks["status"] = "degraded"
-            else:
-                checks["checks"]["odds_freshness"] = "no_timestamp"
+            age_hours = (datetime.now(_tz2.utc) - latest.recorded_at).total_seconds() / 3600
+            checks["checks"]["odds_freshness"] = f"{age_hours:.1f}h"
+            if age_hours > 24:
+                checks["status"] = "degraded"
         else:
             checks["checks"]["odds_freshness"] = "no_odds"
     except Exception as e:
         checks["checks"]["odds_freshness"] = f"error: {e}"
 
     try:
-        from alert_manager import get_active_alerts
+        from monitor.alert_manager import get_active_alerts
         active = get_active_alerts()
         critical = [a for a in active if a.get("level") == "critical"]
         checks["checks"]["alerts"] = f"{len(active)} active ({len(critical)} critical)"
