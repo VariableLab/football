@@ -34,7 +34,8 @@ def health(db: Session = Depends(get_db)):
             recorded = latest.recorded_at
             if recorded.tzinfo is None:
                 recorded = recorded.replace(tzinfo=_tz2.utc)
-            age_hours = (_tz2.utc.now() - recorded).total_seconds() / 3600
+            now_utc = datetime.now(_tz2.utc)
+            age_hours = (now_utc - recorded).total_seconds() / 3600
             checks["checks"]["odds_freshness"] = f"{age_hours:.1f}h"
             if age_hours > 24:
                 checks["status"] = "degraded"
