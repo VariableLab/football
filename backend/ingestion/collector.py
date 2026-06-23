@@ -552,3 +552,73 @@ class OddsCollector:
             "matches_updated": len(results),
             "updated_codes": results,
         }
+
+
+# ────────────────────────────
+# 向后兼容：旧版独立函数接口
+# ────────────────────────────
+def _get_upcoming_matches(db: Session, hours: int = 72) -> List[Match]:
+    """获取未来 N 小时内未锁定的比赛（用于赔率采集）"""
+    from database.models import Match
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    return (
+        db.query(Match)
+        .filter(
+            Match.status.in_(["scheduled", "live"]),
+            Match.odds_locked_at.is_(None),
+            Match.kickoff_at > cutoff,
+        )
+        .all()
+    )
+
+
+def collect_odds_tier1_primary(db: Session) -> Dict:
+    """Tier 1: 免费/基础层赔率采集"""
+    matches = _get_upcoming_matches(db, hours=48)
+    if not matches:
+        return {"skipped": True, "reason": "no_upcoming_matches"}
+    collector = OddsCollector(db)
+    return collector.collect_tier1_primary(matches)
+
+
+def collect_odds_tier2_premium(db: Session) -> Dict:
+    """Tier 2: Odds API 全量采集"""
+    matches = _get_upcoming_matches(db, hours=48)
+    if not matches:
+        return {"skipped": True, "reason": "no_upcoming_matches"}
+    collector = OddsCollector(db)
+    return collector.collect_tier2_premium(matches)
+
+
+def collect_odds_tier3_focus(db: Session) -> Dict:
+    """Tier 3: 焦点战加采"""
+    matches = _get_upcoming_matches(db, hours=48)
+    if not matches:
+        return {"skipped": True, "reason": "no_upcoming_matches"}
+    collector = OddsCollector(db)
+    return collector.collect_tier3_focus(matches)
+
+
+def collect_closing_odds_for_upcoming(db: Session, hours: int = 4) -> Dict:
+    """采集收盘赔率"""
+    matches = _get_upcoming_matches(db, hours=hours)
+    if not matches:
+        return {"skipped": True, "reason": "no_upcoming_matches"}
+    collector = OddsCollector(db)
+    return collector.collect_closing_odds(matches)
+
+
+def collect_odds_for_upcoming_matches(db: Session, hours: int = 72) -> Dict:
+    """全量采集：Tier 1 + Tier 2 + Tier 3"""
+    matches = _get_upcoming_matches(db, hours=hours)
+    if not matches:
+        return {"skipped": True, "reason": "no_upcoming_matches"}
+    collector = OddsCollector(db)
+    tier1 = collector.collect_tier1_primary(matches)
+    tier2 = collector.collect_tier2_premium(matches)
+    tier3 = collector.collect_tier3_focus(matches)
+    return {
+        "tier1": tier1,
+        "tier2": tier2,
+        "tier3": tier3,
+    }
