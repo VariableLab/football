@@ -1,7 +1,7 @@
 import sys
 import os
 _root = os.path.dirname(os.path.abspath(__file__))
-for d in ["api", "core", "features", "ingestion", "database", "strategy", "monitor", "utils", "api/routers"]:
+for d in ["api", "core", "features", "ingestion", "database", "strategy", "monitor", "utils", "api/routers", "scripts", "integrations", "."]:
     sys.path.append(os.path.join(_root, d))
 
 # -*- coding: utf-8 -*-
