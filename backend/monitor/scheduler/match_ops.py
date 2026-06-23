@@ -1,12 +1,29 @@
 """
 比赛预测锁定、状态监控、重算相关任务
 """
+import json
 from datetime import datetime, timedelta, timezone
 
 from database.models import Match, MatchStatus, Prediction
 from utils.logger import get_logger
 
 logger = get_logger("scheduler.match_ops")
+
+
+def _convert_numpy(obj):
+    """递归将 numpy 类型转换为原生 Python 类型，避免 JSON 序列化失败"""
+    if isinstance(obj, dict):
+        return {k: _convert_numpy(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_convert_numpy(v) for v in obj]
+    # numpy scalar 检测 — 用 .item() 转为原生 Python 类型
+    typ = type(obj)
+    mod = getattr(typ, '__module__', '')
+    if mod == "numpy" or mod.startswith("numpy."):
+        if hasattr(obj, "item"):
+            return obj.item()
+        return float(obj)
+    return obj
 
 
 def lock_predictions_job():
@@ -41,7 +58,7 @@ def lock_predictions_job():
                     new_predictions.append((
                         match.id,
                         payload["play_type"],
-                        payload["probabilities"],
+                        _convert_numpy(payload["probabilities"]),
                         payload.get("confidence"),
                         payload.get("model_version", "v2.0_linear"),
                     ))
@@ -134,15 +151,16 @@ def relock_finished_job():
                         Prediction.match_id == match.id,
                         Prediction.play_type == payload["play_type"],
                     ).first()
+                    probs = _convert_numpy(payload["probabilities"])
                     if pred:
-                        pred.probabilities = payload["probabilities"]
+                        pred.probabilities = probs
                         pred.confidence = payload.get("confidence")
                         pred.model_version = payload.get("model_version", "v1.0")
                     else:
                         pred = Prediction(
                             match_id=match.id,
                             play_type=payload["play_type"],
-                            probabilities=payload["probabilities"],
+                            probabilities=probs,
                             confidence=payload.get("confidence"),
                             model_version=payload.get("model_version", "v1.0"),
                         )
