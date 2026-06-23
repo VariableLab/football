@@ -76,10 +76,10 @@ async def lifespan(app: FastAPI):
         raise RuntimeError("ADMIN_API_KEY must be set via environment variable")
 
     init_db()
-    from scheduler import start_scheduler
+    from monitor.scheduler import start_scheduler
     start_scheduler()
     yield
-    from scheduler import stop_scheduler
+    from monitor.scheduler import stop_scheduler
     stop_scheduler()
     logger.info("Application shutting down")
 

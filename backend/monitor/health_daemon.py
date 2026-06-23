@@ -242,7 +242,7 @@ class HealthDaemon:
         result = CheckResult(name="scheduler_jobs")
 
         try:
-            from scheduler import scheduler
+            from monitor.scheduler import scheduler
 
             if not scheduler.running:
                 result.status = "fail"
@@ -348,7 +348,7 @@ class HealthDaemon:
     def _trigger_prediction_lock(self, result: CheckResult) -> None:
         """触发缺失预测的自动锁定"""
         try:
-            from scheduler import lock_predictions_job
+            from monitor.scheduler import lock_predictions_job
             lock_predictions_job()
             result.repaired = True
             result.repair_action = "triggered_prediction_lock"
@@ -617,7 +617,7 @@ class HealthDaemon:
     def _trigger_backup(self, result: CheckResult) -> None:
         """触发紧急数据库备份"""
         try:
-            from scheduler import backup_database_job
+            from monitor.scheduler import backup_database_job
             backup_database_job()
             result.repaired = True
             result.repair_action = "triggered_emergency_backup"
