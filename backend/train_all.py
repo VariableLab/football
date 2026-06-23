@@ -35,7 +35,7 @@ def fusion_train():
 
 def nn_train():
     from core.residual_nn import StackingTrainer
-    from database.config import get_db
+    from database.models import get_db
     db = next(get_db())
     try:
         trainer = StackingTrainer(db_session=db)

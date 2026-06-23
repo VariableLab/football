@@ -21,7 +21,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
 from utils.logger import get_logger
-from alert_manager import fire_alert
+from monitor.alert_manager import fire_alert
 
 logger = get_logger("draw_classifier")
 

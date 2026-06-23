@@ -15,7 +15,6 @@ from datetime import datetime, timezone
 from typing import Dict, Optional, Tuple
 
 import numpy as np
-from sklearn.metrics import log_loss
 
 from fusion.fusion_trainer import FusionTrainer
 from fusion.logistic_fusion import LogisticFusionTrainer, LogisticFusionWeights
@@ -26,6 +25,18 @@ logger = get_logger("validate_deploy")
 WEIGHTS_DIR = "data/weights/lr"
 PRODUCTION_WEIGHT_PATH = os.path.join(WEIGHTS_DIR, "global_v1_2026-05-15.json")
 VALIDATION_META_PATH = os.path.join(WEIGHTS_DIR, "validation_meta.json")
+
+
+def _safe_log_loss(y_true, y_pred):
+    """安全计算 log_loss，sklearn 不可用时用 numpy 近似"""
+    try:
+        from sklearn.metrics import log_loss
+        return float(log_loss(y_true, y_pred, labels=[0, 1, 2]))
+    except ImportError:
+        # Fallback: cross-entropy approximation
+        eps = 1e-15
+        y_pred_clipped = np.clip(y_pred, eps, 1 - eps)
+        return float(-np.mean(y_true * np.log(y_pred_clipped)))
 
 
 def _find_latest_weight() -> str:
@@ -99,7 +110,7 @@ def train_with_validation(
     new_probs = new_weights.predict(X_val)
     new_brier = _brier_score(y_val, new_probs)
     new_acc = float(np.mean(np.argmax(new_probs, axis=1) == y_val))
-    new_ce = float(log_loss(y_val, new_probs, labels=[0, 1, 2]))
+    new_ce = float(_safe_log_loss(y_val, new_probs))
     logger.info(f"[AB] New weights  | Val acc={new_acc:.4f} Brier={new_brier:.4f} CE={new_ce:.4f}")
 
     result["new"] = {"accuracy": new_acc, "brier": new_brier, "cross_entropy": new_ce}
@@ -117,7 +128,7 @@ def train_with_validation(
     old_probs = old_weights.predict(X_val)
     old_brier = _brier_score(y_val, old_probs)
     old_acc = float(np.mean(np.argmax(old_probs, axis=1) == y_val))
-    old_ce = float(log_loss(y_val, old_probs, labels=[0, 1, 2]))
+    old_ce = float(_safe_log_loss(y_val, old_probs))
     logger.info(f"[AB] Current weights | Val acc={old_acc:.4f} Brier={old_brier:.4f} CE={old_ce:.4f}")
 
     result["old"] = {"accuracy": old_acc, "brier": old_brier, "cross_entropy": old_ce}
