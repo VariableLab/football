@@ -31,7 +31,10 @@ def health(db: Session = Depends(get_db)):
         from datetime import datetime, timezone as _tz2
         latest = db.query(OddsHistory).order_by(OddsHistory.recorded_at.desc()).first()
         if latest:
-            age_hours = (datetime.now(_tz2.utc) - latest.recorded_at).total_seconds() / 3600
+            recorded = latest.recorded_at
+            if recorded.tzinfo is None:
+                recorded = recorded.replace(tzinfo=_tz2.utc)
+            age_hours = (_tz2.utc.now() - recorded).total_seconds() / 3600
             checks["checks"]["odds_freshness"] = f"{age_hours:.1f}h"
             if age_hours > 24:
                 checks["status"] = "degraded"
