@@ -167,9 +167,10 @@ class DrawClassifierTrainer:
 
         session = SessionLocal()
         try:
+            VALID_OUTCOMES = ("home", "draw", "away")
             finished = session.query(Match).filter(
                 Match.status == MatchStatus.FINISHED,
-                Match.actual_outcome.isnot(None),
+                Match.actual_outcome.in_(VALID_OUTCOMES),
             ).all()
 
             if len(finished) < MIN_TRAIN_SAMPLES:
@@ -545,9 +546,10 @@ def walk_forward_validate(n_folds: int = 10) -> Dict:
 
     session = SessionLocal()
     try:
+        VALID_OUTCOMES = ("home", "draw", "away")
         finished = session.query(Match).filter(
             Match.status == MatchStatus.FINISHED,
-            Match.actual_outcome.isnot(None),
+            Match.actual_outcome.in_(VALID_OUTCOMES),
             Match.kickoff_at.isnot(None),
         ).order_by(Match.kickoff_at).all()
 

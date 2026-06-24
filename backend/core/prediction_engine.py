@@ -160,13 +160,15 @@ class PredictionEngine:
         # ─── Step 1: Sub-models ───
         elo_out = EloModel.predict(ctx)
         if lab_elo_spf:
-            elo_out = lab_elo_spf
+            # Blend Lab Elo as supplementary signal (30%) rather than full override
+            elo_out = {k: 0.30 * lab_elo_spf[k] + 0.70 * elo_out[k] for k in ["home", "draw", "away"]}
 
         elo_gap = abs(ctx.home_team.elo - ctx.away_team.elo)
         use_heavy_tail = elo_gap > 200
         poisson_out = PoissonModel.predict_with_heavy_tail(ctx, use_heavy_tail=use_heavy_tail)
         if lab_poisson_spf:
-            poisson_out["spf"] = lab_poisson_spf
+            # Blend Lab Poisson as supplementary signal (30%) rather than full override
+            poisson_out["spf"] = {k: 0.30 * lab_poisson_spf[k] + 0.70 * poisson_out["spf"][k] for k in ["home", "draw", "away"]}
 
         players_factor = PlayerAdjustmentModel.predict(ctx)
         market_out = MarketModel.predict(ctx)
@@ -197,13 +199,13 @@ class PredictionEngine:
             mode_desc = "基础混合融合" if not is_degraded else "纯物理实力降级融合"
             trace.add_step(mode_desc, "使用 Elo + 泊松 4 参数模型", fused_spf)
 
-        # Lab Elo override
+        # Lab Elo expert override (supplementary, not dominant)
         if lab_elo_spf:
-            weight_factor = 0.95 if is_degraded else 0.90
+            weight_factor = 0.50 if is_degraded else 0.35
             fused_spf = {k: weight_factor * lab_elo_spf[k] + (1-weight_factor) * fused_spf[k] for k in ["home", "draw", "away"]}
             s_val = sum(fused_spf.values())
             fused_spf = {k: v / s_val for k, v in fused_spf.items()}
-            trace.add_step("专家Elo降级增强", f"权重提升至 {weight_factor:.0%}", fused_spf)
+            trace.add_step("专家Elo降级增强", f"权重调整为 {weight_factor:.0%} (补充信号而非主导)", fused_spf)
 
         # Live odds steam move
         old_spf = fused_spf.copy()
@@ -464,7 +466,7 @@ def build_team_context_from_orm(team) -> TeamContext:
         team_id=team.id, name=team.name, name_en=team.name_en or "",
         elo=team.elo or 1500, fifa_rank=team.fifa_rank or 100,
         avg_goals_scored=team.avg_goals_scored or 1.3, avg_goals_conceded=team.avg_goals_conceded or 1.3,
-        avg_xg=team.avg_xg or 0.0, avg_xga=team.avg_xga or 0.0,
+        avg_xg=team.avg_xg or team.avg_goals_scored or 0.0, avg_xga=team.avg_xga or team.avg_goals_conceded or 0.0,
         possession=team.possession or 0.0, pass_completion=team.pass_completion or 0.0,
         shots_per_game=team.shots_per_game or 0.0, form_factor=team.form_factor or 1.0,
         recent_results=team.recent_results or "",

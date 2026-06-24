@@ -15,7 +15,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from torch.optim.lr_scheduler import OneCycleLR
+# OneCycleLR replaced with ReduceLROnPlateau for early stopping compatibility
 from utils.logger import get_logger
 
 logger = get_logger("residual_nn")
@@ -167,11 +167,13 @@ class StackingTrainer:
         self.model = StackingNet()
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=LEARNING_RATE, weight_decay=0.01)
         criterion = nn.CrossEntropyLoss()
-        scheduler = OneCycleLR(optimizer, max_lr=1e-3, steps_per_epoch=len(tl), epochs=EPOCHS)
-        
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, mode="min", factor=0.5, patience=5, verbose=True
+        )
+
         best_loss = float("inf")
         early_stop = 0
-        
+
         for ep in range(EPOCHS):
             self.model.train()
             for bx, by in tl:
@@ -180,8 +182,7 @@ class StackingTrainer:
                 loss = criterion(pred, by)
                 loss.backward()
                 optimizer.step()
-                scheduler.step()
-            
+
             # 验证
             self.model.eval()
             val_loss = 0
@@ -191,20 +192,23 @@ class StackingTrainer:
                     pred = self.model(bx)
                     val_loss += criterion(pred, by).item()
                     correct += (pred.argmax(1) == by).sum().item()
-            
+
             val_loss /= len(vl)
             acc = correct / len(va_y)
-            
+
+            # ReduceLROnPlateau: step with validation loss, not per-batch
+            scheduler.step(val_loss)
+
             if val_loss < best_loss:
                 best_loss = val_loss
                 early_stop = 0
                 torch.save(self.model.state_dict(), MODEL_PATH)
             else:
                 early_stop += 1
-            
+
             if ep % 5 == 0:
-                logger.info(f"Epoch {ep}: Val Loss={val_loss:.4f}, Acc={acc:.1%}")
-                
+                logger.info(f"Epoch {ep}: Val Loss={val_loss:.4f}, Acc={acc:.1%}, LR={optimizer.param_groups[0]['lr']:.6f}")
+
             if early_stop >= PATIENCE:
                 logger.info("Early stopping triggered.")
                 break

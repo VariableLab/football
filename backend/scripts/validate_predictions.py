@@ -11,10 +11,16 @@
 
 import argparse
 import json
+import os
+import sys
 from collections import defaultdict
 from sqlalchemy.orm import Session
+
+# Ensure backend/ is in path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from database.models import SessionLocal, Match, MatchStatus, Prediction
-from draw_calibrator import DrawFeatures, apply_draw_calibration, load_draw_params, market_probabilities
+from core.draw_calibrator import DrawFeatures, apply_draw_calibration, load_draw_params, market_probabilities
 
 
 # ── 结果映射 ──
@@ -128,7 +134,11 @@ def _draw_features_for_match(match: Match) -> DrawFeatures:
 def validate(db: Session, play_type: str, league: str | None = None,
              with_odds_only: bool = False, draw_calibrated: bool = False) -> dict:
     """Validate predictions for a single play type. Returns stats dict."""
-    matches_q = db.query(Match).filter(Match.status == MatchStatus.FINISHED)
+    VALID_OUTCOMES = ("home", "draw", "away")
+    matches_q = db.query(Match).filter(
+        Match.status == MatchStatus.FINISHED,
+        Match.actual_outcome.in_(VALID_OUTCOMES),
+    )
     if league:
         matches_q = matches_q.filter(Match.competition.like(f"{league}%"))
 
