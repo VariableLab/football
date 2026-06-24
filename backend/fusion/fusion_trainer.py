@@ -87,7 +87,11 @@ class FusionTrainer:
             FRIENDLY_KEYWORDS = ("friendly", "warm-up", "exhibition", "invitational")
 
             valid_matches_raw = []
-            for m in matches:
+            all_matches = s.query(Match).filter(
+                Match.status == MatchStatus.FINISHED,
+                Match.actual_outcome.isnot(None),
+            ).all()
+            for m in all_matches:
                 # 过滤友谊赛
                 comp = (m.competition or "").lower()
                 if any(kw in comp for kw in FRIENDLY_KEYWORDS):
