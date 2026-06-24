@@ -197,15 +197,15 @@ class StackingTrainer:
             val_loss /= len(vl)
             acc = correct / len(va_y)
 
+            if ep % 5 == 0:
+                logger.info(f"Epoch {ep}: Val Loss={val_loss:.4f}, Acc={acc:.1%}, LR={optimizer.param_groups[0]['lr']:.6f}")
+
             if val_loss < best_loss:
                 best_loss = val_loss
                 early_stop = 0
                 torch.save(self.model.state_dict(), MODEL_PATH)
             else:
                 early_stop += 1
-
-            if ep % 5 == 0:
-                logger.info(f"Epoch {ep}: Val Loss={val_loss:.4f}, Acc={acc:.1%}, LR={optimizer.param_groups[0]['lr']:.6f}")
 
             if early_stop >= PATIENCE:
                 logger.info("Early stopping triggered.")
