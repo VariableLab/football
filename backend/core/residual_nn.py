@@ -182,6 +182,7 @@ class StackingTrainer:
                 loss = criterion(pred, by)
                 loss.backward()
                 optimizer.step()
+                scheduler.step()
 
             # 验证
             self.model.eval()
@@ -195,9 +196,6 @@ class StackingTrainer:
 
             val_loss /= len(vl)
             acc = correct / len(va_y)
-
-            # OneCycleLR: step with each batch
-            scheduler.step()
 
             if val_loss < best_loss:
                 best_loss = val_loss
