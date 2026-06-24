@@ -167,8 +167,8 @@ class StackingTrainer:
         self.model = StackingNet()
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=LEARNING_RATE, weight_decay=0.01)
         criterion = nn.CrossEntropyLoss()
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, mode="min", factor=0.5, patience=5, verbose=True
+        scheduler = torch.optim.lr_scheduler.OneCycleLR(
+            optimizer, max_lr=LEARNING_RATE * 10, steps_per_epoch=len(tl), epochs=EPOCHS
         )
 
         best_loss = float("inf")
@@ -196,8 +196,8 @@ class StackingTrainer:
             val_loss /= len(vl)
             acc = correct / len(va_y)
 
-            # ReduceLROnPlateau: step with validation loss, not per-batch
-            scheduler.step(val_loss)
+            # OneCycleLR: step with each batch
+            scheduler.step()
 
             if val_loss < best_loss:
                 best_loss = val_loss
