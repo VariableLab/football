@@ -48,9 +48,11 @@ class InjurySync:
         for team in teams:
             if team.name:
                 self._team_name_map[team.name.lower()] = team.id
-                # 也存缩写/别名
-                if team.short_name:
-                    self._team_name_map[team.short_name.lower()] = team.id
+                # 也存 name_en / code 作为别名
+                if getattr(team, "name_en", None):
+                    self._team_name_map[team.name_en.lower()] = team.id
+                if getattr(team, "code", None):
+                    self._team_name_map[team.code.lower()] = team.id
 
     def _find_team_id(self, name: str) -> Optional[int]:
         """通过名称查找本地球队ID"""
