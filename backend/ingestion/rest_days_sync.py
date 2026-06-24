@@ -27,7 +27,11 @@ logger = get_logger("rest_days_sync")
 
 
 def compute_rest_days_batch(db: Session) -> Dict[int, int]:
-    """批量计算所有球队的 rest_days，避免 N+1 查询。"""
+    """批量计算所有球队的 rest_days，避免 N+1 查询。
+
+    P0 修复: 之前的实现计算的是"比赛中位间隔"而非"距上一场的天数"。
+    正确逻辑: 取每支球队最近一场比赛的时间，rest_days = 从该日到今天的天数。
+    """
     from collections import defaultdict
 
     # 一次性获取所有已完赛比赛
@@ -40,34 +44,29 @@ def compute_rest_days_batch(db: Session) -> Dict[int, int]:
     # 按球队分组收集比赛时间
     team_dates: Dict[int, list] = defaultdict(list)
     for m in matches:
-        for kt_col in (m.kickoff_at,):
-            if kt_col is None:
+        kt = m.kickoff_at
+        if kt is None:
+            continue
+        if isinstance(kt, str):
+            try:
+                kt = datetime.fromisoformat(kt.replace("Z", "+00:00"))
+            except (ValueError, TypeError):
                 continue
-            kt = kt_col
-            if isinstance(kt, str):
-                try:
-                    kt = datetime.fromisoformat(kt.replace("Z", "+00:00"))
-                except (ValueError, TypeError):
-                    continue
-            if kt.tzinfo is None:
-                kt = kt.replace(tzinfo=timezone.utc)
-            team_dates[m.home_team_id].append(kt)
-            team_dates[m.away_team_id].append(kt)
+        if kt.tzinfo is None:
+            kt = kt.replace(tzinfo=timezone.utc)
+        team_dates[m.home_team_id].append(kt)
+        team_dates[m.away_team_id].append(kt)
 
-    # 计算每个球队的中位数间隔
+    # 计算每支球队距最近一场的天数
+    now = datetime.now(timezone.utc)
     result: Dict[int, int] = {}
     for team_id, dates in team_dates.items():
-        if len(dates) < 2:
+        if not dates:
             continue
-        dates.sort()
-        gaps = []
-        for i in range(1, len(dates)):
-            gap = (dates[i] - dates[i - 1]).days
-            if 1 <= gap <= 30:
-                gaps.append(gap)
-        if gaps:
-            gaps.sort()
-            result[team_id] = gaps[len(gaps) // 2]
+        latest = max(dates)
+        rest = (now - latest).days
+        # 合理范围: 1~30 天, 超出则用默认值
+        result[team_id] = max(1, min(rest, 30))
 
     return result
 

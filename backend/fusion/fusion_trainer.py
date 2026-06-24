@@ -80,28 +80,33 @@ class FusionTrainer:
         """
         s = SessionLocal()
         try:
-            # 只使用已完赛且有结果的比赛
-            q = s.query(Match).options(
-                joinedload(Match.home_team), joinedload(Match.away_team)
-            ).filter(
-                Match.status == MatchStatus.FINISHED,
-                Match.actual_outcome.isnot(None),
-            )
-            if competition:
-                q = q.filter(Match.competition == competition)
-            if knockout_only:
-                q = q.filter(Match.stage.in_(["R16", "QF", "SF", "F", "3P"]))
+            # ── P0 修复: 数据质量门控 ──
+            # 1. 排除友谊赛 (比赛性质不稳定, 噪声大)
+            # 2. 排除没有 closing_odds 的比赛
+            # 3. 排除 actual_outcome 为 abandoned/unknown 的比赛
+            FRIENDLY_KEYWORDS = ("friendly", "warm-up", "exhibition", "invitational")
 
-            matches = q.order_by(Match.kickoff_at).all()
-            if self.limit:
-                matches = matches[:self.limit]
-
-            logger.info(f"[fusion_trainer] Total finished matches: {len(matches)}")
-
-            # ── 过滤: 只保留有真实收盘赔率的比赛 ──
-            # 收盘赔率必须在开球前采集,防止标签泄露
-            valid_matches = []
+            valid_matches_raw = []
             for m in matches:
+                # 过滤友谊赛
+                comp = (m.competition or "").lower()
+                if any(kw in comp for kw in FRIENDLY_KEYWORDS):
+                    continue
+                # 过滤无效结果
+                outcome = (m.actual_outcome or "").lower()
+                if outcome in ("abandoned", "unknown", "cancelled", "postponed", ""):
+                    continue
+                valid_matches_raw.append(m)
+
+            logger.info(f"[fusion_trainer] After quality gate: {len(valid_matches_raw)} matches (removed friendlies/bad outcomes)")
+
+            if len(valid_matches_raw) < 10:
+                logger.warning("[fusion_trainer] Too few matches after quality gate")
+                return None, None
+
+            # 后续过滤: closing_odds + 赛前赔率
+            valid_matches = []
+            for m in valid_matches_raw:
                 if m.closing_odds_home is None or m.closing_odds_draw is None or m.closing_odds_away is None:
                     continue
                 # 检查是否有赛前采集的赔率记录

@@ -34,22 +34,29 @@ logger = get_logger("logistic_fusion")
 WEIGHTS_DIR = "./data/weights/lr"
 os.makedirs(WEIGHTS_DIR, exist_ok=True)
 
-# 特征名称（与 feature_builder 对齐）
+# 特征名称（与 feature_builder.py 完全对齐：48 基线 + 5 交互 = 53）
+# 基线 48 维 (与 features/feature_builder.py FEATURE_NAMES 一致):
 FEATURE_NAMES = [
+    # A. Elo (8)
     "elo_diff", "elo_win", "elo_draw", "elo_away",
-    "is_heavy_fav", "is_heavy_udog", "elo_tier_diff",
+    "is_heavy_fav", "is_heavy_udog", "elo_tier_diff", "elo_drift",
+    # B. Poisson (8)
     "lambda_home", "lambda_away", "lambda_diff",
-    "poisson_win", "poisson_draw", "poisson_away", "goal_exp",
+    "poisson_win", "poisson_draw", "poisson_away", "goal_exp", "relative_goals",
+    # C. Players (4)
     "home_avail", "away_avail", "avail_diff", "injury_impact",
+    # D. Market (7)
     "market_win", "market_draw", "market_away",
-    "overround", "max_odds_move", "source_count",
+    "overround", "max_odds_move", "source_count", "market_volatility",
+    # E. Form (5)
     "form_win", "form_draw", "momentum", "stability", "streak_norm",
+    # F. H2H (6)
     "h2h_total_norm", "h2h_win", "h2h_draw", "h2h_recent", "h2h_goals_norm", "first_meeting",
-    "rest_advantage", "is_knockout", "is_derby",
-    "ref_severity", "ref_home_bias",
-    "home_rest", "away_rest", "is_late_season",
-    # 交互特征
-    "I_elo_knockout", "I_model_disagree", "I_momentum_rest",
+    # G. Meta (10)
+    "rest_advantage", "is_knockout", "is_derby", "ref_severity", "ref_home_bias",
+    "home_rest", "away_rest", "is_late_season", "pressure_index", "is_prime_time",
+    # 交互特征 (5)
+    "I_elo_knockout", "I_poisson_market_consistent", "I_momentum_rest",
     "I_market_source", "I_elo_form",
 ]
 
@@ -194,7 +201,8 @@ class LogisticFusionTrainer:
         verbose: bool = False,
         class_weight: Optional[Dict[int, float]] = None,
     ):
-        self.l1_penalty = l1_penalty
+        # 确保 L1 正则化永不归零 —— 这是 P0 修复的关键防线
+        self.l1_penalty = max(0.001, l1_penalty)
         self.max_iter = max_iter
         self.verbose = verbose
         self.class_weight = class_weight
@@ -359,7 +367,8 @@ def cross_validate_lambda(
         (best_lambda, {lambda: avg_accuracy})
     """
     if lambdas is None:
-        lambdas = [0.0, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05]
+        # P0 修复: 移除 0.0 选项, 强制至少 0.001 的 L1 正则化
+        lambdas = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1]
 
     results = {}
     best_lambda = lambdas[0]

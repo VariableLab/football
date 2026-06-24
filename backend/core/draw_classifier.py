@@ -420,9 +420,10 @@ class DrawClassifierPredictor:
         self.model = DrawClassifierNet()
         self.feature_mean: Optional[np.ndarray] = None
         self.feature_std: Optional[np.ndarray] = None
-        self.threshold = 0.65
-        self.max_boost = 0.05
-        self.boost_scale = 0.25
+        # P0 修复: 降低 draw 检测门槛, 提高灵敏度
+        self.threshold = 0.45
+        self.max_boost = 0.10
+        self.boost_scale = 0.35
         self._load_model()
 
 
