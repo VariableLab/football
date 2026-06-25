@@ -75,60 +75,51 @@ class FusionTrainer:
         构建训练数据。
 
         关键修复: 只使用赛前可获取的特征。
-        - 收盘赔率必须在开球前采集 (recorded_at < kickoff_at)
+        - 优先使用 closing_odds (已隐含赛前采集)
         - 特征构建时不使用赛后数据
         """
         s = SessionLocal()
         try:
             # ── P0 修复: 数据质量门控 ──
-            # 1. 排除友谊赛 (比赛性质不稳定, 噪声大)
-            # 2. 排除没有 closing_odds 的比赛
-            # 3. 排除 actual_outcome 为 abandoned/unknown 的比赛
             FRIENDLY_KEYWORDS = ("friendly", "warm-up", "exhibition", "invitational")
+            BAD_OUTCOMES = ("abandoned", "unknown", "cancelled", "postponed", "")
 
-            valid_matches_raw = []
-            all_matches = s.query(Match).filter(
+            # 优化: 直接查询有 closing_odds 的比赛 (无需再查 OddsHistory)
+            q = s.query(Match).filter(
                 Match.status == MatchStatus.FINISHED,
                 Match.actual_outcome.isnot(None),
-            ).all()
+                Match.closing_odds_home.isnot(None),
+                Match.closing_odds_draw.isnot(None),
+                Match.closing_odds_away.isnot(None),
+            )
+
+            if competition:
+                q = q.filter(Match.competition == competition)
+
+            if knockout_only:
+                q = q.filter(Match.stage.in_(("R32", "R16", "QF", "SF", "F", "3P")))
+
+            all_matches = q.all()
+            logger.info(f"[fusion_trainer] Total finished with closing odds: {len(all_matches)}")
+
+            # 过滤: 友谊赛 + 无效结果
+            valid_matches = []
             for m in all_matches:
-                # 过滤友谊赛
                 comp = (m.competition or "").lower()
                 if any(kw in comp for kw in FRIENDLY_KEYWORDS):
                     continue
-                # 过滤无效结果
                 outcome = (m.actual_outcome or "").lower()
-                if outcome in ("abandoned", "unknown", "cancelled", "postponed", ""):
-                    continue
-                valid_matches_raw.append(m)
-
-            logger.info(f"[fusion_trainer] After quality gate: {len(valid_matches_raw)} matches (removed friendlies/bad outcomes)")
-
-            if len(valid_matches_raw) < 10:
-                logger.warning("[fusion_trainer] Too few matches after quality gate")
-                return None, None
-
-            # 后续过滤: closing_odds + 赛前赔率
-            valid_matches = []
-            for m in valid_matches_raw:
-                if m.closing_odds_home is None or m.closing_odds_draw is None or m.closing_odds_away is None:
-                    continue
-                # 检查是否有赛前采集的赔率记录
-                earliest = s.query(OddsHistory).filter(
-                    OddsHistory.match_id == m.id,
-                    OddsHistory.recorded_at < m.kickoff_at,
-                ).order_by(OddsHistory.recorded_at.asc()).first()
-                if earliest is None:
-                    # 没有赛前赔率记录,跳过
+                if outcome in BAD_OUTCOMES:
                     continue
                 valid_matches.append(m)
 
-            logger.info(f"[fusion_trainer] After pre-match filter: {len(valid_matches)} matches")
+            logger.info(f"[fusion_trainer] After quality gate: {len(valid_matches)} matches (removed friendlies/bad outcomes)")
 
             if len(valid_matches) < 10:
-                logger.warning("[fusion_trainer] Too few valid matches after filtering")
+                logger.warning("[fusion_trainer] Too few matches after quality gate")
                 return None, None
 
+            # 特征构建
             Xl, yl = [], []
             o2i = {"home": 0, "draw": 1, "away": 2}
             sk = 0
@@ -137,7 +128,7 @@ class FusionTrainer:
 
             for i, m in enumerate(valid_matches):
                 if i % 1000 == 0:
-                    logger.info(f"[fusion_trainer] Progress: {i}/{len(valid_matches)}")
+                    logger.info(f"[fusion_trainer] Feature building: {i}/{len(valid_matches)}")
                 try:
                     yv = o2i.get(m.actual_outcome)
                     if yv is None:

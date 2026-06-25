@@ -48,8 +48,8 @@ def apply_residual_correction(
 
         stacking_spf = predictor.predict(full_input)
         if stacking_spf:
-            # P0 修复: 降低 NN 修正权重, 主要信任 LR Fusion 输出
-            final_spf = {k: 0.8 * spf[k] + 0.2 * stacking_spf[k] for k in ["home", "draw", "away"]}
+            # P1 修复: 进一步降低 StackingNN 权重至 10%, 避免噪声修正
+            final_spf = {k: 0.9 * spf[k] + 0.1 * stacking_spf[k] for k in ["home", "draw", "away"]}
             total = sum(final_spf.values())
             return {k: v / total for k, v in final_spf.items()}
     except Exception as e:
@@ -100,8 +100,8 @@ def apply_betnn_correction(
             bet_nn_spf = {k: max(0.001, v) for k, v in bet_nn_spf.items()}
             total = sum(bet_nn_spf.values())
             bet_nn_spf = {k: v / total for k, v in bet_nn_spf.items()}
-            # P0 修复: 降低 BetNN 权重, 避免噪声修正
-            fused_spf = {k: 0.8 * fused_spf[k] + 0.2 * bet_nn_spf[k] for k in ["home", "draw", "away"]}
+            # P1 修复: 降低 BetNN 权重至 5%, 仅在显著信号时生效
+            fused_spf = {k: 0.95 * fused_spf[k] + 0.05 * bet_nn_spf[k] for k in ["home", "draw", "away"]}
             total = sum(fused_spf.values())
             return {k: v / total for k, v in fused_spf.items()}
     except Exception as e:

@@ -64,9 +64,9 @@ def _brier_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return float(np.mean(np.sum((y_pred - y_onehot) ** 2, axis=1)))
 
 
-def _time_split(X: np.ndarray, y: np.ndarray, val_ratio: float = 0.15
+def _time_split(X: np.ndarray, y: np.ndarray, val_ratio: float = 0.2
                 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """按时间顺序切分（最近 val_ratio 作为验证集，15% ≈ 5000+ 样本）"""
+    """按时间顺序切分（最近 val_ratio 作为验证集，~20% ≈ 21 场验证集）"""
     n = len(X)
     split = int(n * (1 - val_ratio))
     return X[:split], X[split:], y[:split], y[split:]
@@ -75,7 +75,7 @@ def _time_split(X: np.ndarray, y: np.ndarray, val_ratio: float = 0.15
 def train_with_validation(
     l1_penalty: float = 0.001,
     class_weight: Optional[Dict[int, float]] = None,
-    val_ratio: float = 0.15,
+    val_ratio: float = 0.2,
     dry_run: bool = False,
 ) -> Dict:
     """训练 + A/B 验证部署

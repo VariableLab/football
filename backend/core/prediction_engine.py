@@ -190,9 +190,8 @@ class PredictionEngine:
         if lr_spf is not None:
             fused_spf = lr_spf
             trace.add_step("逻辑回归基准", f"使用 {ctx.competition or '全球'} 48维特征模型", fused_spf)
-            if real_market:
-                fused_spf = {k: 0.5 * fused_spf[k] + 0.5 * real_market[k] for k in ["home", "draw", "away"]}
-                trace.add_step("市场共识校准", "模型与机构赔率 50:50 融合", fused_spf)
+            # P1 修复: 移除 50:50 市场融合 — LR 已包含 market 特征, 重复融合会稀释信号
+            # 仅在 LR 失败时 fallback 到 EnsembleFusion
         else:
             fused_spf = self.fusion.fuse_spf(elo=elo_out, poisson=poisson_out["spf"],
                 players=players_factor, market=real_market, ctx=ctx)
@@ -201,7 +200,7 @@ class PredictionEngine:
 
         # Lab Elo expert override (supplementary, not dominant)
         if lab_elo_spf:
-            weight_factor = 0.50 if is_degraded else 0.35
+            weight_factor = 0.30 if is_degraded else 0.20
             fused_spf = {k: weight_factor * lab_elo_spf[k] + (1-weight_factor) * fused_spf[k] for k in ["home", "draw", "away"]}
             s_val = sum(fused_spf.values())
             fused_spf = {k: v / s_val for k, v in fused_spf.items()}
@@ -350,7 +349,7 @@ class PredictionEngine:
             return None
 
     def _apply_live_odds_override(self, spf, ctx):
-        """动态市场异动修正 (Steam Move Adjustment)"""
+        """动态市场异动修正 (Steam Move Adjustment) — P1: 降低强度"""
         if not ctx.has_closing_odds or not ctx.has_odds:
             return spf
         moves = {}
@@ -360,10 +359,11 @@ class PredictionEngine:
             moves[sel] = (closing - opening) / opening if closing and opening else 0.0
         best_move_sel = min(moves, key=moves.get)
         best_move_val = moves[best_move_sel]
-        intensity = 1.0 / (1.0 + np.exp(-20 * (abs(best_move_val) - 0.10)))
-        if abs(best_move_val) > 0.05 and best_move_val < 0:
-            target_prob = 0.65 if intensity > 0.5 else 0.50
-            alpha = 0.4 * intensity
+        # P1: 提高触发阈值, 降低强度 — 只在显著异动时介入
+        intensity = 1.0 / (1.0 + np.exp(-15 * (abs(best_move_val) - 0.15)))
+        if abs(best_move_val) > 0.08 and best_move_val < 0:
+            target_prob = 0.55 if intensity > 0.5 else 0.48
+            alpha = 0.2 * intensity  # P1: 从 0.4 降至 0.2
             spf[best_move_sel] = (1 - alpha) * spf[best_move_sel] + alpha * target_prob
             total = sum(spf.values())
             spf = {k: v / total for k, v in spf.items()}
