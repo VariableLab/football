@@ -100,6 +100,8 @@ class FormMarkovModel:
         self._db = db
         # 全局状态转移缓存 (state → {home/draw/away → probability})
         self._transition_cache: Dict[str, Dict[str, float]] = {}
+        # 团队级缓存: team_id -> transition_table
+        self._team_cache: Dict[int, Dict[str, Dict[str, float]]] = {}
 
     # ────────────────────────────────
     # 状态分类
@@ -178,12 +180,14 @@ class FormMarkovModel:
         """
         从历史数据构建状态转移概率表。
 
-        P(下一场结果 | 当前状态) = count(该状态后出现该结果) / count(该状态)
-
-        如果提供 team_id，只统计该队历史。否则统计全库。
+        带缓存: 同一 team_id 的结果会被复用。
         """
         if self._db is None:
             return self._default_transitions()
+
+        if team_id is not None:
+            if team_id in self._team_cache:
+                return self._team_cache[team_id]
 
         # 查询所有已结束比赛，按 kickoff_at 排序
         query = self._db.query(Match).filter(
@@ -197,7 +201,10 @@ class FormMarkovModel:
         matches = query.order_by(Match.kickoff_at).all()
 
         if len(matches) < 10:
-            return self._default_transitions()
+            result = self._default_transitions()
+            if team_id is not None:
+                self._team_cache[team_id] = result
+            return result
 
         # 按球队分组追踪状态序列
         team_history: Dict[int, List[str]] = {}
@@ -215,7 +222,10 @@ class FormMarkovModel:
             # 暂不按球队追踪（全库统计），简化实现
             pass
 
-        return self._default_transitions()
+        result = self._default_transitions()
+        if team_id is not None:
+            self._team_cache[team_id] = result
+        return result
 
     @staticmethod
     def _default_transitions() -> Dict[str, Dict[str, float]]:
