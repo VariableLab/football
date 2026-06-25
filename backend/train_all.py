@@ -28,7 +28,7 @@ def fusion_train():
     result = train_with_validation(
         l1_penalty=0.001,
         class_weight={0: 0.8, 1: 1.5, 2: 0.8},
-        val_ratio=0.1,
+        val_ratio=0.15,
     )
     logger.info(f"Fusion LR: deployed={result.get('deployed')}, delta_brier={result.get('delta_brier', 'N/A')}")
 

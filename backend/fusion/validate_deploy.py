@@ -64,9 +64,9 @@ def _brier_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return float(np.mean(np.sum((y_pred - y_onehot) ** 2, axis=1)))
 
 
-def _time_split(X: np.ndarray, y: np.ndarray, val_ratio: float = 0.1
+def _time_split(X: np.ndarray, y: np.ndarray, val_ratio: float = 0.15
                 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """按时间顺序切分（最近 val_ratio 作为验证集）"""
+    """按时间顺序切分（最近 val_ratio 作为验证集，15% ≈ 5000+ 样本）"""
     n = len(X)
     split = int(n * (1 - val_ratio))
     return X[:split], X[split:], y[:split], y[split:]
@@ -174,7 +174,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--val-ratio", type=float, default=0.1)
+    parser.add_argument("--val-ratio", type=float, default=0.15)
     args = parser.parse_args()
 
     result = train_with_validation(
