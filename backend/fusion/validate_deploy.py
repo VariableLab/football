@@ -75,7 +75,7 @@ def _time_split(X: np.ndarray, y: np.ndarray, val_ratio: float = 0.15
 def train_with_validation(
     l1_penalty: float = 0.001,
     class_weight: Optional[Dict[int, float]] = None,
-    val_ratio: float = 0.1,
+    val_ratio: float = 0.15,
     dry_run: bool = False,
 ) -> Dict:
     """训练 + A/B 验证部署
