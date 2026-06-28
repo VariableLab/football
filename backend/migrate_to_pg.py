@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS teams (
     possession FLOAT,
     pass_completion FLOAT,
     shots_per_game FLOAT,
-    stats_synced_at TIMESTAMP,
+    stats_synced_at TIMESTAMPTZ,
     key_players_available INTEGER DEFAULT 11,
     key_players_total INTEGER DEFAULT 11
 );
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS matches (
     match_code VARCHAR(50) UNIQUE NOT NULL,
     home_team_id INTEGER REFERENCES teams(id),
     away_team_id INTEGER REFERENCES teams(id),
-    kickoff_at TIMESTAMP,
+    kickoff_at TIMESTAMPTZ,
     "group_name" VARCHAR(10),
     stage VARCHAR(50),
     venue VARCHAR(100),
@@ -117,8 +117,8 @@ CREATE TABLE IF NOT EXISTS matches (
     actual_home_goals INTEGER,
     actual_away_goals INTEGER,
     actual_outcome VARCHAR(10),
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ,
     confidence VARCHAR(10),
     odds_source VARCHAR(20),
     venue_type VARCHAR(20),
@@ -130,14 +130,14 @@ CREATE TABLE IF NOT EXISTS matches (
     closing_odds_draw FLOAT,
     closing_odds_away FLOAT,
     closing_odds_source VARCHAR(20),
-    odds_locked_at TIMESTAMP,
+    odds_locked_at TIMESTAMPTZ,
     ht_home_goals INTEGER,
     ht_away_goals INTEGER,
     opening_odds_home FLOAT,
     opening_odds_draw FLOAT,
     opening_odds_away FLOAT,
     opening_odds_source VARCHAR(100),
-    opening_odds_at TIMESTAMP,
+    opening_odds_at TIMESTAMPTZ,
     odds_degraded BOOLEAN DEFAULT FALSE,
     poster_url VARCHAR(500),
     is_broadcasted BOOLEAN DEFAULT FALSE
@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS predictions (
     probabilities JSONB NOT NULL,
     model_version VARCHAR(20),
     input_checksum VARCHAR(64),
-    locked_at TIMESTAMP DEFAULT NOW(),
+    locked_at TIMESTAMPTZ DEFAULT NOW(),
     confidence VARCHAR(10)
 );
 
@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS odds_history (
     odds_home FLOAT NOT NULL,
     odds_draw FLOAT NOT NULL,
     odds_away FLOAT NOT NULL,
-    recorded_at TIMESTAMP NOT NULL,
+    recorded_at TIMESTAMPTZ NOT NULL,
     is_closing BOOLEAN,
     is_real BOOLEAN
 );
@@ -184,7 +184,7 @@ CREATE TABLE IF NOT EXISTS fusion_weights (
     metric_value FLOAT,
     sample_size INTEGER,
     is_active BOOLEAN,
-    learned_at TIMESTAMP DEFAULT NOW()
+    learned_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS jingcai_issues (
@@ -192,14 +192,14 @@ CREATE TABLE IF NOT EXISTS jingcai_issues (
     issue_id VARCHAR(20) NOT NULL,
     issue_type VARCHAR(20),
     status VARCHAR(20),
-    sale_start TIMESTAMP,
-    sale_end TIMESTAMP,
-    draw_at TIMESTAMP,
+    sale_start TIMESTAMPTZ,
+    sale_end TIMESTAMPTZ,
+    draw_at TIMESTAMPTZ,
     draw_result JSONB,
     verification JSONB,
     notes TEXT,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS jingcai_issue_matches (
@@ -244,7 +244,7 @@ CREATE TABLE IF NOT EXISTS teams (
     possession FLOAT,
     pass_completion FLOAT,
     shots_per_game FLOAT,
-    stats_synced_at TIMESTAMP,
+    stats_synced_at TIMESTAMPTZ,
     key_players_available INTEGER DEFAULT 11,
     key_players_total INTEGER DEFAULT 11
 );
@@ -252,7 +252,7 @@ CREATE TABLE IF NOT EXISTS teams (
 -- Additional tables (may be empty)
 CREATE TABLE IF NOT EXISTS accuracy_snapshots (
     id SERIAL PRIMARY KEY,
-    created_at TIMESTAMP DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
     direction_accuracy FLOAT,
     high_conf_accuracy FLOAT,
     avg_brier_score FLOAT,
@@ -268,9 +268,9 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255),
     is_active BOOLEAN DEFAULT TRUE,
     is_paid BOOLEAN DEFAULT FALSE,
-    paid_until TIMESTAMP,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP
+    paid_until TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS feedbacks (
@@ -281,8 +281,8 @@ CREATE TABLE IF NOT EXISTS feedbacks (
     is_anonymous BOOLEAN DEFAULT FALSE,
     likes INTEGER DEFAULT 0,
     author VARCHAR(100),
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS live_odds_snapshots (
@@ -295,15 +295,15 @@ CREATE TABLE IF NOT EXISTS live_odds_snapshots (
     match_minute INTEGER,
     score_home INTEGER,
     score_away INTEGER,
-    recorded_at TIMESTAMP DEFAULT NOW()
+    recorded_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS audit_logs (
     id SERIAL PRIMARY KEY,
     action VARCHAR(100),
     details JSONB,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ
 );
 """
 
