@@ -333,6 +333,8 @@ def get_strategy(
     # ─── 对冲投资组合 ───
     try:
         from strategy.hedged_portfolio import HedgedPortfolioGenerator
+        from strategy.ev_maximizing_strategy import EVMaximizingStrategy
+        
         port_gen = HedgedPortfolioGenerator(
             match_predictions=predictions,
             odds_home=match.odds_home or 2.0,
@@ -340,9 +342,23 @@ def get_strategy(
             odds_away=match.odds_away or 3.5,
             collapse_prob=collapse_prob,
         )
+        raw_ports = port_gen.generate(min_ev=0.03)
+        
+        ev_gen = EVMaximizingStrategy(
+            match_predictions=predictions,
+            odds_home=match.odds_home or 2.0,
+            odds_draw=match.odds_draw or 3.2,
+            odds_away=match.odds_away or 3.5,
+            collapse_prob=collapse_prob,
+        )
+        ev_ports = ev_gen.generate(min_ev=0.03)
+        
+        merged_ports = raw_ports + ev_ports
+        merged_ports.sort(key=lambda p: p.expected_roi, reverse=True)
+        
         # 提取 dict 格式的 portfolio
         portfolios = []
-        for port in port_gen.generate(min_ev=0.03):
+        for port in merged_ports[:6]:
             portfolios.append({
                 "strategy_type": port.strategy_type,
                 "name": port.name,

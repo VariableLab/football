@@ -91,11 +91,22 @@ def apply_betnn_correction(
             ctx=ctx,
         )
 
-        lr_arr = np.array([fused_spf.get('home', 0.33), fused_spf.get('draw', 0.33), fused_spf.get('away', 0.33)], dtype=np.float32)
-        mkt_arr = np.array([market_out.get('home', 0.33), market_out.get('draw', 0.33), market_out.get('away', 0.33)] if market_out else lr_arr, dtype=np.float32)
-        full_input = np.concatenate([base_feats, lr_arr, mkt_arr])
-
-        bet_nn_spf = bet_nn.predict(full_input)
+        # 提取 BetNN 专属的 20 维特征进行推理
+        odds_dict = {
+            "home": getattr(ctx, "odds_home", 2.0) or 2.0,
+            "draw": getattr(ctx, "odds_draw", 3.2) or 3.2,
+            "away": getattr(ctx, "odds_away", 3.5) or 3.5,
+        }
+        
+        bet_nn_spf = bet_nn.predict_match(
+            spf_probs=fused_spf,
+            rq_probs=fused_spf,  # 降级/对齐使用
+            score_top3=poisson_out.get("probabilities", {}) if isinstance(poisson_out, dict) else {},
+            odds=odds_dict,
+            elo_diff=0.0,
+            odds_movement={"home": 0.0, "draw": 0.0, "away": 0.0},
+            competition=getattr(ctx, "competition", "") or "",
+        )
         if bet_nn_spf:
             bet_nn_spf = {k: max(0.001, v) for k, v in bet_nn_spf.items()}
             total = sum(bet_nn_spf.values())
