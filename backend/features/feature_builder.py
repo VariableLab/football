@@ -28,7 +28,7 @@ from utils.logger import get_logger
 logger = get_logger("feature_builder")
 
 # ─── 特征维度 ───
-FEATURE_DIM = 48
+FEATURE_DIM = 50
 FEATURE_NAMES = [
     # A. Elo (8)
     "elo_diff", "elo_win", "elo_draw", "elo_away",
@@ -45,9 +45,10 @@ FEATURE_NAMES = [
     "form_win", "form_draw", "momentum", "stability", "streak_norm",
     # F. H2H (6)
     "h2h_total_norm", "h2h_win", "h2h_draw", "h2h_recent", "h2h_goals_norm", "first_meeting",
-    # G. Meta (10)
+    # G. Meta (12)
     "rest_advantage", "is_knockout", "is_derby", "ref_severity", "ref_home_bias",
     "home_rest", "away_rest", "is_late_season", "pressure_index", "is_prime_time",
+    "home_first_half_goals_ratio", "away_first_half_goals_ratio",
 ]
 
 
@@ -178,6 +179,8 @@ class FeatureBuilder:
             1.0 if getattr(ctx, "is_late_season", False) else 0.0,
             pressure,
             0.0, # is_prime_time
+            float(getattr(ctx.home_team, "first_half_goals_ratio", 0.45)),
+            float(getattr(ctx.away_team, "first_half_goals_ratio", 0.45)),
         ])
 
         result = np.array([float(x) for x in feats], dtype=np.float32)

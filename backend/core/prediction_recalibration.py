@@ -9,10 +9,48 @@ from typing import Dict
 
 
 def recalibrate_scores(raw_score: Dict[str, float], fused_spf: Dict[str, float], use_heavy_tail: bool = False) -> Dict[str, float]:
-    """使用融合 SPF 概率对比分预测进行贝叶斯校准"""
+    """使用融合 SPF 概率对比分预测进行贝叶斯校准，并对大比分/低比分进行过度分散(Overdispersion)修正"""
+    adjusted_raw = {}
+    
+    # 1. 如果开启了重尾修正，对比分概率应用过度分散调整 (Negative Binomial 效应)
+    if use_heavy_tail:
+        # 计算粗略的期望总进球数
+        total_ev = 0.0
+        for score_key, prob in raw_score.items():
+            try:
+                parts = score_key.split(':')
+                h = int(parts[0].replace('+', ''))
+                a = int(parts[1].replace('+', ''))
+                total_ev += (h + a) * prob
+            except Exception:
+                total_ev += 2.5 * prob
+
+        for score_key, prob in raw_score.items():
+            try:
+                parts = score_key.split(':')
+                h = int(parts[0].replace('+', ''))
+                a = int(parts[1].replace('+', ''))
+                g = h + a
+                
+                # 足球进球过度分散修正因子: 
+                # Poisson 通常会高估 2 球，低估 0-1 球以及 4+ 球
+                if g <= 1:
+                    factor = 1.15  # 增加零/低进球概率
+                elif g == 2:
+                    factor = 0.88  # 压低 2 球概率
+                elif g >= 4:
+                    factor = 1.0 + 0.08 * ((g - 3.0) ** 1.5)  # 增强大比分厚尾
+                else:
+                    factor = 1.0
+                adjusted_raw[score_key] = prob * factor
+            except Exception:
+                adjusted_raw[score_key] = prob
+    else:
+        adjusted_raw = raw_score.copy()
+
     calibrated = {}
     by_outcome = {"home": {}, "draw": {}, "away": {}}
-    for score_key, prob in raw_score.items():
+    for score_key, prob in adjusted_raw.items():
         try:
             parts = score_key.split(':')
             h = int(parts[0].replace('+', ''))
@@ -36,7 +74,7 @@ def recalibrate_scores(raw_score: Dict[str, float], fused_spf: Dict[str, float],
 
     total = sum(calibrated.values())
     if total > 0:
-        calibrated = {k: round(v / total, 4) for k, v in calibrated.items() if (v / total) >= 0.005}
+        calibrated = {k: round(v / total, 4) for k, v in calibrated.items() if (v / total) >= 0.002}
     return calibrated
 
 

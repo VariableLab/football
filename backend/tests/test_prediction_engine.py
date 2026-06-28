@@ -35,7 +35,7 @@ from core.constants import (
     WEATHER_PENALTY,
 )
 TACTICAL_MATRIX = TacticalModel.TACTICAL_MATRIX
-from features.feature_builder import FeatureBuilder
+from features.feature_builder import FeatureBuilder, FEATURE_DIM
 
 
 # ─── Fixtures ───
@@ -406,23 +406,23 @@ class TestFeatureBuilder:
 
     def test_input_dim_with_interactions(self):
         builder = FeatureBuilder(use_interactions=True)
-        assert builder.get_input_dim() == 48 + 5
+        assert builder.get_input_dim() == FEATURE_DIM + 5
 
     def test_input_dim_without_interactions(self):
         builder = FeatureBuilder(use_interactions=False)
-        assert builder.get_input_dim() == 48
+        assert builder.get_input_dim() == FEATURE_DIM
 
     def test_scaler_fit_transform(self):
         builder = FeatureBuilder()
-        matrix = np.random.randn(100, 48)
+        matrix = np.random.randn(100, FEATURE_DIM)
         builder.fit_scaler(matrix)
         transformed = builder.transform(matrix[0])
         assert isinstance(transformed, np.ndarray)
-        assert len(transformed) == 48
+        assert len(transformed) == FEATURE_DIM
 
     def test_scaler_no_mean_returns_input(self):
         builder = FeatureBuilder()
-        feats = np.ones(48)
+        feats = np.ones(FEATURE_DIM)
         result = builder.transform(feats)
         np.testing.assert_array_almost_equal(result, feats)
 
