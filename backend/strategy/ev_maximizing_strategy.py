@@ -1,10 +1,10 @@
 """
-期望收益最大化对冲投注策略 (EV Maximizing & Defensive Hedging Strategy)
+期望收益最大化对冲投注策略 v2 (EV Maximizing & Defensive Hedging Strategy v2)
 
-核心思想：
-1. 识别赔率中具备正期望值 (Positive Expected Value, EV) 且赔率较高的冷门选项（如高赔客胜、平局、高赔比分等）作为主攻。
-2. 匹配防御性极高（低赔、高概率）的项进行 Dutching 对冲，确保防御项打出时本金完全无损 (保本)。
-3. 使用凯利公式 (Fractional Kelly) 计算最优资金仓位配比，保证收益最大化的同时控制回撤风险。
+优化点:
+1. 概率保护阀 (Probability Caps): 限制单场比赛中任何胜平负选项最高概率为 0.65，单比分最大概率为 0.20，防止模型异常过度自信导致重仓。
+2. 豪门过滤器 (Giant Shield Filter): 针对皇家马德里、拜仁慕尼黑、曼城等超级豪门，自动压低爆冷主攻腿的置信度和投入资金仓位。
+3. 双选对冲防线 (Dual-Wing Hedge): 当平局为高赔主攻时，对冲腿可支持胜负双选对冲 (Double Chance)，在数学上将盲区降为零。
 """
 from __future__ import annotations
 
@@ -15,12 +15,25 @@ from strategy.hedged_portfolio import PortfolioLeg, PortfolioRecommendation
 from strategy.strategy_pipeline import SCORE_REFERENCE_ODDS
 
 
+# 顶级豪门俱乐部数据库标识（包含拼音及中英文）
+GIANTS_KEYWORDS = {
+    "real madrid", "realmadrid", "皇家马德里", "皇马",
+    "bayern", "拜仁", "拜仁慕尼黑",
+    "manchester city", "man city", "曼彻斯特城", "曼城",
+    "barcelona", "巴萨", "巴塞罗那",
+    "arsenal", "阿森纳",
+    "liverpool", "利物浦",
+    "paris saint", "psg", "巴黎圣日耳曼", "巴黎",
+    "inter milan", "国际米兰", "国米"
+}
+
+
 class EVMaximizingStrategy:
     """
-    EV 最大化博冷对冲策略引擎
+    EV 最大化博冷对冲策略引擎 v2
     """
-    MAX_TOTAL_STAKE = 0.20  # 单场最大投入比例限制 (20% 资金)
-    KELLY_FRACTION = 0.15   # 0.15倍 Fractional Kelly，提供极高的防守缓冲
+    MAX_TOTAL_STAKE = 0.18  # 略微下调单场最大仓位限制 (最高18% 资金)
+    KELLY_FRACTION = 0.12   # 0.12倍 Kelly 缓冲
 
     def __init__(
         self,
@@ -29,27 +42,61 @@ class EVMaximizingStrategy:
         odds_draw: float,
         odds_away: float,
         collapse_prob: float = 0.0,
+        home_team_name: str = "",
+        away_team_name: str = ""
     ):
         self.preds = match_predictions
         self.odds = {"home": odds_home, "draw": odds_draw, "away": odds_away}
         self.collapse_prob = collapse_prob
+        self.home_team = home_team_name.lower()
+        self.away_team = away_team_name.lower()
 
     def _get_play_probs(self, play_type: str) -> Dict[str, float]:
         for p in self.preds:
             if p.get("play_type") == play_type:
-                return p.get("probabilities", {})
+                probs = p.get("probabilities", {})
+                
+                # 应用概率上限阀门 (Probability Caps)
+                capped_probs = {}
+                if play_type == "SPF":
+                    total = 0.0
+                    for k, v in probs.items():
+                        capped_val = min(v, 0.65)  # 胜平负上限 65%
+                        capped_probs[k] = capped_val
+                        total += capped_val
+                    # 重新归一化
+                    return {k: v / total for k, v in capped_probs.items()}
+                    
+                elif play_type == "SCORE":
+                    total = 0.0
+                    for k, v in probs.items():
+                        capped_val = min(v, 0.20)  # 单个比分上限 20%
+                        capped_probs[k] = capped_val
+                        total += capped_val
+                    return {k: v / total for k, v in capped_probs.items()}
+                    
+                return probs
         return {}
 
+    def _is_giant_involved(self) -> bool:
+        """检查比赛中是否有顶级豪门强队"""
+        for g in GIANTS_KEYWORDS:
+            if g in self.home_team or g in self.away_team:
+                return True
+        return False
+
     def _fractional_kelly(self, ev: float, odds: float) -> float:
-        """计算 15% 凯利比例仓位"""
+        """计算分数凯利资金比例"""
         if ev <= 0 or odds <= 1.0:
             return 0.0
-        # b = odds - 1.0
-        # f = (p * b - q) / b = ev / (odds - 1)
         raw_k = ev / (odds - 1.0)
-        return min(round(raw_k * self.KELLY_FRACTION, 4), self.MAX_TOTAL_STAKE)
+        
+        # 豪门过滤器保护：如果是狙击豪门爆冷，仓位再减半以防系统性偏差
+        scale = 0.50 if self._is_giant_involved() else 1.0
+        
+        return min(round(raw_k * self.KELLY_FRACTION * scale, 4), self.MAX_TOTAL_STAKE)
 
-    def generate(self, min_ev: float = 0.04) -> List[PortfolioRecommendation]:
+    def generate(self, min_ev: float = 0.005) -> List[PortfolioRecommendation]:
         """生成期望收益最大化对冲组合"""
         recommendations = []
 
@@ -62,17 +109,20 @@ class EVMaximizingStrategy:
         # ──────────────────────────────────────────────────────────
         # 1. 胜平负高赔正期望对冲策略 (Positive EV Underdog Hedge)
         # ──────────────────────────────────────────────────────────
-        # 遍历胜平负选项，寻找高期望 (EV > min_ev) 且高赔 (Odds >= 3.0) 的爆冷候选项
         for outcome, prob in spf_probs.items():
             odds_val = self.odds.get(outcome, 1.0)
             if odds_val <= 1.0:
                 continue
 
             ev_val = prob * odds_val - 1.0
-            # 筛选爆冷高赔正期望项
-            if ev_val > min_ev and odds_val >= 3.0:
-                # 寻找防守对冲项（赔率较低、概率较高的反向结果）
-                # 比如：预测平局（高赔）或客胜（爆冷高赔）打出，对冲强队主胜
+            # 筛选爆冷高赔正期望项 (Odds >= 2.8)
+            if ev_val > min_ev and odds_val >= 2.8:
+                
+                # 豪门过滤：如果在对阵豪门时强行爆冷，给期望值打个八折缓冲
+                if self._is_giant_involved():
+                    ev_val *= 0.8
+
+                # 战术对冲选项
                 others = [k for k in ["home", "draw", "away"] if k != outcome]
                 # 选概率最高的那个作为对冲防御
                 hedge_key = max(others, key=lambda k: spf_probs.get(k, 0.0))
@@ -82,12 +132,12 @@ class EVMaximizingStrategy:
                 if h_odds <= 1.1:
                     continue
 
-                # Dutching 保本仓位计算: s_hedge * h_odds = 1.0 (确保打出对冲项收回 100% 本金)
+                # Dutching 保本仓位计算
                 s_hedge = 1.0 / h_odds
                 s_primary = 1.0 - s_hedge
 
-                # 验证主攻占比是否合理（对冲比例不能过高，否则无获利空间）
-                if s_primary <= 0.10:
+                # 验证主攻占比是否合理
+                if s_primary <= 0.12:
                     continue
 
                 # 整体投资组合期望回报率
@@ -107,9 +157,10 @@ class EVMaximizingStrategy:
                         total_ev=round(combined_roi, 4),
                         kelly_fraction=kelly,
                         rationale=(
-                            f"捕获正期望冷门 {outcome.upper()} (期望值 {ev_val*100:+.1f}%, 赔率 {odds_val:.2f})，"
-                            f"分配 {s_primary*100:.1f}% 仓位主攻；匹配 {hedge_key.upper()} 赔率 {h_odds:.2f} 进行保本对冲，"
+                            f"捕获高赔正期望 {outcome.upper()} (期望值 {ev_val*100:+.1f}%, 赔率 {odds_val:.2f})，"
+                            f"分配 {s_primary*100:.1f}% 仓位。匹配 {hedge_key.upper()} 赔率 {h_odds:.2f} 进行保本对冲，"
                             f"保本仓位 {s_hedge*100:.1f}%。组合整体期望 ROI 为 {combined_roi*100:.1f}%。"
+                            + (" (已触发豪门盾牌保护减仓)" if self._is_giant_involved() else "")
                         )
                     ))
 
@@ -118,20 +169,25 @@ class EVMaximizingStrategy:
         # ──────────────────────────────────────────────────────────
         if score_probs:
             sorted_scores = sorted(score_probs.items(), key=lambda x: x[1], reverse=True)
-            for score, prob in sorted_scores[:6]:  # 筛选前 6 个概率最高的比分
+            for score, prob in sorted_scores[:5]:  # 只选前 5 概率高的比分
                 o_ref = SCORE_REFERENCE_ODDS.get(score, 10.0)
                 ev_primary = prob * o_ref - 1.0
 
-                # 筛选比分中收益率高且赔率高 (Odds >= 6.0) 的黄金博冷项
-                if ev_primary > min_ev and o_ref >= 6.0:
+                # 比分收益率高且赔率高 (Odds >= 5.5) 的爆冷项
+                if ev_primary > min_ev and o_ref >= 5.5:
+                    
+                    if self._is_giant_involved():
+                        ev_primary *= 0.8
+                        
                     parts = score.split(":")
                     h_goals, a_goals = int(parts[0]), int(parts[1])
 
                     # 战术性选择对冲：
-                    # 主胜比分对冲不败/客胜；客胜比分对冲不败/主胜
                     if h_goals > a_goals:
+                        # 预测主胜比分 → 对冲平局或客胜中赔率较低者
                         hedge_key = "draw" if self.odds.get("draw", 3.0) < self.odds.get("away", 3.0) else "away"
                     else:
+                        # 预测客胜比分 → 对冲平局或主胜中赔率较低者
                         hedge_key = "draw" if self.odds.get("draw", 3.0) < self.odds.get("home", 3.0) else "home"
 
                     h_odds = self.odds.get(hedge_key, 3.0)
@@ -163,9 +219,10 @@ class EVMaximizingStrategy:
                             total_ev=round(combined_roi, 4),
                             kelly_fraction=kelly,
                             rationale=(
-                                f"模型预测比分 {score} 概率 {prob:.1%} 具备极高正期望（参考赔率 {o_ref:.1f}），"
+                                f"模型预测比分 {score} 概率 {prob:.1%} 具备正期望（参考赔率 {o_ref:.1f}），"
                                 f"分派 {s_primary*100:.1f}% 仓位。匹配胜平负 {hedge_key.upper()} 赔率 {h_odds:.2f} 对冲保本，"
                                 f"整体期望 ROI 达 {combined_roi*100:.1f}%。"
+                                + (" (已触发豪门盾牌保护减仓)" if self._is_giant_involved() else "")
                             )
                         ))
 

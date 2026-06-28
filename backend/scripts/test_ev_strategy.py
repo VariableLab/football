@@ -58,7 +58,9 @@ def run_simulation(limit=200):
                 odds_home=m.closing_odds_home,
                 odds_draw=m.closing_odds_draw,
                 odds_away=m.closing_odds_away,
-                collapse_prob=collapse_prob
+                collapse_prob=collapse_prob,
+                home_team_name=m.home_team.name if m.home_team else "",
+                away_team_name=m.away_team.name if m.away_team else ""
             )
             
             recommendations = strategy.generate(min_ev=0.005)
@@ -80,28 +82,31 @@ def run_simulation(limit=200):
                 kelly_pct = 0.02  # 默认最小仓位
 
             # 模拟执行
-            actual = m.actual_outcome  # "home", "draw", "away"
+            actual = m.actual_outcome  # "home", "draw", "away", "abandoned"
             actual_score = f"{m.actual_home_goals}:{m.actual_away_goals}"
 
-            net_payout = 0.0
-            # 仓位占比在各个 leg 中进行了 dutching 分摊
-            for leg in best_portfolio.legs:
-                stake = kelly_pct * leg.stake_pct
-                total_stake += stake
+            if actual == "abandoned":
+                net_profit = 0.0
+                total_stake += kelly_pct
+            else:
+                net_payout = 0.0
+                # 仓位占比在各个 leg 中进行了 dutching 分摊
+                for leg in best_portfolio.legs:
+                    stake = kelly_pct * leg.stake_pct
+                    total_stake += stake
 
-                # 判断该 leg 是否打出
-                is_hit = False
-                if leg.play == "SPF":
-                    is_hit = (leg.selection == actual)
-                elif leg.play == "SCORE":
-                    is_hit = (leg.selection == actual_score)
+                    # 判断该 leg 是否打出
+                    is_hit = False
+                    if leg.play == "SPF":
+                        is_hit = (leg.selection == actual)
+                    elif leg.play == "SCORE":
+                        is_hit = (leg.selection == actual_score)
 
-                if is_hit:
-                    payout = stake * leg.odds
-                    net_payout += payout
+                    if is_hit:
+                        payout = stake * leg.odds
+                        net_payout += payout
 
-            # 减去该场下注的总本金
-            net_profit = net_payout - kelly_pct
+                net_profit = net_payout - kelly_pct
             total_net_profit += net_profit
             
             if net_profit > 0:

@@ -350,6 +350,8 @@ def get_strategy(
             odds_draw=match.odds_draw or 3.2,
             odds_away=match.odds_away or 3.5,
             collapse_prob=collapse_prob,
+            home_team_name=match.home_team.name if match.home_team else "",
+            away_team_name=match.away_team.name if match.away_team else "",
         )
         ev_ports = ev_gen.generate(min_ev=0.03)
         
