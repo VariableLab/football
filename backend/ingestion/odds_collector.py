@@ -3,7 +3,7 @@
 
 所有数据源类已拆分至 ingestion/sources/ 目录。
 此模块保持原有导入路径兼容：
-  from odds_collector import (
+  from ingestion.odds_collector import (
       OddsCollector, OddsAnomaly, OddsApiBudget,
       collect_odds_tier1_primary, collect_odds_tier2_premium,
       collect_odds_tier3_focus, collect_closing_odds_for_upcoming,

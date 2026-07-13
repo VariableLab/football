@@ -8,19 +8,19 @@ logger = get_logger("scheduler.health")
 
 def health_check_wrapper():
     """自检+自修引擎：每10分钟"""
-    from health_daemon import health_check_job
+    from monitor.health_daemon import health_check_job
     health_check_job()
 
 
 def strategy_monitor_wrapper():
     """策略漂移监控：每天 22:00"""
-    from strategy_monitor import strategy_monitor_job
+    from monitor.strategy_monitor import strategy_monitor_job
     strategy_monitor_job()
 
 
 def injury_sync_wrapper():
     """伤停数据同步：每天 08:00"""
-    from injury_sync import InjurySync
+    from ingestion.injury_sync import InjurySync
     from monitor.scheduler.jobs import DBSession
 
     with DBSession() as db:

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from database.models import get_db
-from schemas import HealthCheck
+from api.schemas import HealthCheck
 
 router = APIRouter(prefix="/api", tags=["System"])
 
@@ -59,11 +59,11 @@ def health(db: Session = Depends(get_db)):
 @router.get("/health/detailed")
 def health_detailed():
     """详细健康报告"""
-    from health_daemon import get_latest_health
+    from monitor.health_daemon import get_latest_health
     return get_latest_health()
 
 @router.get("/audit/reports")
 def audit_reports(n: int = 7):
     """获取最近 N 天的模型复盘报告"""
-    from model_audit import ModelAuditor
+    from monitor.model_audit import ModelAuditor
     return {"reports": ModelAuditor.get_latest_reports(n)}

@@ -25,7 +25,6 @@ import time
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy.orm import Session
 from database.models import SessionLocal, Team, Match, MatchStatus

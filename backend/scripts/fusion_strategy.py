@@ -12,8 +12,8 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
-from edge_calculator import EdgeCalculator
-# from bet_nn import BetNetPredictor, extract_features
+from strategy.edge_calculator import EdgeCalculator
+# from core.bet_nn import BetNetPredictor, extract_features
 from utils.logger import get_logger
 
 logger = get_logger("fusion_strategy")

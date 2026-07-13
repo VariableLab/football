@@ -5,7 +5,7 @@
 检测蒸汽盘（短时大幅变动）和尾盘资金（赛前最后变动）。
 
 用法:
-from odds_tracker import OddsTracker
+from ingestion.odds_tracker import OddsTracker
 tracker = OddsTracker(db_session)
 report = tracker.analyze_match(match_id=42)
 print(report.opening_odds, report.drift_home, report.steam_moves)

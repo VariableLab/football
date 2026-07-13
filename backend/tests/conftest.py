@@ -1,9 +1,3 @@
-import sys
-import os
-_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-for d in ["api", "core", "features", "ingestion", "database", "strategy", "monitor", "utils", "api/routers"]:
-    sys.path.append(os.path.join(_root, d))
-
 """Pytest fixtures for WC Analytics backend tests."""
 import os
 import pytest
@@ -43,7 +37,7 @@ def auth_token(client):
         return resp.json().get("access_token")
     # Last resort: create via direct DB
     from database.models import SessionLocal, User
-    from auth import get_password_hash, create_access_token
+    from api.auth import get_password_hash, create_access_token
     session = SessionLocal()
     try:
         u = session.query(User).filter(User.email == "test_fixed@example.com").first()
@@ -52,7 +46,7 @@ def auth_token(client):
             session.add(u)
             session.commit()
             session.refresh(u)
-        token = create_access_token(data={"sub": u.email})
+        token = create_access_token(data={"sub": str(u.id)})
         return token
     finally:
         session.close()

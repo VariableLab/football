@@ -14,17 +14,12 @@ from datetime import datetime, timezone
 from typing import Dict
 
 # 确保 backend 及其子包在 sys.path 中
-_current_dir = os.path.dirname(os.path.abspath(__file__))
-_backend_root = os.path.dirname(_current_dir)
 for d in ["api", "core", "features", "ingestion", "database", "strategy", "monitor", "utils", "scripts"]:
     _path = os.path.join(_backend_root, d)
     if _path not in sys.path:
-        sys.path.append(_path)
-if _backend_root not in sys.path:
-    sys.path.append(_backend_root)
-
+sys.path.insert(0, _backend_root)
 from database.models import SessionLocal, Match, MatchStatus, Prediction, PlayType
-from prediction_engine import PredictionEngine, build_context_from_match
+from core.prediction_engine import PredictionEngine, build_context_from_match
 from utils.logger import get_logger
 
 logger = get_logger("shadow_audit")

@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from database.models import get_db, Team
-from schemas import TeamListResponse, ArbitrageResponse
-from hedge_engine import HedgeEngine
+from api.schemas import TeamListResponse, ArbitrageResponse
+from core.hedge_engine import HedgeEngine
 
 router = APIRouter(prefix="/api", tags=["Public"])
 

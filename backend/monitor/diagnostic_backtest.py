@@ -4,13 +4,10 @@ from datetime import datetime, timedelta, timezone
 
 # Ensure we can import from backend and all subfolders
 _cwd = os.getcwd()
-_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if not os.path.exists(os.path.join(_root, 'database')):
     _root = os.path.join(_cwd, 'backend')
 
 for d in ["api", "core", "features", "ingestion", "database", "strategy", "monitor", "utils", "api/routers"]:
-    sys.path.append(os.path.join(_root, d))
-sys.path.append(_root)
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -49,7 +46,7 @@ def run_diagnostic():
         pred_counts = {"home": 0, "draw": 0, "away": 0}
         conf_sums = {"home": 0.0, "draw": 0.0, "away": 0.0}
 
-        from prediction_engine import PredictionEngine, build_context_from_match
+        from core.prediction_engine import PredictionEngine, build_context_from_match
         engine = PredictionEngine()
         high_edge_mistakes = []
 

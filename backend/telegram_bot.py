@@ -4,8 +4,6 @@ import sys
 from pathlib import Path
 
 # 设置路径以引入 backend 模块
-_current_dir = Path(__file__).resolve().parent
-sys.path.append(str(_current_dir))
 
 from database.config import get_settings
 from database.models import SessionLocal

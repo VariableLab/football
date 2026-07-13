@@ -14,9 +14,7 @@ import httpx
 from datetime import datetime, timedelta, timezone
 
 # 确保能导入 backend 下的模块
-_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _root not in sys.path:
-    sys.path.append(_root)
 
 from database.models import SessionLocal, Match, Team, MatchStatus
 from database.config import get_settings

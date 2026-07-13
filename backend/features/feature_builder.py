@@ -1,62 +1,42 @@
 """
 特征拼接器 — FeatureBuilder
 
-将所有 Layer 1 子模型输出拼接为一个 38 维特征向量，
-供 Layer 2 逻辑回归融合使用。
+将 Layer 1 子模型输出拼接为权威特征向量，供 LR 融合使用。
 
-特征清单 (38 维):
-
-A. Elo (7维):    elo_diff, elo_win, elo_draw, elo_away, heavy_fav, heavy_udog, elo_tier_diff
-B. Poisson (7维): lambda_home, lambda_away, lambda_diff, poisson_win, poisson_draw, poisson_away, goal_exp
-C. Players (4维): home_avail, away_avail, avail_diff, injury_impact
-D. Market (6维):  market_win, market_draw, market_away, overround, max_odds_move, source_count
-E. Form (5维):    form_win, form_draw, momentum, stability, streak_norm
-F. H2H (6维):     h2h_total_norm, h2h_win, h2h_draw, h2h_recent, h2h_goals_norm, first_meeting
-G. Meta (3维):    rest_advantage, is_knockout, is_derby
-
-交互特征 (自动生成 ~10 维):
-  elo_diff × is_knockout
-  market_win × source_count
-  ...
+维度 (单一真相源: features.schema):
+  基线 48 + 交互 5 = 53 (use_interactions=True)
 """
+from __future__ import annotations
+
 from typing import Dict, Optional
 
 import numpy as np
 
+from features.schema import (
+    BASE_FEATURE_DIM,
+    BASE_FEATURE_NAMES,
+    FEATURE_DIM,
+    FEATURE_NAMES,
+    FULL_FEATURE_DIM,
+    INTERACTION_DIM,
+)
 from utils.logger import get_logger
 
 logger = get_logger("feature_builder")
 
-# ─── 特征维度 ───
-FEATURE_DIM = 50
-FEATURE_NAMES = [
-    # A. Elo (8)
-    "elo_diff", "elo_win", "elo_draw", "elo_away",
-    "is_heavy_fav", "is_heavy_udog", "elo_tier_diff", "elo_drift",
-    # B. Poisson (8)
-    "lambda_home", "lambda_away", "lambda_diff",
-    "poisson_win", "poisson_draw", "poisson_away", "goal_exp", "relative_goals",
-    # C. Players (4)
-    "home_avail", "away_avail", "avail_diff", "injury_impact",
-    # D. Market (7)
-    "market_win", "market_draw", "market_away",
-    "overround", "max_odds_move", "source_count", "market_volatility",
-    # E. Form (5)
-    "form_win", "form_draw", "momentum", "stability", "streak_norm",
-    # F. H2H (6)
-    "h2h_total_norm", "h2h_win", "h2h_draw", "h2h_recent", "h2h_goals_norm", "first_meeting",
-    # G. Meta (12)
-    "rest_advantage", "is_knockout", "is_derby", "ref_severity", "ref_home_bias",
-    "home_rest", "away_rest", "is_late_season", "pressure_index", "is_prime_time",
-    "home_first_half_goals_ratio", "away_first_half_goals_ratio",
+# 再导出，保持 `from features.feature_builder import FEATURE_DIM` 兼容
+__all__ = [
+    "FeatureBuilder",
+    "FEATURE_DIM",
+    "FEATURE_NAMES",
+    "BASE_FEATURE_DIM",
+    "FULL_FEATURE_DIM",
+    "INTERACTION_DIM",
 ]
 
 
 class FeatureBuilder:
-    """
-    高精度特征拼接器。
-    集成 Karpathy 的第一性原理：减少冗余特征，强化核心博弈信号。
-    """
+    """高精度特征拼接器 — 与 schema 严格对齐。"""
 
     def __init__(self, use_interactions: bool = True):
         self.use_interactions = use_interactions
@@ -74,7 +54,9 @@ class FeatureBuilder:
         ctx,
     ) -> np.ndarray:
         """
-        拼接 48 维高精度特征向量。
+        拼接特征向量。
+        - use_interactions=False → shape (48,)
+        - use_interactions=True  → shape (53,)
         """
         feats = []
 
@@ -82,9 +64,8 @@ class FeatureBuilder:
         elo_home = getattr(ctx.home_team, "elo", 1500)
         elo_away = getattr(ctx.away_team, "elo", 1500)
         elo_diff = (elo_home - elo_away) / 400.0
-        # 💡 新增：Elo 漂移率 (假设 ctx 包含 elo_drift，不包含则默认为0)
         elo_drift = getattr(ctx, "elo_drift", 0.0)
-        
+
         feats.extend([
             np.clip(elo_diff, -2.0, 2.0),
             elo_probs.get("home", 0.33),
@@ -100,7 +81,6 @@ class FeatureBuilder:
         lam_h = poisson_result.get("lambda_home", 1.2)
         lam_a = poisson_result.get("lambda_away", 1.0)
         poisson_spf = poisson_result.get("spf", {})
-        # 💡 新增：相对进球比 (Scored/Conceded Ratio)
         rel_goals = (lam_h / max(lam_a, 0.1)) / 5.0
 
         feats.extend([
@@ -115,10 +95,22 @@ class FeatureBuilder:
         ])
 
         # ─── C. Players (4) ───
-        h_avail = getattr(ctx.home_team, "key_players_available", 11) / max(getattr(ctx.home_team, "key_players_total", 11), 1)
-        a_avail = getattr(ctx.away_team, "key_players_available", 11) / max(getattr(ctx.away_team, "key_players_total", 11), 1)
-        h_inj = len((getattr(ctx.home_team, "key_injuries", "") or "").split(",")) if getattr(ctx.home_team, "key_injuries", "") else 0
-        a_inj = len((getattr(ctx.away_team, "key_injuries", "") or "").split(",")) if getattr(ctx.away_team, "key_injuries", "") else 0
+        h_avail = getattr(ctx.home_team, "key_players_available", 11) / max(
+            getattr(ctx.home_team, "key_players_total", 11), 1
+        )
+        a_avail = getattr(ctx.away_team, "key_players_available", 11) / max(
+            getattr(ctx.away_team, "key_players_total", 11), 1
+        )
+        h_inj = (
+            len((getattr(ctx.home_team, "key_injuries", "") or "").split(","))
+            if getattr(ctx.home_team, "key_injuries", "")
+            else 0
+        )
+        a_inj = (
+            len((getattr(ctx.away_team, "key_injuries", "") or "").split(","))
+            if getattr(ctx.away_team, "key_injuries", "")
+            else 0
+        )
         feats.extend([
             h_avail,
             a_avail,
@@ -128,10 +120,8 @@ class FeatureBuilder:
 
         # ─── D. Market (7) ───
         if market_probs:
-            # 💡 新增：市场热值 (Volatility)
             m_move = getattr(ctx, "max_odds_move", 0.0)
             vol = abs(m_move) / 0.15
-            
             feats.extend([
                 market_probs.get("home", 0.33),
                 market_probs.get("draw", 0.33),
@@ -160,82 +150,68 @@ class FeatureBuilder:
         rest_h = getattr(ctx.home_team, "rest_days", 5)
         rest_a = getattr(ctx.away_team, "rest_days", 5)
         ref = getattr(ctx, "referee", None)
-        
-        ref_severity = (ref.yellow_cards_avg - 4.0) / 4.0 if ref else 0.0
+
+        ref_cardinality = (ref.yellow_cards_avg - 4.0) / 4.0 if ref else 0.0
         ref_home_bias = (ref.home_win_bias - 1.0) if ref else 0.0
-        
-        # 💡 新增：关键场次压力指数
+
         is_knockout = 1.0 if getattr(ctx, "is_knockout", False) else 0.0
         pressure = 0.8 if is_knockout else 0.2
-        
+
         feats.extend([
             np.clip((rest_h - rest_a) / 7.0, -1.0, 1.0),
             is_knockout,
-            0.0, # is_derby
-            ref_severity,
+            0.0,  # is_derby
+            ref_cardinality,
             ref_home_bias,
             np.clip(rest_h / 7.0, 0, 2.0),
             np.clip(rest_a / 7.0, 0, 2.0),
             1.0 if getattr(ctx, "is_late_season", False) else 0.0,
             pressure,
-            0.0, # is_prime_time
-            float(getattr(ctx.home_team, "first_half_goals_ratio", 0.45)),
-            float(getattr(ctx.away_team, "first_half_goals_ratio", 0.45)),
+            0.0,  # is_prime_time
         ])
+
+        if len(feats) != BASE_FEATURE_DIM:
+            raise ValueError(
+                f"FeatureBuilder base dim mismatch: got {len(feats)}, "
+                f"expected {BASE_FEATURE_DIM}. Schema drift detected."
+            )
 
         result = np.array([float(x) for x in feats], dtype=np.float32)
 
         if self.use_interactions:
             interactions = self._compute_interactions(result)
+            if len(interactions) != INTERACTION_DIM:
+                raise ValueError(
+                    f"Interaction dim mismatch: got {len(interactions)}, "
+                    f"expected {INTERACTION_DIM}"
+                )
             result = np.concatenate([result, interactions])
 
         return result
 
     def _compute_interactions(self, feats: np.ndarray) -> np.ndarray:
-        """
-        计算交互特征。
-        当前选取 5 个高价值交互项。
-        """
-        inter = []
-        idx = {name: i for i, name in enumerate(FEATURE_NAMES)}
-
-        # 1. elo_diff × is_knockout
-        if "elo_diff" in idx and "is_knockout" in idx:
-            inter.append(feats[idx["elo_diff"]] * feats[idx["is_knockout"]])
-
-        # 2. poisson_win × market_win (模型一致性)
-        if "poisson_win" in idx and "market_win" in idx:
-            inter.append(abs(feats[idx["poisson_win"]] - feats[idx["market_win"]]))
-
-        # 3. momentum × rest_advantage
-        if "momentum" in idx and "rest_advantage" in idx:
-            inter.append(feats[idx["momentum"]] * feats[idx["rest_advantage"]])
-
-        # 4. market_win × source_count
-        if "market_win" in idx and "source_count" in idx:
-            inter.append(feats[idx["market_win"]] * feats[idx["source_count"]])
-
-        # 5. elo_diff × form_win
-        if "elo_diff" in idx and "form_win" in idx:
-            inter.append(feats[idx["elo_diff"]] * feats[idx["form_win"]])
-
+        """5 个高价值交互项 — 顺序与 schema.INTERACTION_FEATURE_NAMES 一致。"""
+        idx = {name: i for i, name in enumerate(BASE_FEATURE_NAMES)}
+        inter = [
+            feats[idx["elo_diff"]] * feats[idx["is_knockout"]],
+            abs(feats[idx["poisson_win"]] - feats[idx["market_win"]]),
+            feats[idx["momentum"]] * feats[idx["rest_advantage"]],
+            feats[idx["market_win"]] * feats[idx["source_count"]],
+            feats[idx["elo_diff"]] * feats[idx["form_win"]],
+        ]
         return np.array(inter, dtype=np.float32)
 
     def get_input_dim(self) -> int:
-        """返回特征向量总维度（含交互特征）"""
-        base = FEATURE_DIM
         if self.use_interactions:
-            base += 5  # 5 个交互特征
-        return base
+            return FULL_FEATURE_DIM
+        return BASE_FEATURE_DIM
 
     def fit_scaler(self, feature_matrix: np.ndarray) -> None:
-        """在训练集上拟合标准化参数"""
         self._feature_mean = np.mean(feature_matrix, axis=0)
         self._feature_std = np.std(feature_matrix, axis=0)
-        self._feature_std[self._feature_std == 0] = 1.0  # 防止除零
+        self._feature_std[self._feature_std == 0] = 1.0
 
     def transform(self, features: np.ndarray) -> np.ndarray:
-        """标准化特征"""
         if self._feature_mean is None:
             return features
         return (features - self._feature_mean) / self._feature_std

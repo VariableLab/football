@@ -2,7 +2,7 @@
 实时验证引擎 — 赛后对比预测 vs 实际结果
 
 用法：
-    from validation_engine import ValidationEngine, MatchValidator
+    from monitor.validation_engine import ValidationEngine, MatchValidator
     
     # 单场比赛验证
     result = MatchValidator.validate_match(db, match_id)

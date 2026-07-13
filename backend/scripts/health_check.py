@@ -42,12 +42,10 @@ from datetime import datetime
 _CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 _BACKEND_ROOT = os.path.dirname(_CURRENT_DIR)
 if _BACKEND_ROOT not in sys.path:
-    sys.path.insert(0, _BACKEND_ROOT)
 # health_daemon 用的是同级模块导入(alert_manager, monitor.xxx)
-# 加上 backend 根的子目录,让 `from alert_manager import ...` 也能工作
+# 加上 backend 根的子目录,让 `from monitor.alert_manager import ...` 也能工作
 _MONITOR_DIR = os.path.join(_BACKEND_ROOT, "monitor")
 if _MONITOR_DIR not in sys.path:
-    sys.path.insert(0, _MONITOR_DIR)
 
 
 def parse_args() -> argparse.Namespace:

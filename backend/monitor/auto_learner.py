@@ -39,7 +39,7 @@ def auto_learn_trigger():
 
 def auto_verify_jingcai():
     from database.models import SessionLocal, JingcaiIssue, JingcaiIssueMatch
-    from jingcai_predictor import record_draw_result, verify_issue
+    from core.jingcai_predictor import record_draw_result, verify_issue
     s = SessionLocal()
     try:
         drawn = s.query(JingcaiIssue).filter(JingcaiIssue.status=='drawn', JingcaiIssue.verification==None).all()

@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wc-analytics-backend"
+version = "0.1.0"
+description = "WC Analytics Football Modeling Backend"
+dependencies = [
+    # Dependencies are managed in requirements.txt
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["api*", "core*", "database*", "features*", "fusion*", "ingestion*", "monitor*", "scripts*", "strategy*", "utils*"]

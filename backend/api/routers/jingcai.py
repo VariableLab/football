@@ -5,7 +5,7 @@ import json
 from datetime import datetime, timedelta
 
 from database.models import get_db, JingcaiIssue, JingcaiIssueMatch, Match, MatchStatus
-from schemas import (
+from api.schemas import (
     JingcaiIssueCreate, JingcaiIssueOut, JingcaiIssueResultIn,
     JingcaiIssueListResponse, JingcaiReportResponse, MatchOut, OptimalComboResponse
 )
@@ -448,6 +448,6 @@ def _build_issue_analysis(issue, matches_report, spf_hits, total, accuracy):
 @router.get("/issues/{issue_id}/optimal-combo", response_model=OptimalComboResponse)
 def get_optimal_combo(issue_id: int, top_n: int = 8, db: Session = Depends(get_db)):
     """获取当期最优串关推荐"""
-    from optimal_combo import compute_optimal_combo
+    from strategy.optimal_combo import compute_optimal_combo
     picks = compute_optimal_combo(db, issue_id, top_n)
     return {"issue_id": issue_id, "picks": picks, "total": len(picks)}

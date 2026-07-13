@@ -3,9 +3,8 @@ import sys
 import os
 
 # Ensure we can import from backend
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from prediction_engine import PredictionEngine, TeamContext, MatchContext
+from core.prediction_engine import PredictionEngine, TeamContext, MatchContext
 
 def test_raw_sqlite():
     db_path = "database.sqlite"

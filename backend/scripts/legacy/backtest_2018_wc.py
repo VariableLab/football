@@ -19,7 +19,7 @@ from typing import List, Tuple, Dict, Any
 from sqlalchemy.orm import Session
 
 from database.models import Team, SessionLocal
-from prediction_engine import (
+from core.prediction_engine import (
     PredictionEngine,
     Backtester,
     MatchContext,
@@ -331,8 +331,8 @@ def run_regression_weights(historical: List[Tuple[MatchContext, str]]):
     """用 scipy.optimize 回归学习最优权重"""
     print("\n  🔬 回归学习最优权重（L-BFGS-B 优化）...")
 
-    from weight_learner import _weights_to_dict
-    from prediction_engine import DEFAULT_WEIGHTS as DW
+    from scripts.weight_learner import _weights_to_dict
+    from core.prediction_engine import DEFAULT_WEIGHTS as DW
     import numpy as np
     from scipy.optimize import minimize
 

@@ -44,8 +44,6 @@ from pathlib import Path
 # ── 路径注入 ──
 _CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 _BACKEND_ROOT = os.path.dirname(_CURRENT_DIR)
-if _BACKEND_ROOT not in sys.path:
-    sys.path.insert(0, _BACKEND_ROOT)
 
 # utils/logs 是 DailyRotatingFileHandler 写日志的位置
 DEFAULT_LOG_DIR = os.path.join(_BACKEND_ROOT, "utils", "logs")

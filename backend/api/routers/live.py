@@ -7,14 +7,14 @@ import os
 
 from database.config import get_settings
 from database.models import get_db
-from schemas import (
+from api.schemas import (
     LiveOddsAllResponse, LiveOddsSingleResponse,
     HedgeAlertsResponse, HedgePositionResponse, HedgeComputeResult,
     StatusResponse
 )
 from utils.logger import get_logger
-from live_odds_feed import LiveOddsFeed, OddsBus, get_odds_bus, live_odds_update_to_dict
-from live_hedge_engine import LiveHedgeEngine
+from ingestion.live_odds_feed import LiveOddsFeed, OddsBus, get_odds_bus, live_odds_update_to_dict
+from core.live_hedge_engine import LiveHedgeEngine
 
 settings = get_settings()
 logger = get_logger("live_router")
@@ -179,8 +179,7 @@ def add_hedge_position(
     global _live_hedge
     if _live_hedge is None:
         _live_hedge = LiveHedgeEngine(bus=get_odds_bus())
-
-    from live_hedge_engine import Position
+    from core.live_hedge_engine import Position
     _live_hedge.add_position(Position(
         match_id=match_id,
         selection=selection,
@@ -199,7 +198,7 @@ def compute_hedge(
 ):
     """计算对冲方案。"""
     engine = LiveHedgeEngine(bus=get_odds_bus())
-    from live_hedge_engine import Position
+    from core.live_hedge_engine import Position
     p = Position(match_id=match_id, selection=selection, odds=odds, stake=stake)
     
     bus = get_odds_bus()

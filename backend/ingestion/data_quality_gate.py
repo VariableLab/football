@@ -125,6 +125,19 @@ class DataQualityGate:
         return findings
 
     @staticmethod
+    def check_extended_features(team_id: int, avg_xg: Optional[float], rest_days: Optional[int], key_injuries: Optional[str], name: str) -> List[QualityFinding]:
+        """扩展特征(xG, 休息日, 伤停)完整性检查"""
+        findings = []
+        if avg_xg is None or avg_xg == 0.0:
+            findings.append(QualityFinding(category="team", severity="warning", description=f"球队 {name}(id={team_id}) 缺少 xG 数据"))
+        if rest_days is None:
+            findings.append(QualityFinding(category="team", severity="info", description=f"球队 {name}(id={team_id}) 缺少 休息日 数据"))
+        if key_injuries is None:
+            findings.append(QualityFinding(category="team", severity="info", description=f"球队 {name}(id={team_id}) 缺少 伤停 数据"))
+        
+        return findings
+
+    @staticmethod
     def audit_all(odds_findings: List, pred_findings: List, team_findings: List) -> Dict[str, int]:
         """汇总审计结果"""
         counts = {"critical": 0, "warning": 0, "info": 0}

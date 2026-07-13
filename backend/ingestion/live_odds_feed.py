@@ -13,7 +13,7 @@
 3. SSE endpoint: FastAPI 推送实时赔率到前端
 
 用法:
-from live_odds_feed import LiveOddsFeed, OddsBus
+from ingestion.live_odds_feed import LiveOddsFeed, OddsBus
 
 # 启动采集
 feed = LiveOddsFeed(db_session)

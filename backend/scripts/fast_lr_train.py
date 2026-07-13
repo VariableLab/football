@@ -5,7 +5,6 @@
     cd backend && PYTHONPATH=. ./venv/bin/python scripts/fast_lr_train.py
 """
 import os, sys, time
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 

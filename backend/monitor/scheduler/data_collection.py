@@ -17,7 +17,7 @@ logger = get_logger("scheduler.data_collection")
 # ────────────────────────────
 def collect_zgzcw_job():
     """从中国足彩网（zgzcw.com）采集百家欧赔。"""
-    from zgzcw_source import collect_zgzcw_odds
+    from ingestion.zgzcw_source import collect_zgzcw_odds
     from monitor.scheduler.jobs import DBSession
 
     with DBSession() as db:
@@ -32,7 +32,7 @@ def collect_zgzcw_job():
 
 def collect_500_job():
     """从 500.com 采集百家欧赔。"""
-    from wubaibai_source import collect_500_odds
+    from ingestion.wubaibai_source import collect_500_odds
     from monitor.scheduler.jobs import DBSession
 
     with DBSession() as db:
@@ -50,7 +50,7 @@ def collect_500_job():
 # ────────────────────────────
 def collect_odds_tier1_job():
     """Tier 1: 免费/基础层 — 每2小时"""
-    from odds_collector import collect_odds_tier1_primary
+    from ingestion.odds_collector import collect_odds_tier1_primary
     from monitor.scheduler.jobs import DBSession
 
     with DBSession() as db:
@@ -63,7 +63,7 @@ def collect_odds_tier1_job():
 
 def collect_odds_tier2_job():
     """Tier 2: 付费全量层 — 每天08:00和20:00"""
-    from odds_collector import collect_odds_tier2_premium
+    from ingestion.odds_collector import collect_odds_tier2_premium
     from monitor.scheduler.jobs import DBSession
 
     with DBSession() as db:
@@ -87,7 +87,7 @@ def collect_odds_tier2_job():
 
 def collect_odds_tier3_job():
     """Tier 3: 焦点加采层 — 每天12:00 + 赛前4h自动"""
-    from odds_collector import collect_odds_tier3_focus
+    from ingestion.odds_collector import collect_odds_tier3_focus
     from monitor.scheduler.jobs import DBSession
 
     with DBSession() as db:
@@ -111,7 +111,7 @@ def collect_odds_tier3_job():
 
 def collect_closing_odds_job():
     """收盘赔率采集（赛前90分钟内，每15分钟）"""
-    from odds_collector import collect_closing_odds_for_upcoming
+    from ingestion.odds_collector import collect_closing_odds_for_upcoming
     from monitor.scheduler.jobs import DBSession
 
     with DBSession() as db:
@@ -127,7 +127,7 @@ def collect_closing_odds_job():
 
 def update_opening_odds_job():
     """批量更新开盘赔率"""
-    from odds_tracker import OddsTracker
+    from ingestion.odds_tracker import OddsTracker
     from monitor.scheduler.jobs import DBSession
 
     with DBSession() as db:
@@ -139,7 +139,7 @@ def update_opening_odds_job():
 
 def live_odds_poll_job():
     """滚球赔率采集"""
-    from live_odds_feed import LiveOddsFeed, get_odds_bus
+    from ingestion.live_odds_feed import LiveOddsFeed, get_odds_bus
     from database.config import get_settings
 
     settings = get_settings()

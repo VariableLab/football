@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 from dataclasses import dataclass, field
 
 from utils.logger import get_logger
-from alert_manager import fire_alert, get_active_alerts, check_consecutive_failures, odds_freshness_check
+from monitor.alert_manager import fire_alert, get_active_alerts, check_consecutive_failures, odds_freshness_check
 
 logger = get_logger("health_daemon")
 
@@ -212,7 +212,7 @@ class HealthDaemon:
         """触发紧急赔率采集 + zgzcw 竞彩同步"""
         actions = []
         try:
-            from odds_collector import collect_odds_tier1_primary
+            from ingestion.odds_collector import collect_odds_tier1_primary
             from database.models import SessionLocal
             session = SessionLocal()
             try:
@@ -534,7 +534,7 @@ class HealthDaemon:
         替代旧的 calibrator.fit_from_db()，走 model_audit.run_self_heal_cycle()。
         """
         try:
-            from model_audit import run_self_heal_cycle
+            from monitor.model_audit import run_self_heal_cycle
             heal_result = run_self_heal_cycle(reason="health_daemon_drift_detected")
             if heal_result.get("status") == "completed":
                 result.repaired = True

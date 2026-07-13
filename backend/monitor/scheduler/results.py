@@ -55,7 +55,7 @@ def sync_results_job():
     from database.models import Match, Team
 
     try:
-        from result_sync import sync_results
+        from ingestion.result_sync import sync_results
         with DBSession() as db:
             count = sync_results(db, days_back=14)
             if count:
@@ -64,7 +64,7 @@ def sync_results_job():
     except Exception as e:
         logger.warning(f"[result] result_sync 模块失败: {e}")
 
-    from openfootball_importer import TeamMatcher
+    from ingestion.openfootball_importer import TeamMatcher
 
     with DBSession() as db:
         live_matches = db.query(Match).filter(
@@ -138,7 +138,7 @@ def sync_results_job():
 
 def zgzcw_draw_sync_job():
     """从中国足彩网采集开奖结果并更新比赛状态。每 6 小时运行一次。"""
-    from zgzcw_draw import sync_recent_draw
+    from ingestion.zgzcw_draw import sync_recent_draw
     result = sync_recent_draw(days_back=14)
     updated = result.get("updated", 0)
     matched = result.get("matched", 0)
@@ -213,13 +213,13 @@ def fill_drawn_issues_job():
 def jingcai_auto_verify_wrapper():
     """检查已开奖但未验证的期号并执行verify"""
     from database.models import JingcaiIssue
-    from jingcai_predictor import verify_issue
+    from core.jingcai_predictor import verify_issue
     from database.config import get_db
 
     db = next(get_db())
     try:
         try:
-            from result_sync import sync_results
+            from ingestion.result_sync import sync_results
             synced = sync_results(db, days_back=14)
             if synced:
                 logger.info(f"[jingcai-verify] 预同步 {synced} 场结果")
@@ -259,7 +259,7 @@ def jingcai_realtime_results_wrapper():
 
     with DBSession() as db:
         try:
-            from result_sync import sync_results
+            from ingestion.result_sync import sync_results
             synced = sync_results(db, days_back=2)
             if synced:
                 logger.info(f"[jingcai-realtime] 同步 {synced} 场赛果")
@@ -270,7 +270,7 @@ def jingcai_realtime_results_wrapper():
                 logger.info(f"[jingcai-realtime] 自动关期 {closed} 个")
 
             from database.models import JingcaiIssue
-            from jingcai_predictor import verify_issue
+            from core.jingcai_predictor import verify_issue
             drawn = db.query(JingcaiIssue).filter(
                 JingcaiIssue.status == "drawn",
                 JingcaiIssue.verification == None,
@@ -285,7 +285,7 @@ def jingcai_realtime_results_wrapper():
 
             if synced or closed:
                 try:
-                    from sse import push_event
+                    from utils.sse import push_event
                     push_event("jingcai_update", {
                         "synced": synced, "closed": closed,
                         "timestamp": datetime.now(timezone.utc).isoformat(),

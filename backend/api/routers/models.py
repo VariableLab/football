@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from schemas import (
+from api.schemas import (
     BetNNStatusResponse, BetNNPredictResponse, BetNNTrainResponse
 )
 from api.auth import verify_admin_key

@@ -215,7 +215,7 @@ class OddsCollector:
 
     def _init_zgzcw(self):
         try:
-            from zgzcw_source import ZgzcwOddsSource
+            from ingestion.zgzcw_source import ZgzcwOddsSource
             source = ZgzcwOddsSource()
             logger.info("[zgzcw] Source initialized")
             return source
@@ -226,7 +226,7 @@ class OddsCollector:
 
     def _init_wubaibai(self):
         try:
-            from wubaibai_source import WubaibaiOddsSource
+            from ingestion.wubaibai_source import WubaibaiOddsSource
             source = WubaibaiOddsSource()
             logger.info("[500] Source initialized")
             return source
@@ -449,7 +449,7 @@ class OddsCollector:
             logger.info(f"[odds-update] {match.match_code}: {match.odds_home}/{match.odds_draw}/{match.odds_away} (source: {match.odds_source})")
 
         try:
-            from prediction_recalc import on_odds_updated
+            from core.prediction_recalc import on_odds_updated
             on_odds_updated(self.db, match.id)
         except Exception as e:
             logger.warning(f"[odds-update] Prediction recalc trigger failed: {e}")
@@ -481,7 +481,7 @@ class OddsCollector:
 
     def _store_snapshot(self, snapshot: OddsSnapshot, is_closing: bool = False):
         """存储赔率快照到 OddsHistory 表，自动去重 (5min窗口)"""
-        from data_cleaner import validate_source, validate_odds
+        from ingestion.data_cleaner import validate_source, validate_odds
         source = validate_source(snapshot.source)
         is_real = source != "synthetic"
 

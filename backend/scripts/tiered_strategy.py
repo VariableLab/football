@@ -19,13 +19,13 @@ v2 优化:
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Any
 
-from edge_calculator import EdgeCalculator
+from strategy.edge_calculator import EdgeCalculator
 try:
-    from position_sizer import PositionSizer, RiskTier
+    from strategy.position_sizer import PositionSizer, RiskTier
 except ImportError:
     from strategy.position_sizer import PositionSizer, RiskTier
 
-from strategy_config import (
+from strategy.strategy_config import (
     StrategyParams, load_params, compute_position_ratio,
 )
 from utils.logger import get_logger
@@ -694,7 +694,7 @@ def analyze_match_from_db(
     """从数据库加载比赛数据，运行完整分层分析"""
     import json
     from database.models import SessionLocal, Match, Prediction
-    # from bet_nn import BetNetPredictor, extract_features
+    # from core.bet_nn import BetNetPredictor, extract_features
 
     predictor = BetNetPredictor()
     if not predictor.is_ready():
@@ -760,7 +760,7 @@ def analyze_match_from_db(
             pass
 
         try:
-            from sub_model_score import ScorePredictor
+            from scripts.sub_model_score import ScorePredictor
             sc = ScorePredictor()
             if sc.is_ready():
                 r = sc.predict_from_db(match_id)
@@ -770,7 +770,7 @@ def analyze_match_from_db(
             pass
 
         try:
-            from sub_model_handicap import HandicapPredictor
+            from scripts.sub_model_handicap import HandicapPredictor
             hc = HandicapPredictor()
             if hc.is_ready():
                 r = hc.predict_from_db(match_id)

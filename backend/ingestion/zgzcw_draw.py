@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup
 
 from database.models import Match, MatchStatus, Team
 from utils.logger import get_logger
-from zgzcw_source import TEAM_NAME_ALIAS
+from ingestion.zgzcw_source import TEAM_NAME_ALIAS
 
 logger = get_logger("zgzcw_draw")
 

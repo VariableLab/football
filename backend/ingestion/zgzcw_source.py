@@ -25,8 +25,8 @@ from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
 
 from data_source.base import OddsSnapshot, OddsSource
-from odds_collector import _fetch_with_retry
-from data_cleaner import resolve_team_name
+from ingestion.odds_collector import _fetch_with_retry
+from ingestion.data_cleaner import resolve_team_name
 
 logger = logging.getLogger("zgzcw")
 

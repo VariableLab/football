@@ -16,8 +16,8 @@ from datetime import datetime, timezone
 from itertools import product
 from typing import Dict, List, Optional
 
-from strategy_config import StrategyParams, save_params, load_params
-from tiered_strategy import (
+from strategy.strategy_config import StrategyParams, save_params, load_params
+from strategy.tiered_strategy import (
     TIER_HIGH, TIER_MEDIUM, TIER_SKIP,
     classify_tier,
 )
@@ -132,7 +132,7 @@ def _load_backtest_data(limit: int = 0) -> List[Dict]:
     """从数据库加载回测数据（已结束比赛 + 预测 + 赔率 + 结果）"""
     import json
     from database.models import SessionLocal, Match, MatchStatus, Prediction
-    # from bet_nn import BetNetPredictor, extract_features
+    # from core.bet_nn import BetNetPredictor, extract_features
 
     predictor = BetNetPredictor()
     if not predictor.is_ready():
@@ -225,8 +225,8 @@ def _load_backtest_data(limit: int = 0) -> List[Dict]:
 
 def _backtest_params(params: StrategyParams, data: List[Dict]) -> OptimResult:
     """对单套参数运行回测（含平局信号+低赔率降权+自适应仓位）"""
-    from tiered_strategy import select_spf_recommendation
-    from strategy_config import compute_position_ratio
+    from strategy.tiered_strategy import select_spf_recommendation
+    from strategy.strategy_config import compute_position_ratio
 
     high_count = 0
     medium_count = 0

@@ -2,11 +2,7 @@ import sys
 import os
 
 # 💡 强力路径定位
-_current_dir = os.path.dirname(os.path.abspath(__file__))
-_backend_root = os.path.dirname(_current_dir)
-if _backend_root not in sys.path:
-    sys.path.insert(0, _backend_root)
-
+sys.path.insert(0, _backend_root)
 # 强制加载环境
 from dotenv import load_dotenv
 load_dotenv(os.path.join(_backend_root, ".env"))

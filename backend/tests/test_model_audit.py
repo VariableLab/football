@@ -16,7 +16,7 @@ def clean_audit_dir():
     yield
 
 
-from model_audit import AuditEntry, AuditReport, ModelAuditor, run_self_heal_cycle
+from monitor.model_audit import AuditEntry, AuditReport, ModelAuditor, run_self_heal_cycle
 
 
 class TestAuditEntry:
@@ -104,7 +104,7 @@ class TestSelfHealCycle:
     def test_self_heal_lock_prevents_concurrent(self):
         mock_lock = MagicMock()
         mock_lock.acquire.return_value = False
-        with patch("model_audit._self_heal_lock", mock_lock):
+        with patch("monitor.model_audit._self_heal_lock", mock_lock):
             result = run_self_heal_cycle("test")
             assert result["status"] == "skipped"
             assert result["reason"] == "another_self_heal_running"
@@ -118,7 +118,7 @@ class TestSelfHealCycle:
         state_file = os.path.join(str(tmp_path), "self_heal_state.json")
         with open(state_file, "w") as f:
             json.dump(state, f)
-        with patch("model_audit.SELF_HEAL_STATE_PATH", state_file):
+        with patch("monitor.model_audit.SELF_HEAL_STATE_PATH", state_file):
             result = run_self_heal_cycle("test")
             assert result["status"] == "skipped"
             assert result["reason"] == "cooldown"
@@ -127,10 +127,10 @@ class TestSelfHealCycle:
         state_file = os.path.join(str(tmp_path), "self_heal_state.json")
         with open(state_file, "w") as f:
             json.dump({"status": "idle", "last_run": None, "last_result": None}, f)
-        with patch("model_audit.SELF_HEAL_STATE_PATH", state_file), \
-             patch("model_audit._step_weight_learn", return_value={"accuracy": 0.55}), \
-             patch("model_audit._step_regenerate", return_value=15), \
-             patch("model_audit._step_validate", return_value={"status": "passed", "improvement": 0.003}):
+        with patch("monitor.model_audit.SELF_HEAL_STATE_PATH", state_file), \
+             patch("monitor.model_audit._step_weight_learn", return_value={"accuracy": 0.55}), \
+             patch("monitor.model_audit._step_regenerate", return_value=15), \
+             patch("monitor.model_audit._step_validate", return_value={"status": "passed", "improvement": 0.003}):
             result = run_self_heal_cycle("scheduled")
             assert result["status"] == "success"
             assert result["reason"] == "scheduled"
@@ -141,8 +141,8 @@ class TestSelfHealCycle:
         state_file = os.path.join(str(tmp_path), "self_heal_state.json")
         with open(state_file, "w") as f:
             json.dump({"status": "idle", "last_run": None, "last_result": None}, f)
-        with patch("model_audit.SELF_HEAL_STATE_PATH", state_file), \
-             patch("model_audit._step_weight_learn", return_value=None):
+        with patch("monitor.model_audit.SELF_HEAL_STATE_PATH", state_file), \
+             patch("monitor.model_audit._step_weight_learn", return_value=None):
             result = run_self_heal_cycle("test")
             assert result["status"] == "failed"
 
@@ -162,7 +162,7 @@ class TestModelAuditor:
             path = os.path.join(audit_dir, f"audit_2026-05-{16 - day}.json")
             with open(path, "w") as f:
                 json.dump({"date": f"2026-05-{16 - day}", "total": 10}, f)
-        with patch("model_audit.AUDIT_DIR", audit_dir):
+        with patch("monitor.model_audit.AUDIT_DIR", audit_dir):
             auditor = ModelAuditor()
             reports = auditor.get_latest_reports(2)
             assert len(reports) == 2

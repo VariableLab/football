@@ -17,7 +17,6 @@ from collections import defaultdict
 from sqlalchemy.orm import Session
 
 # Ensure backend/ is in path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from database.models import SessionLocal, Match, MatchStatus, Prediction
 from core.draw_calibrator import DrawFeatures, apply_draw_calibration, load_draw_params, market_probabilities

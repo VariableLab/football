@@ -1043,7 +1043,7 @@ def cmd_issue_list():
 
 def cmd_issue_sync(days: int = 3):
     """从竞彩官网同步当前在售比赛，自动创建/更新期号并生成预测"""
-    from odds_collector import JingcaiSource
+    from ingestion.odds_collector import JingcaiSource
     from datetime import datetime, timedelta
 
     src = JingcaiSource()

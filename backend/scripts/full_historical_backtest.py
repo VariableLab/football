@@ -1,7 +1,5 @@
 import sys
 import os
-_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(_root)
 
 from database.models import SessionLocal, Team, Match, MatchStatus
 
@@ -49,5 +47,5 @@ def run_global_elo_backtest():
 if __name__ == "__main__":
     run_global_elo_backtest()
     # 顺便运行画像生成器
-    from auto_team_stats import calculate_dynamic_stats
+    from scripts.auto_team_stats import calculate_dynamic_stats
     calculate_dynamic_stats()

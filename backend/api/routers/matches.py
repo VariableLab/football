@@ -5,12 +5,12 @@ from datetime import datetime
 import os
 
 from database.models import get_db, Match, MatchStatus, Prediction
-from schemas import (
+from api.schemas import (
     MatchListResponse, MatchOut, StrategyResponse, 
     OddsMovementResponse, StrategyPickOut, PortfolioStrategyOut
 )
-from auth import get_optional_user
-from strategy_pipeline import StrategyPipeline
+from api.auth import get_optional_user
+from strategy.strategy_pipeline import StrategyPipeline
 from utils.cache import cached_api
 
 

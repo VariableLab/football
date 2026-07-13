@@ -6,10 +6,7 @@ import traceback
 
 # 路径初始化
 _cur_dir = os.path.dirname(os.path.abspath(__file__))
-_backend_root = os.path.dirname(_cur_dir)
-sys.path.append(_backend_root)
 for d in ["api", "core", "features", "ingestion", "database", "strategy", "monitor", "utils", "api/routers"]:
-    sys.path.append(os.path.join(_backend_root, d))
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("retrain_all")

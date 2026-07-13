@@ -9,7 +9,7 @@
 - 最大回撤实时追踪
 
 用法:
-    from risk_manager import RiskManager, BetRecord
+    from strategy.risk_manager import RiskManager, BetRecord
     rm = RiskManager(bankroll=1000)
     rm.add_bet(BetRecord(match_id=1, league="EPL", stake_pct=0.04))
     rm.check(league="EPL", stake_pct=0.03)  # → True/False

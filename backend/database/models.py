@@ -621,6 +621,31 @@ def get_db():
     finally:
         db.close()
 
+
+# ────────────────────────────
+# DebounceEntry — 跨进程防抖表
+# ────────────────────────────
+class DebounceEntry(Base):
+    """进程间共享的防抖时间戳表，替旧的模块内存 dict 缺陷。
+
+    旧实现使用 ``_recalc_cache: Dict[int, float]``，进程本地；
+    gunicorn 多 worker 下崩溃：每个 worker 各一份，必触发
+    ``Match.id`` 多次触发重算并打满日志。
+
+    替代后：每个 ``(scope, key)`` 在 DB 留一行 ``last_executed_at``，
+    由 upsert SQL 原子写入；任何 worker 看到窗口内再触发直接返回 False。
+    """
+    __tablename__ = "debounce_entries"
+
+    id = Column(Integer, primary_key=True)
+    scope = Column(String(32), nullable=False, index=True)  # 例如 "recalc"、"email"
+    key = Column(String(128), nullable=False, index=True)   # 例如 "match:12345"
+    last_executed_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+# 启动时确保轻量防抖表也存在（Base.metadata.create_all 完成后）
+_ = DebounceEntry  # 保持 import side effect
+
 # ────────────────────────────
 # AI Report Cache（AI 精算师报告持久化缓存，解决并发性能瓶颈）
 # ────────────────────────────

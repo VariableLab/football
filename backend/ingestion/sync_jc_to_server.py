@@ -57,7 +57,6 @@ def run_local_sync() -> bool:
     # 💡 确保能够找到 backend 根目录模块
     _backend_dir = os.path.dirname(PROJECT_ROOT)
     if _backend_dir not in sys.path:
-        sys.path.insert(0, _backend_dir)
         
     try:
         from database.models import Base
@@ -72,7 +71,6 @@ def run_local_sync() -> bool:
         for d in ["core", "features", "database", "utils"]:
             _d_path = os.path.join(_backend_dir, d)
             if _d_path not in sys.path:
-                sys.path.append(_d_path)
 
         from ingestion.zgzcw_jc_sync import sync_jc_matches
         result = sync_jc_matches(DB_PATH)

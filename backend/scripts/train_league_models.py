@@ -4,7 +4,6 @@ import time
 import logging
 
 # Ensure we can import from backend
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from fusion.fusion_trainer import FusionTrainer
 
@@ -13,17 +12,18 @@ logger = logging.getLogger("league_trainer")
 
 def train_all_leagues():
     # 目标联赛清单
-    leagues = ["EPL", "LaLiga", "SerieA", "Bundesliga", "Ligue1", "JLeague"]
+    tier_a_leagues = ["EPL", "LaLiga", "SerieA", "Bundesliga", "Ligue1", "UCL", "WorldCup"]
+    tier_b_leagues = ["JLeague", "KLeague", "MLS", "Championship", "Eredivisie"]
     
     trainer = FusionTrainer(limit=None)
     
-    print("🚀 开始训练分联赛垂直模型...")
+    print("🚀 开始训练分联赛垂直模型 (Tier 分层隔离)...")
     t0 = time.time()
     
-    for league in leagues:
-        print(f"\n[任务] 正在训练 {league} 专属模型...")
+    for tier_name, leagues in [("TierA", tier_a_leagues), ("TierB", tier_b_leagues)]:
+        print(f"\n[任务] 正在训练 {tier_name} 专属模型 (覆盖: {','.join(leagues)})...")
         try:
-            w = trainer.train_league(league)
+            w = trainer.train_tier(tier_name, leagues)
             if w:
                 print(f"  ✅ 成功: Accuracy={w.accuracy:.4f}, Samples={w.sample_count}")
                 path = w.save()

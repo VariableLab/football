@@ -1,0 +1,157 @@
+{
+  "Bundesliga": {
+    "active": "Bundesliga_v1_2026-05-25.json",
+    "history": [
+      {
+        "acc": 0.5618671700703621,
+        "file": "Bundesliga_v1_2026-05-25.json",
+        "l1": 0.0,
+        "n": 5827,
+        "sha256": "ff8d2a1054570ad98e786c62d15ad07bf50a1947c05e4b0c8876f84432c341a8",
+        "trained_at": "2026-05-25T02:56:21.364125+00:00"
+      }
+    ]
+  },
+  "EPL": {
+    "active": "EPL_v1_2026-05-25.json",
+    "history": [
+      {
+        "acc": 0.5879911455451023,
+        "file": "EPL_v1_2026-05-25.json",
+        "l1": 0.0,
+        "n": 7228,
+        "sha256": "2002cd401c27af4162006abe6faac2406aaa9467b529e7b82232dab0177cdc7b",
+        "trained_at": "2026-05-25T02:42:46.343574+00:00"
+      }
+    ]
+  },
+  "LaLiga": {
+    "active": "LaLiga_v1_2026-05-25.json",
+    "history": [
+      {
+        "acc": 0.5697100555212832,
+        "file": "LaLiga_v1_2026-05-25.json",
+        "l1": 0.0,
+        "n": 6484,
+        "sha256": "7865b67f768322f463ccab0ccdf293b93e73d9714550201f9e31fd5d6edc79e2",
+        "trained_at": "2026-05-25T02:46:47.997467+00:00"
+      }
+    ]
+  },
+  "Ligue1": {
+    "active": "Ligue1_v1_2026-05-25.json",
+    "history": [
+      {
+        "acc": 0.5791872388909989,
+        "file": "Ligue1_v1_2026-05-25.json",
+        "l1": 0.0,
+        "n": 5266,
+        "sha256": "36e4fd15355ec7c8f7fd6779b63cd4d17ff99b8bbe1e431e9dab7e218db141f0",
+        "trained_at": "2026-05-25T03:01:24.560350+00:00"
+      }
+    ]
+  },
+  "SerieA": {
+    "active": "SerieA_v1_2026-05-25.json",
+    "history": [
+      {
+        "acc": 0.5794054853013632,
+        "file": "SerieA_v1_2026-05-25.json",
+        "l1": 0.0,
+        "n": 6089,
+        "sha256": "ac73354dfd4c5681cca871afb2e3030b1214967abf65da81d600c05dc1fee408",
+        "trained_at": "2026-05-25T02:51:23.992620+00:00"
+      }
+    ]
+  },
+  "global": {
+    "active": "global_v1_2026-05-25.json",
+    "history": [
+      {
+        "acc": 0.5737068412270568,
+        "file": "global_v1_2026-05-25.json",
+        "l1": 0.0,
+        "n": 31164,
+        "sha256": "522bbd39641faf9294f9561f868b3bc9efb2aa8dc552f82be0809cc34ae30bd8",
+        "trained_at": "2026-05-25T02:05:35.974008+00:00"
+      },
+      {
+        "acc": 0.48033815806327657,
+        "file": "global_v1_2026-06-15.json",
+        "l1": 0.0,
+        "n": 31228,
+        "sha256": "16a7d6b83aae9120a5191a178963cd55359206f30eeabe9b4eb4d96605b64ab3",
+        "trained_at": "2026-06-15T08:56:56.047770+00:00"
+      },
+      {
+        "acc": 0.47304582210242585,
+        "file": "global_v1_2026-05-24.json",
+        "l1": 0.0,
+        "n": 31164,
+        "sha256": "81709750487b7c39a14eee3d855f42190f0f4c656d8a36cb36394d7e2ad40937",
+        "trained_at": "2026-05-24T14:03:37.668566+00:00"
+      },
+      {
+        "acc": 0.5365,
+        "file": "global_v1_2026-05-17.json",
+        "l1": 0.0,
+        "n": 2000,
+        "sha256": "5123b2dae9138e91164b1b8c77b6328cb13f967a4b256619f81af6fa0cbd9735",
+        "trained_at": "2026-05-17T09:11:24.747971+00:00"
+      },
+      {
+        "acc": 0.542657842961903,
+        "file": "global_v1_2026-05-16_balanced.json",
+        "l1": 0.0,
+        "n": 27955,
+        "sha256": "102f8e4138bdc7c87d1f43aa67909cf8ff48bc87a15ec7b36188fd650e6bb9f2",
+        "trained_at": "2026-05-16T15:35:58.443727+00:00"
+      },
+      {
+        "acc": 0.542657842961903,
+        "file": "global_v1_2026-05-17_balanced_full.json",
+        "l1": 0.0,
+        "n": 27955,
+        "sha256": "102f8e4138bdc7c87d1f43aa67909cf8ff48bc87a15ec7b36188fd650e6bb9f2",
+        "trained_at": "2026-05-16T15:35:58.443727+00:00"
+      },
+      {
+        "acc": 0.4805633071581543,
+        "file": "global_v1_2026-05-16_aggressive_draw3.json",
+        "l1": 0.0,
+        "n": 30818,
+        "sha256": "4d819699f0b63408a68271d1f4eb5db6b77b58471e72a7d14fecb446ae1a745d",
+        "trained_at": "2026-05-16T12:05:24.125381+00:00"
+      },
+      {
+        "acc": 0.0,
+        "file": "global_v1_2026-05-16.json",
+        "l1": 0.0,
+        "n": 0,
+        "sha256": "8e21c8e9981de588db21c1e312661bd3b976e6ea247baae341f8f50dcada9d7a",
+        "trained_at": "2026-05-16T12:00:00"
+      },
+      {
+        "acc": 0.5656,
+        "file": "global_v1_2026-05-15.json",
+        "l1": 0.0,
+        "n": 5000,
+        "sha256": "c5d22e006a81791dd61a7bb2ba862ee2186439c7c36127413d416fb9492cd5d1",
+        "trained_at": "2026-05-15T16:38:47.898470+00:00"
+      }
+    ]
+  },
+  "knockout": {
+    "active": "knockout_v1_2026-05-17.json",
+    "history": [
+      {
+        "acc": 0.49333333333333335,
+        "file": "knockout_v1_2026-05-17.json",
+        "l1": 0.0,
+        "n": 225,
+        "sha256": "6cc791bf18ed68cf09b05edcb8c29526c0697192ec4e566976c42fe41c4aaafa",
+        "trained_at": "2026-05-17T04:59:39.850171+00:00"
+      }
+    ]
+  }
+}

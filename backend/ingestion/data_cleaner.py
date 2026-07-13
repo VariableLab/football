@@ -10,7 +10,7 @@
 6. Enum 一致性: raw string → enum value
 
 用法:
-    from data_cleaner import DataCleaner
+    from ingestion.data_cleaner import DataCleaner
     cleaner = DataCleaner(db)
 
     # 审计 (只读)

@@ -18,11 +18,6 @@ import httpx
 from bs4 import BeautifulSoup
 
 # 保证路径正确
-_current_dir = os.path.dirname(os.path.abspath(__file__))
-_backend_root = os.path.dirname(_current_dir)
-if _backend_root not in sys.path:
-    sys.path.insert(0, _backend_root)
-
 from database.models import SessionLocal, Match, MatchStatus, BettingExchangeVolume
 
 # 默认球探网必发指数综合页

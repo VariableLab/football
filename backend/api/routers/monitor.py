@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database.models import get_db
-from model_audit import ModelAuditor, run_self_heal_cycle
-from auth import get_current_active_user, User
+from monitor.model_audit import ModelAuditor, run_self_heal_cycle
+from api.auth import get_current_active_user, User
 
 router = APIRouter(prefix="/api/monitor", tags=["monitor"])
 
@@ -28,7 +28,7 @@ def trigger_daily_audit(days_back: int = 1, user: User = Depends(get_current_act
 @router.get("/self-heal/status")
 def get_self_heal_status(user: User = Depends(get_current_active_user)):
     """查看自愈任务状态"""
-    from model_audit import _load_self_heal_state
+    from monitor.model_audit import _load_self_heal_state
     return _load_self_heal_state()
 
 @router.post("/self-heal/trigger")

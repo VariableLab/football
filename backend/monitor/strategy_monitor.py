@@ -17,9 +17,9 @@ from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Tuple
 
-from strategy_config import load_params
+from strategy.strategy_config import load_params
 from utils.logger import get_logger
-from alert_manager import fire_alert
+from monitor.alert_manager import fire_alert
 
 logger = get_logger("strategy_monitor")
 
@@ -370,9 +370,9 @@ def _compute_window_metrics(days: int) -> Optional[DriftSnapshot]:
         if len(matches) < 20:
             return None
 
-        from tiered_strategy import classify_tier, select_spf_recommendation
-        from strategy_config import compute_position_ratio
-        # from bet_nn import BetNetPredictor, extract_features
+        from strategy.tiered_strategy import classify_tier, select_spf_recommendation
+        from strategy.strategy_config import compute_position_ratio
+        # from core.bet_nn import BetNetPredictor, extract_features
 
         predictor = BetNetPredictor()
         if not predictor.is_ready():
@@ -836,7 +836,7 @@ def strategy_monitor_job() -> None:
             )
             # 可选: 直接调用 param_optimizer (阻塞)
             # 当前设计: 只告警，由人工或下一次双周周期执行
-            # from param_optimizer import param_optimize_job
+            # from scripts.param_optimizer import param_optimize_job
             # param_optimize_job()
 
 

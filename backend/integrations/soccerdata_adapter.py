@@ -439,7 +439,7 @@ class SoccerDataSync:
         updated = 0
         for r in ratings:
             # 优先使用规范名匹配
-            from data_cleaner import resolve_team_db
+            from ingestion.data_cleaner import resolve_team_db
             team_id = resolve_team_db(self.db, r.team_name)
             if team_id:
                 team = self.db.query(Team).filter(Team.id == team_id).first()

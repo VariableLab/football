@@ -4,7 +4,7 @@ from typing import Optional
 
 from database.models import get_db, User, UserSettings
 from api.auth import get_current_active_user
-from schemas import SettingsResponse, SettingsUpdateResponse
+from api.schemas import SettingsResponse, SettingsUpdateResponse
 
 router = APIRouter(prefix="/api/settings", tags=["Settings"])
 

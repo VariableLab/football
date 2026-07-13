@@ -18,11 +18,6 @@ import time
 from datetime import datetime, timedelta, timezone
 
 # 确保路径定位正确，将 backend 根目录置于 path 中
-_current_dir = os.path.dirname(os.path.abspath(__file__))
-_backend_root = os.path.dirname(_current_dir)
-if _backend_root not in sys.path:
-    sys.path.insert(0, _backend_root)
-
 # 强制加载 .env 环境变量
 from dotenv import load_dotenv
 load_dotenv(os.path.join(_backend_root, ".env"))

@@ -20,7 +20,7 @@ from utils.logger import get_logger
 
 logger = get_logger("residual_nn")
 
-from features.feature_builder import FEATURE_DIM
+from features.schema import BASE_FEATURE_DIM, INTERACTION_DIM
 
 # 配置
 MODEL_DIR = "./data/weights/nn"
@@ -28,7 +28,8 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 MODEL_PATH = os.path.join(MODEL_DIR, "stacking_v3.pt")
 STATS_PATH = os.path.join(MODEL_DIR, "stacking_stats.json")
 
-INPUT_DIM = FEATURE_DIM + 5 + 3 + 3  # FeatureBuilder + Interactions + LR + Market = 61
+# 48 base + 5 interactions + 3 LR + 3 market = 59
+INPUT_DIM = BASE_FEATURE_DIM + INTERACTION_DIM + 3 + 3
 OUTPUT_DIM = 3
 BATCH_SIZE = 128
 LEARNING_RATE = 3e-4

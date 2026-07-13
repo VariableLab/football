@@ -19,7 +19,7 @@ from database.models import (
     SessionLocal, Team, Match, MatchStatus, MatchType,
     JingcaiIssue, JingcaiIssueMatch, OddsHistory,
 )
-from odds_collector import JingcaiSource
+from ingestion.odds_collector import JingcaiSource
 from utils.logger import get_logger
 
 logger = get_logger("sporttery_sync")
@@ -30,7 +30,7 @@ logger = get_logger("sporttery_sync")
 # 直接引用 jingcai_predictor 的映射，避免重复维护
 def _get_team_resolver():
     """延迟加载 jingcai_predictor 的球队解析器"""
-    from jingcai_predictor import resolve_team_code, CLUB_ELO_RATINGS, CHINESE_ALIASES
+    from core.jingcai_predictor import resolve_team_code, CLUB_ELO_RATINGS, CHINESE_ALIASES
     return resolve_team_code, CLUB_ELO_RATINGS, CHINESE_ALIASES
 
 
@@ -164,7 +164,7 @@ def _sync_single_match(
     odds_a = _safe_float(had.get("a"))
 
     # 预写入校验: 赔率范围检查
-    from data_cleaner import validate_odds
+    from ingestion.data_cleaner import validate_odds
     odds_h, odds_d, odds_a, odds_valid = validate_odds(odds_h, odds_d, odds_a)
     if not odds_valid:
         return # 赔率无效跳过

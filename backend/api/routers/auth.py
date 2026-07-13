@@ -7,7 +7,7 @@ from api.auth import (
     get_password_hash, verify_password, create_access_token, 
     get_current_active_user
 )
-from schemas import UserRegister, UserLogin, UserOut, Token
+from api.schemas import UserRegister, UserLogin, UserOut, Token
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 

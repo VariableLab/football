@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from database.models import SessionLocal, Match, Team, OddsHistory, MatchStatus
-from odds_collector import (
+from ingestion.odds_collector import (
     FootballDataSource, BetExplorerSource, SyntheticOddsSource
 )
 from utils.logger import get_logger

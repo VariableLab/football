@@ -27,38 +27,18 @@ from scipy.optimize import minimize
 from scipy.special import softmax
 
 from utils.logger import get_logger
+from utils.paths import WEIGHTS_LR_DIR, ensure_dir
 
 logger = get_logger("logistic_fusion")
 
-# 权重存储目录
-WEIGHTS_DIR = "./data/weights/lr"
-os.makedirs(WEIGHTS_DIR, exist_ok=True)
+# 权重存储目录：使用绝对路径，避免 gunicorn/systemd/celery
+# 因 cwd 不同而读到旧文件。兼容向导：若绝对目录不存在但老的相对目录存在，
+# 自动迁移目录内容后才使用绝对目录。
+WEIGHTS_DIR = ensure_dir(WEIGHTS_LR_DIR).as_posix()
 
-# 特征名称（与 feature_builder.py 完全对齐：48 基线 + 5 交互 = 53）
-# 基线 48 维 (与 features/feature_builder.py FEATURE_NAMES 一致):
-FEATURE_NAMES = [
-    # A. Elo (8)
-    "elo_diff", "elo_win", "elo_draw", "elo_away",
-    "is_heavy_fav", "is_heavy_udog", "elo_tier_diff", "elo_drift",
-    # B. Poisson (8)
-    "lambda_home", "lambda_away", "lambda_diff",
-    "poisson_win", "poisson_draw", "poisson_away", "goal_exp", "relative_goals",
-    # C. Players (4)
-    "home_avail", "away_avail", "avail_diff", "injury_impact",
-    # D. Market (7)
-    "market_win", "market_draw", "market_away",
-    "overround", "max_odds_move", "source_count", "market_volatility",
-    # E. Form (5)
-    "form_win", "form_draw", "momentum", "stability", "streak_norm",
-    # F. H2H (6)
-    "h2h_total_norm", "h2h_win", "h2h_draw", "h2h_recent", "h2h_goals_norm", "first_meeting",
-    # G. Meta (10)
-    "rest_advantage", "is_knockout", "is_derby", "ref_severity", "ref_home_bias",
-    "home_rest", "away_rest", "is_late_season", "pressure_index", "is_prime_time",
-    # 交互特征 (5)
-    "I_elo_knockout", "I_poisson_market_consistent", "I_momentum_rest",
-    "I_market_source", "I_elo_form",
-]
+# 特征名称 — 单一真相源 features.schema（48 基线 + 5 交互 = 53）
+from features.schema import BASE_FEATURE_DIM, FEATURE_NAMES, FULL_FEATURE_DIM  # noqa: E402
+
 
 
 @dataclass
@@ -69,7 +49,7 @@ class LogisticFusionWeights:
     intercept_home: float = 0.0
     intercept_away: float = 0.0
     l1_penalty: float = 0.001
-    input_dim: int = 48
+    input_dim: int = BASE_FEATURE_DIM
 
     # 元信息
     league: str = "global"
@@ -353,41 +333,130 @@ class LogisticFusionTrainer:
         logger.info("[logistic_fusion] Top 10 features:\n" + "\n".join(lines))
 
 
+def _purged_time_folds(n: int, n_folds: int, embargo: int, time_index: Optional[np.ndarray] = None):
+    """
+    生成按时间顺序的 walk-forward K-fold 索引(2026-06-25 整改新增)。
+
+    设计:
+      - 严格 walk-forward:train 只能看到 val **之前**的历史,val 不能进 train。
+      - 折区间留 ``embargo`` 条样本的 purge gap,防止相邻比赛日期接近导致的特征泄漏
+        (一个联赛同一天的多场比赛,其滚动特征如 Elo/近况自然会跨场传染)。
+      - 若提供 ``time_index``,先按时间戳升序排序后再切,保证 train 永远早于 val;
+
+    Args:
+        n: 样本数
+        n_folds: 折数
+        embargo: 折间 purge gap(以排序后的样本下标为单位)
+        time_index: 可选时间戳数组。提供时按时间戳排序后切;
+                    不提供时按当前下标顺序切(也不随机打散)。
+
+    Yields:
+        (train_idx, val_idx) — train.max() < val.min() (严格 time-monotonic)。
+    """
+    if time_index is not None and len(time_index) == n:
+        order = np.argsort(time_index, kind="mergesort")
+    else:
+        order = np.arange(n)
+    n = len(order)
+
+    sizes = _walk_forward_split_sizes(n, n_folds, embargo)
+
+    for (train_end, val_end) in sizes:
+        if train_end <= 0:
+            # 折叠 0: train 为空,跳过 val 评估(由调用方 hold-out 兜底)
+            yield order[np.arange(0, 0)].astype(int), order[np.arange(train_end + embargo, val_end)].astype(int)
+            continue
+        train_pos = np.arange(0, train_end)
+        val_pos = np.arange(train_end + embargo, val_end)
+        yield order[train_pos].astype(int), order[val_pos].astype(int)
+        if val_end >= n:
+            return
+
+
+def _walk_forward_split_sizes(n: int, n_folds: int, embargo: int) -> List[Tuple[int, int]]:
+    """
+    规划 expanding-window walk-forward 切分边界,返回 ``[(train_end, gap_end), ...]``:
+      - ``train_end``: 本折训练集终止下标(不含)
+      - ``gap_end``:   本折验证集终止下标(不含)
+
+    设计要点 (2026-06-25):
+      - **expanding train + fixed-size stride**: 训练集在所有后续折叠中继续增长,
+        保证每折训练数据包含此前全部历史观测(无未来信息泄漏)。
+      - step = ``floor(n / (n_folds + 1))`` 留出至少一折 val + embargo 的尾部预算,
+        避免最后折叠 val 越界。
+      - 最末折叠 val_end 自适应截到 ``n``, 完全避免越界访问。
+      - 当 ``n_folds * step + embargo >= n`` 时折叠数自动收紧至代数可行边界。
+    """
+    if n_folds <= 0 or n <= 0:
+        return []
+    # step 越小 train 越多、val 越短; floor(n/(n_folds+1)) 留出至少一折 val 空间
+    step = max(1, n // (n_folds + 1))
+    out: List[Tuple[int, int]] = []
+    cursor = 0
+    for fold in range(n_folds):
+        train_end = cursor + step
+        if train_end > n:
+            break
+        val_start = train_end + embargo
+        val_end = val_start + step
+        if val_end > n:
+            val_end = n
+        if val_start >= val_end:
+            # 当前折叠没有可用 val (样本尾部不足), 后续更不会有
+            break
+        out.append((train_end, val_end))
+        cursor = train_end  # 下一折 train 起点 = 当前 train 终点
+        if val_end >= n:
+            break
+    return out
+
+
 def cross_validate_lambda(
     X: np.ndarray,
     y: np.ndarray,
     lambdas: List[float] = None,
     n_folds: int = 5,
     class_weight: Optional[Dict[int, float]] = None,
+    time_index: Optional[np.ndarray] = None,
+    embargo: int = 50,
 ) -> Tuple[float, Dict[float, float]]:
     """
     交叉验证选择最优 L1 正则化强度。
+
+    关键改进 (2026-06-25):
+      - 默认使用 purged 时序 K-fold：每折训练集只由先前样本组成，
+        验证集只由后续样本组成，模拟真实推断的"未来不可见"约束。
+      - 折间使用 ``embargo`` 个样本 gap 防止近期信息泄漏（金融时序常用做法）。
+      - 若调用方传入 ``time_index``，按时间戳排序后再分；否则按当前顺序
+        分（不再随机打散），由调用方负责保证顺序合理。
+
+    Args:
+        X: (N, D) 特征矩阵
+        y: (N,) 标签 (0=home, 1=draw, 2=away)
+        lambdas: L1 正则强度候选
+        n_folds: 折数
+        class_weight: 类别权重字典
+        time_index: 可选时间戳向量，长度 N。None 表示调用方已按时间排好。
+        embargo: 分位间 embargo（样本数），默认 50。
 
     Returns:
         (best_lambda, {lambda: avg_accuracy})
     """
     if lambdas is None:
-        # P0 修复: 移除 0.0 选项, 强制至少 0.001 的 L1 正则化
+        # P0 修复: 强制至少 0.001 的 L1 正则化
         lambdas = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1]
 
-    results = {}
+    results: Dict[float, float] = {}
     best_lambda = lambdas[0]
-    best_acc = 0.0
+    best_acc = -1.0
 
-    N = X.shape[0]
-    fold_size = N // n_folds
+    folds = list(_purged_time_folds(X.shape[0], n_folds, embargo=embargo, time_index=time_index))
 
     for lam in lambdas:
         accs = []
-        for fold in range(n_folds):
-            val_start = fold * fold_size
-            val_end = val_start + fold_size if fold < n_folds - 1 else N
-
-            val_idx = np.arange(val_start, val_end)
-            train_idx = np.concatenate([
-                np.arange(0, val_start),
-                np.arange(val_end, N),
-            ])
+        for train_idx, val_idx in folds:
+            if len(train_idx) < 10 or len(val_idx) < 5:
+                continue
 
             X_train, y_train = X[train_idx], y[train_idx]
             X_val, y_val = X[val_idx], y[val_idx]
@@ -400,7 +469,7 @@ def cross_validate_lambda(
                 preds = np.argmax(probs, axis=1)
                 accs.append(float(np.mean(preds == y_val)))
 
-        avg_acc = np.mean(accs) if accs else 0.0
+        avg_acc = float(np.mean(accs)) if accs else 0.0
         results[lam] = avg_acc
         if avg_acc > best_acc:
             best_acc = avg_acc

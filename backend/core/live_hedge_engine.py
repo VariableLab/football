@@ -8,8 +8,8 @@
 4. 部分锁定: 比赛进行中部分锁定利润
 
 用法:
-from live_hedge_engine import LiveHedgeEngine, HedgeAlert
-from live_odds_feed import get_odds_bus
+from core.live_hedge_engine import LiveHedgeEngine, HedgeAlert
+from ingestion.live_odds_feed import get_odds_bus
 
 engine = LiveHedgeEngine(db_session, bus=get_odds_bus())
 engine.start_monitoring()
@@ -27,8 +27,8 @@ from enum import Enum
 
 from sqlalchemy.orm import Session
 
-from hedge_engine import HedgeEngine, HedgeResult, compute_implied_total
-from live_odds_feed import OddsBus, LiveOddsUpdate, get_odds_bus
+from core.hedge_engine import HedgeEngine, HedgeResult, compute_implied_total
+from ingestion.live_odds_feed import OddsBus, LiveOddsUpdate, get_odds_bus
 from utils.logger import get_logger
 
 logger = get_logger("live_hedge_engine")

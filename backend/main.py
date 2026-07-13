@@ -1,9 +1,3 @@
-import sys
-import os
-_root = os.path.dirname(os.path.abspath(__file__))
-for d in ["api", "core", "features", "ingestion", "database", "strategy", "monitor", "utils", "api/routers", "scripts", "integrations", "."]:
-    sys.path.append(os.path.join(_root, d))
-
 # -*- coding: utf-8 -*-
 import os
 from pathlib import Path
@@ -21,7 +15,7 @@ from contextlib import asynccontextmanager
 from utils.logger import get_logger
 from database.config import get_settings
 from database.models import init_db, get_db, Team, Match, Prediction
-from auth import (
+from api.auth import (
     verify_admin_key
 )
 from api.admin import router as admin_router
@@ -179,14 +173,24 @@ app.include_router(strategy_router)
 app.include_router(events_router)
 app.include_router(content_router)
 
-# 兼容路由(2026-06-17) — 桥接 6-16 动态审计发现的 11 个 404 端点
-# 文档: docs/audits/2026-06-16/AUDIT_DYNAMIC_20260616.md
-try:
-    from api.compat_routes import router as compat_router
-    app.include_router(compat_router)
-    logger.info("[compat] 兼容路由已挂载")
-except Exception as e:
-    logger.warning(f"[compat] 兼容路由挂载失败(非致命): {e}")
+# ─── Legacy 路径纯重定向(Phase 2.G: 取代 api/compat_routes.py)───────────────
+# 旧的 compat router 同时塞了 15 个 shim,其中 11 个只是把请求转发到业务路由,
+# 既增加了进程调用栈,又在 OpenAPI 里暴露重复地址。规范做法:
+#   - 真正的路径改名:用 307 在应用层做轻量重定向(以下 4 项)。
+#   - 同名同义:不重定向,让前端切到 /api/matches/{id},因为它们已经存在。
+
+def _redirect(path: str):
+    """构造一个 307 Temporary Redirect 端点(轻量、无依赖、include_in_schema=False)。"""
+    async def _handler():
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(path, status_code=307)
+    return _handler
+
+app.add_api_route("/api/live-odds",                _redirect("/api/live/live-odds"),          methods=["GET"], include_in_schema=False)
+app.add_api_route("/api/live-odds/{match_id}",     _redirect("/api/live/live-odds/{match_id}"), methods=["GET"], include_in_schema=False)
+app.add_api_route("/api/monitor/health",           _redirect("/api/health"),                   methods=["GET"], include_in_schema=False)
+app.add_api_route("/api/admin/dashboard",          _redirect("/api/admin/data-quality"),       methods=["GET"], include_in_schema=False)
+logger.info("[compat] Legacy 重定向已挂载(307,4 条)")
 
 # Static files — 使用绝对路径
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"

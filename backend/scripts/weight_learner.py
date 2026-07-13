@@ -10,7 +10,7 @@
 - accuracy : 方向准确率（非凸，不推荐）
 
 用法:
-from weight_learner import WeightLearner
+from scripts.weight_learner import WeightLearner
 learner = WeightLearner(db)
 result = learner.learn_all(metric="brier")
 # result = {"all/all": {weights}, "group/all": {weights}, ...}
@@ -29,7 +29,7 @@ from sqlalchemy.orm import Session
 
 from database.models import Match, Prediction, FusionWeight, PlayType, MatchStatus, MatchAIReport
 from sqlalchemy.orm import joinedload
-from prediction_engine import (
+from core.prediction_engine import (
     MatchContext,
     TeamContext,
     EloModel,

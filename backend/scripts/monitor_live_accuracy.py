@@ -3,7 +3,6 @@ import os
 from datetime import datetime, timedelta, timezone
 
 # 确保可以导入后端模块
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

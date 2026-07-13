@@ -9,11 +9,11 @@ from database.config import get_settings
 from database.models import (
     get_db, Team, Match, MatchStatus, Prediction, AuditLog, User, LicenseKey
 )
-from schemas import (
+from api.schemas import (
     TeamCreate, TeamOut, MatchCreate, MatchOut, MatchUpdateResult,
     PredictionCreate, PredictionOut, DashboardStats, LicenseKeyCreate
 )
-from validation_engine import ValidationEngine, MatchValidator
+from monitor.validation_engine import ValidationEngine, MatchValidator
 
 settings = get_settings()
 router = APIRouter(prefix="/api/admin", tags=["Admin (OpenClaw)"])
@@ -256,7 +256,7 @@ def generate_licenses(
     authorized: bool = Depends(verify_admin_key)
 ):
     """Generate batch license keys."""
-    from license_manager import create_license_keys
+    from core.license_manager import create_license_keys
     from database.models import LicenseType
     
     lt = LicenseType.MATCH if data.license_type == "match" else LicenseType.TOURNAMENT

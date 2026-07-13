@@ -89,7 +89,7 @@ def fetch_json_local(local_root: Path, season: str, league_code: str) -> dict | 
 # ─── 队名匹配 ───
 
 def normalize_team_name(name: str) -> str:
-    from data_cleaner import resolve_team_name
+    from ingestion.data_cleaner import resolve_team_name
     # 1. 尝试使用中心别名库
     norm = resolve_team_name(name)
     if norm != name:
@@ -193,7 +193,7 @@ class TeamMatcher:
         norm = normalize_team_name(of_name)
 
         # 0) 规范名 DB 查找 (data_cleaner)
-        from data_cleaner import resolve_team_name
+        from ingestion.data_cleaner import resolve_team_name
         canonical = resolve_team_name(of_name)
         for key, team in self._index.items():
             if key == canonical.lower() or key == canonical:

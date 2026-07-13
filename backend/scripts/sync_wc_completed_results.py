@@ -9,13 +9,10 @@ import sqlite3
 
 # 配置 Python 路径以包含 backend 及子目录
 _cwd = os.getcwd()
-_root = os.path.join(_cwd, 'backend')
 if not os.path.exists(_root):
     _root = _cwd
 
 for d in ["api", "core", "features", "ingestion", "database", "strategy", "monitor", "utils", "api/routers"]:
-    sys.path.append(os.path.join(_root, d))
-sys.path.append(_root)
 
 def main():
     db_path = os.path.join(_root, 'database.sqlite')
@@ -78,7 +75,7 @@ def main():
     # ─── 触发 ModelAuditor 审计重算 ───
     print("=== 开始运行 ModelAuditor 触发过去 7 天赛果复盘审计 ===")
     try:
-        from model_audit import ModelAuditor
+        from monitor.model_audit import ModelAuditor
         auditor = ModelAuditor()
         # 审计过去 7 天的完赛预测 (包含 6月9日 到 6月15日)
         report = auditor.run_daily_audit(days_back=7)

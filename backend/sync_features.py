@@ -24,7 +24,6 @@ import argparse
 from datetime import datetime, timezone
 
 # 确保 backend/ 根目录在 path 中
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from utils.logger import get_logger
 from database.models import SessionLocal, Team

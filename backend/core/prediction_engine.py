@@ -24,13 +24,16 @@ import pandas as pd
 from core.models import EloModel, PoissonModel, PlayerAdjustmentModel, MarketModel, DrawDetectionModel
 from core.models.mixture_score_model import MixtureScoreModel
 from core.models.upset_detector import UpsetDetector
-from features import EloModel as FeEloModel, PoissonModel as FePoissonModel
 from features.feature_builder import FeatureBuilder
 from features.form_markov_model import FormMarkovModel
 from features.h2h_model import H2HModel
 import fusion.logistic_fusion as _lr_module
+from fusion.weights_registry import WeightsRegistry
 
 LogisticFusionWeights = _lr_module.LogisticFusionWeights
+
+# 共享的单例注册表，__init__ 阶段统一管理权重生命周期
+_WEIGHTS_REGISTRY = WeightsRegistry()
 
 # ─── 常量 ───
 from core.constants import (
@@ -80,24 +83,29 @@ class PredictionEngine:
 
     @staticmethod
     def _load_lr_weights(league: str = "global") -> Optional[LogisticFusionWeights]:
-        import glob
+        """
+        通过 WeightsRegistry 加载指定联赛的 LR 权重。
+
+        改进（2026-06-25）：
+        - 不再依赖文件名字母序；改由单一权威注册表 + env 覆盖控制。
+        - 加载时校验 SHA256，启动时即可发现权重被误编辑。
+        - 失败时降级到注册表提供的最新权重，且 log warning。
+        """
         try:
-            _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            _lr_weights_dir = os.path.join(_root, "data", "weights", "lr")
-            pattern = os.path.join(_lr_weights_dir, f"{league}_v1_*.json")
-            lr_files = sorted(glob.glob(pattern))
-            if lr_files:
-                w = LogisticFusionWeights.load(lr_files[-1])
+            w = _WEIGHTS_REGISTRY.get_active(league)
+            if w is not None:
                 import logging
                 logging.getLogger("prediction_engine").info(
-                    f"[LR-fusion] Loaded {league} weights: {os.path.basename(lr_files[-1])} "
-                    f"(acc={w.accuracy:.1%}, n={w.sample_count})"
+                    f"[LR-fusion] Loaded {league} weights via registry "
+                    f"(acc={getattr(w, 'accuracy', 0.0):.1%}, n={getattr(w, 'sample_count', 0)})"
                 )
-                return w
+            return w
         except Exception as e:
             import logging
-            logging.getLogger("prediction_engine").warning(f"[LR-fusion] Failed to load {league} weights: {e}")
-        return None
+            logging.getLogger("prediction_engine").warning(
+                f"[LR-fusion] Failed to load {league} weights: {e}"
+            )
+            return None
 
     def _get_lr_weights_for_match(self, competition: str) -> Optional[LogisticFusionWeights]:
         if competition in self._lr_weights_cache:
@@ -122,8 +130,8 @@ class PredictionEngine:
                 from core.research_poisson import PoissonPredictor as LabPoisson
                 from core.research_elo import EloPredictor as LabElo
             except ImportError:
-                from research_poisson import PoissonPredictor as LabPoisson
-                from research_elo import EloPredictor as LabElo
+                from core.research_poisson import PoissonPredictor as LabPoisson
+                from core.research_elo import EloPredictor as LabElo
 
             p_weight_path = os.path.join(_b_root, "data", "weights", "research", "poisson_expert_weights.json")
             e_weight_path = os.path.join(_b_root, "data", "weights", "research", "elo_expert_weights.json")
@@ -158,17 +166,19 @@ class PredictionEngine:
             logging.getLogger("prediction_engine").warning(f"[F1-Bridge] Lab injection failed: {e}")
 
         # ─── Step 1: Sub-models ───
+        # P0 准确率: Lab 仅在物理模型侧做轻量混合 (10%)，不再在融合后再覆盖
         elo_out = EloModel.predict(ctx)
         if lab_elo_spf:
-            # Blend Lab Elo as supplementary signal (30%) rather than full override
-            elo_out = {k: 0.30 * lab_elo_spf[k] + 0.70 * elo_out[k] for k in ["home", "draw", "away"]}
+            elo_out = {k: 0.10 * lab_elo_spf[k] + 0.90 * elo_out[k] for k in ["home", "draw", "away"]}
 
         elo_gap = abs(ctx.home_team.elo - ctx.away_team.elo)
         use_heavy_tail = elo_gap > 200
         poisson_out = PoissonModel.predict_with_heavy_tail(ctx, use_heavy_tail=use_heavy_tail)
         if lab_poisson_spf:
-            # Blend Lab Poisson as supplementary signal (30%) rather than full override
-            poisson_out["spf"] = {k: 0.30 * lab_poisson_spf[k] + 0.70 * poisson_out["spf"][k] for k in ["home", "draw", "away"]}
+            poisson_out["spf"] = {
+                k: 0.10 * lab_poisson_spf[k] + 0.90 * poisson_out["spf"][k]
+                for k in ["home", "draw", "away"]
+            }
 
         players_factor = PlayerAdjustmentModel.predict(ctx)
         market_out = MarketModel.predict(ctx)
@@ -180,6 +190,8 @@ class PredictionEngine:
             trace.add_step("数据断流预警", "检测到赔率数据源失效，系统自动进入 [反脆弱降级模式]", {"mode": "degraded", "source": _odds_source})
 
         # ─── Step 2: Fusion ───
+        # 主路径: LR (48维最优权重) → 轻量 Draw 校准
+        # 旁路: NN/BetNN 默认关闭 (FOOTBALL_USE_NN_CORRECTION=1 可开启)
         lr_spf = None
         weights = self._get_lr_weights_for_match(ctx.competition)
         real_market = market_out if not is_degraded else None
@@ -189,40 +201,44 @@ class PredictionEngine:
 
         if lr_spf is not None:
             fused_spf = lr_spf
-            trace.add_step("逻辑回归基准", f"使用 {ctx.competition or '全球'} 48维特征模型", fused_spf)
-            # P1 修复: 移除 50:50 市场融合 — LR 已包含 market 特征, 重复融合会稀释信号
-            # 仅在 LR 失败时 fallback 到 EnsembleFusion
+            dim = len(getattr(weights, "coef_home", [])) if weights else 48
+            trace.add_step("逻辑回归基准", f"使用 {ctx.competition or '全球'} {dim}维 LR 模型", fused_spf)
         else:
             fused_spf = self.fusion.fuse_spf(elo=elo_out, poisson=poisson_out["spf"],
                 players=players_factor, market=real_market, ctx=ctx)
             mode_desc = "基础混合融合" if not is_degraded else "纯物理实力降级融合"
             trace.add_step(mode_desc, "使用 Elo + 泊松 4 参数模型", fused_spf)
+            # Lab 后融合覆盖: 仅当 LR 失败时启用，且降级更重
+            if lab_elo_spf:
+                weight_factor = 0.25 if is_degraded else 0.10
+                fused_spf = {
+                    k: weight_factor * lab_elo_spf[k] + (1 - weight_factor) * fused_spf[k]
+                    for k in ["home", "draw", "away"]
+                }
+                s_val = sum(fused_spf.values())
+                fused_spf = {k: v / s_val for k, v in fused_spf.items()}
+                trace.add_step("专家Elo降级增强", f"LR 不可用，Lab 权重 {weight_factor:.0%}", fused_spf)
 
-        # Lab Elo expert override (supplementary, not dominant)
-        if lab_elo_spf:
-            weight_factor = 0.30 if is_degraded else 0.20
-            fused_spf = {k: weight_factor * lab_elo_spf[k] + (1-weight_factor) * fused_spf[k] for k in ["home", "draw", "away"]}
-            s_val = sum(fused_spf.values())
-            fused_spf = {k: v / s_val for k, v in fused_spf.items()}
-            trace.add_step("专家Elo降级增强", f"权重调整为 {weight_factor:.0%} (补充信号而非主导)", fused_spf)
-
-        # Live odds steam move
+        # Live odds steam move (真实资金流信号，保留)
         old_spf = fused_spf.copy()
         fused_spf = self._apply_live_odds_override(fused_spf, ctx)
         if fused_spf != old_spf:
             trace.add_step("临场异动修正", "赔率剧烈跳水，强制对齐资金流向", fused_spf)
 
-        # Draw detection
+        # Draw detection (轻量偏置，保留)
         fused_spf = DrawDetectionModel.predict(fused_spf, ctx, market_out)
-        trace.add_step("平局概率微调", "Draw-MLP 分类器偏置修正", fused_spf)
+        trace.add_step("平局概率微调", "Draw 校准器偏置修正", fused_spf)
 
-        # ─── Step 2d/2e: NN Corrections ───
+        # ─── Step 2d/2e: NN Corrections (Shadow mode only) ───
+        nn_spf = fused_spf.copy()
         if lr_spf is not None:
-            fused_spf = apply_residual_correction(fused_spf, ctx, poisson_out, market_out, self)
-            trace.add_step("利润导向 NN 修正", "StackingNet 残差学习", fused_spf)
-
-            fused_spf = apply_betnn_correction(fused_spf, ctx, poisson_out, market_out, self, fused_spf)
-            trace.add_step("BetNN 投注价值修正", "BetNet 二次校准 SPF 概率", fused_spf)
+            try:
+                nn_spf = apply_residual_correction(nn_spf, ctx, poisson_out, market_out, self)
+                nn_spf = apply_betnn_correction(nn_spf, ctx, poisson_out, market_out, self, nn_spf)
+                trace.add_step("NN旁路观察", "StackingNet + BetNN 计算完毕，已移至旁路不干预主结果", nn_spf)
+            except Exception as e:
+                import logging
+                logging.getLogger("prediction_engine").warning(f"[NN-Shadow] Failed: {e}")
 
         # ─── Step 3: RQ ───
         rq_raw = poisson_out["rq"].copy()
@@ -466,7 +482,7 @@ def build_team_context_from_orm(team) -> TeamContext:
         team_id=team.id, name=team.name, name_en=team.name_en or "",
         elo=team.elo or 1500, fifa_rank=team.fifa_rank or 100,
         avg_goals_scored=team.avg_goals_scored or 1.3, avg_goals_conceded=team.avg_goals_conceded or 1.3,
-        avg_xg=team.avg_xg or team.avg_goals_scored or 0.0, avg_xga=team.avg_xga or team.avg_goals_conceded or 0.0,
+        avg_xg=team.avg_xg or team.avg_goals_scored or 1.3, avg_xga=team.avg_xga or team.avg_goals_conceded or 1.3,
         possession=team.possession or 0.0, pass_completion=team.pass_completion or 0.0,
         shots_per_game=team.shots_per_game or 0.0, form_factor=team.form_factor or 1.0,
         recent_results=team.recent_results or "",

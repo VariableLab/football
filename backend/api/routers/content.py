@@ -4,12 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional
 
-# 将 research/src 加入路径以引用内容引擎
-_current_dir = Path(__file__).resolve().parent
-_root_dir = _current_dir.parent.parent.parent
-_research_src = _root_dir / "research" / "src"
-if str(_research_src) not in sys.path:
-    sys.path.append(str(_research_src))
+import os
+_research_src = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), "research", "src")
+if _research_src not in sys.path:
+    sys.path.insert(0, _research_src)
 
 from database.models import get_db, Match
 from footy.content.engine import WorldCupContentEngine

@@ -8,7 +8,6 @@ import os
 import time
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, "scripts")
 
 from utils.logger import get_logger
 logger = get_logger("train_all")
@@ -51,17 +50,17 @@ def draw_classifier():
 
 
 def halftime():
-    from sub_model_halftime import halftime_train_job
+    from scripts.sub_model_halftime import halftime_train_job
     halftime_train_job()
 
 
 def score():
-    from sub_model_score import score_train_job
+    from scripts.sub_model_score import score_train_job
     score_train_job()
 
 
 def handicap():
-    from sub_model_handicap import handicap_train_job
+    from scripts.sub_model_handicap import handicap_train_job
     handicap_train_job()
 
 

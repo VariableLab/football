@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 
 from database.models import User, get_db
 from api.auth import get_current_active_user
-from license_manager import redeem_license_key
-from schemas import LicenseRedeem, LicenseRedeemOut
+from core.license_manager import redeem_license_key
+from api.schemas import LicenseRedeem, LicenseRedeemOut
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 

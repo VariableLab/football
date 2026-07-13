@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 
 from database.models import SessionLocal, Team
-from form_collector import InternalFormSource
+from scripts.form_collector import InternalFormSource
 
 
 def main():

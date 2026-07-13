@@ -10,22 +10,13 @@ Model Audit — 每日复盘 + 自愈闭环
 - 每日复盘写入磁盘；每周或漂移时触发完整闭环
 
 用法:
-  from model_audit import daily_audit_job, weekly_audit_job, self_heal_job
+  from monitor.model_audit import daily_audit_job, weekly_audit_job, self_heal_job
   # 调度器会自动调用，也可手动执行
 """
 
 import sys
 import os
 
-# Ensure backend and scripts are in sys.path
-_current_dir = os.path.dirname(os.path.abspath(__file__))
-_backend_root = os.path.dirname(_current_dir)
-for d in ["api", "core", "features", "ingestion", "database", "strategy", "monitor", "utils", "scripts"]:
-    _path = os.path.join(_backend_root, d)
-    if _path not in sys.path:
-        sys.path.append(_path)
-if _backend_root not in sys.path:
-    sys.path.append(_backend_root)
 
 import json
 import threading
@@ -34,7 +25,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 from utils.logger import get_logger
-from alert_manager import fire_alert
+from monitor.alert_manager import fire_alert
 
 logger = get_logger("model_audit")
 
@@ -478,7 +469,7 @@ def run_self_heal_cycle(reason: str = "manual") -> dict:
 def _step_weight_learn() -> Optional[Dict]:
     """第1步：从全量历史数据回归学习最优融合权重"""
     from database.models import SessionLocal
-    from weight_learner import WeightLearner
+    from scripts.weight_learner import WeightLearner
 
     db = SessionLocal()
     try:
@@ -511,7 +502,7 @@ def _step_weight_learn() -> Optional[Dict]:
 def _step_regenerate() -> Optional[int]:
     """第2步：用新权重重新生成所有已完成比赛预测"""
     from database.models import SessionLocal, Match, MatchStatus
-    from regenerate_predictions import regenerate_matches
+    from scripts.regenerate_predictions import regenerate_matches
 
     db = SessionLocal()
     try:

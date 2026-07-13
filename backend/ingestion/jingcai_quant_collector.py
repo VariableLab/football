@@ -9,7 +9,7 @@ JingcaiQuantCollector — 竞彩专用量化数据采集器
 from datetime import datetime, timezone, timedelta
 
 from database.models import SessionLocal, Match, OddsHistory
-from odds_collector import JingcaiSource
+from ingestion.odds_collector import JingcaiSource
 from utils.logger import get_logger
 
 logger = get_logger("jingcai_quant")

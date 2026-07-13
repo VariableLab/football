@@ -9,7 +9,7 @@
 3. Dutch book：多选项组合投注，保证无论哪个结果都赢。
 
 用法:
-from hedge_engine import HedgeEngine
+from core.hedge_engine import HedgeEngine
 engine = HedgeEngine(db_session)
 
 # 套利扫描

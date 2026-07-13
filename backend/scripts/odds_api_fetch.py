@@ -56,7 +56,6 @@ from typing import List, Optional
 _CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 _BACKEND_ROOT = os.path.dirname(_CURRENT_DIR)
 if _BACKEND_ROOT not in sys.path:
-    sys.path.insert(0, _BACKEND_ROOT)
 
 
 def parse_args() -> argparse.Namespace:

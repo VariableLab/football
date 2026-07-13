@@ -8,7 +8,7 @@
 - 失败告警
 
 用法:
-  from prediction_recalc import trigger_recalc
+  from core.prediction_recalc import trigger_recalc
   trigger_recalc(db, match_id)
 """
 
@@ -20,8 +20,8 @@ from typing import Dict, Optional
 from sqlalchemy.orm import Session
 
 from database.models import Match, PredictionSnapshot
-from prediction_engine import PredictionEngine, build_context_from_match
-from prediction_snapshot import PredictionSnapshotManager
+from core.prediction_engine import PredictionEngine, build_context_from_match
+from core.prediction_snapshot import PredictionSnapshotManager
 from utils.logger import get_logger
 
 logger = get_logger("prediction_recalc")

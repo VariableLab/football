@@ -118,7 +118,7 @@ def compute_position_ratio(
     2. 低赔率主胜降权 (优化2)
     3. 赔率区间自适应 (优化3)
     """
-    from tiered_strategy import TIER_HIGH, TIER_SKIP
+    from strategy.tiered_strategy import TIER_HIGH, TIER_SKIP
 
     if tier == TIER_SKIP:
         return 0.0

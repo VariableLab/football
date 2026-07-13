@@ -8,7 +8,6 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from database.models import SessionLocal, Prediction, Team, Match
 from utils.logger import get_logger

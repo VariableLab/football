@@ -3,11 +3,13 @@ from sqlalchemy.orm import Session
 
 from database.config import get_settings
 from database.models import get_db, Match
-from odds_collector import OddsCollector
+from ingestion.odds_collector import OddsCollector
 from api.auth import verify_admin_key
 
 settings = get_settings()
-router = APIRouter(prefix="/api/admin", tags=["Admin"])
+# 命名空间: 与 backend/api/admin.py 同属 /api/admin 大域,
+# 以 /api/admin/mgmt/* 子前缀避开与 /api/admin/{teams,matches,...} 的路径冲突。
+router = APIRouter(prefix="/api/admin/mgmt", tags=["Admin Mgmt"])
 
 @router.post("/odds/refresh")
 def admin_refresh_all_odds(
@@ -15,7 +17,7 @@ def admin_refresh_all_odds(
     db: Session = Depends(get_db),
 ):
     """手动触发全部 upcoming 比赛的赔率刷新。"""
-    from odds_collector import _get_upcoming_matches
+    from ingestion.odds_collector import _get_upcoming_matches
     matches = _get_upcoming_matches(db, hours=72)
     if not matches:
         return {"status": "ok", "message": "No upcoming matches", "updated": 0}
@@ -91,7 +93,7 @@ def data_quality_report(
     db: Session = Depends(get_db),
 ):
     """数据质量审计报告 (只读)。"""
-    from data_cleaner import DataCleaner
+    from ingestion.data_cleaner import DataCleaner
     cleaner = DataCleaner(db)
     findings = cleaner.audit()
     return {
@@ -110,14 +112,14 @@ def data_quality_report(
         "critical_count": sum(1 for f in findings if f.severity == "critical"),
     }
 
-@router.post("/api/admin/data-clean")
+@router.post("/data-clean")
 def data_clean(
     dry_run: bool = True,
     authorized: bool = Depends(verify_admin_key),
     db: Session = Depends(get_db),
 ):
     """执行数据清洗。"""
-    from data_cleaner import DataCleaner
+    from ingestion.data_cleaner import DataCleaner
     cleaner = DataCleaner(db)
     result = cleaner.clean(dry_run=dry_run)
     return {

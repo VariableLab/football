@@ -38,7 +38,7 @@ def collect_elo_ratings_job():
 
 def collect_form_job():
     """每天自动刷新所有球队的近期战绩。"""
-    from form_collector import FormCollector
+    from scripts.form_collector import FormCollector
     from monitor.scheduler.jobs import DBSession
 
     with DBSession() as db:
@@ -56,7 +56,7 @@ def collect_form_job():
 def fill_xg_job():
     """为缺失 xG/xGA 的球队填充估算值"""
     from monitor.scheduler.jobs import DBSession
-    from xg_estimator import fill_missing_xg
+    from scripts.xg_estimator import fill_missing_xg
 
     with DBSession() as db:
         try:

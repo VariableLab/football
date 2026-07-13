@@ -112,7 +112,7 @@ def generate_report(match_id: int) -> Optional[ComprehensiveReport]:
 
         # ─── 2. 分层策略分析 ───
         try:
-            from tiered_strategy import analyze_match_from_db
+            from strategy.tiered_strategy import analyze_match_from_db
             tier_result = analyze_match_from_db(match_id)
             if tier_result:
                 report.tier = tier_result.tier
@@ -142,7 +142,7 @@ def generate_report(match_id: int) -> Optional[ComprehensiveReport]:
 
         # ─── 3. 半场预测(兼容旧接口) ───
         try:
-            from sub_model_halftime import HalftimePredictor
+            from scripts.sub_model_halftime import HalftimePredictor
             ht_pred = HalftimePredictor()
             if ht_pred.is_ready():
                 ht_result = ht_pred.predict_from_db(match_id)
@@ -155,7 +155,7 @@ def generate_report(match_id: int) -> Optional[ComprehensiveReport]:
 
         # ─── 4. 比分预测(兼容旧接口) ───
         try:
-            from sub_model_score import ScorePredictor
+            from scripts.sub_model_score import ScorePredictor
             sc_pred = ScorePredictor()
             if sc_pred.is_ready():
                 sc_result = sc_pred.predict_from_db(match_id)
@@ -166,7 +166,7 @@ def generate_report(match_id: int) -> Optional[ComprehensiveReport]:
 
         # ─── 5. 让球预测(兼容旧接口) ───
         try:
-            from sub_model_handicap import HandicapPredictor
+            from scripts.sub_model_handicap import HandicapPredictor
             hc_pred = HandicapPredictor()
             if hc_pred.is_ready():
                 hc_result = hc_pred.predict_from_db(match_id)
